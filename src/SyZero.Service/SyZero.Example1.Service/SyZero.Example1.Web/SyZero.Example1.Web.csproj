@@ -25,12 +25,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\SyZero.Core\SyZero.AspNetCore\SyZero.AspNetCore.csproj" />
-    <ProjectReference Include="..\..\..\SyZero.Core\SyZero.DynamicWebApi\SyZero.DynamicWebApi.csproj" />
-    <ProjectReference Include="..\..\..\SyZero.Core\SyZero.Feign\SyZero.Feign.csproj" />
-    <ProjectReference Include="..\..\..\SyZero.Core\SyZero.Log4Net\SyZero.Log4Net.csproj" />
-    <ProjectReference Include="..\..\..\SyZero.Core\SyZero.OpenTelemetry\SyZero.OpenTelemetry.csproj" />
-    <ProjectReference Include="..\..\..\SyZero.Core\SyZero.Swagger\SyZero.Swagger.csproj" />
+    <ProjectReference Include="..\..\..\SyZero.Module\SyZero.AspNetCore\SyZero.AspNetCore.csproj" />
+    <ProjectReference Include="..\..\..\SyZero.Module\SyZero.DynamicWebApi\SyZero.DynamicWebApi.csproj" />
+    <ProjectReference Include="..\..\..\SyZero.Module\SyZero.Feign\SyZero.Feign.csproj" />
+    <ProjectReference Include="..\..\..\SyZero.Module\SyZero.Log4Net\SyZero.Log4Net.csproj" />
+    <ProjectReference Include="..\..\..\SyZero.Module\SyZero.OpenTelemetry\SyZero.OpenTelemetry.csproj" />
+    <ProjectReference Include="..\..\..\SyZero.Module\SyZero.Swagger\SyZero.Swagger.csproj" />
     <ProjectReference Include="..\SyZero.Example1.Application\SyZero.Example1.Application.csproj" />
   </ItemGroup>
 

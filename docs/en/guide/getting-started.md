@@ -5,7 +5,7 @@ This guide helps you bootstrap a minimal SyZero Web API in minutes.
 ## 1. Install packages
 
 ```bash
-dotnet add package SyZero
+dotnet add package SyZero.Core
 dotnet add package SyZero.AspNetCore
 dotnet add package SyZero.DynamicWebApi
 dotnet add package SyZero.Swagger

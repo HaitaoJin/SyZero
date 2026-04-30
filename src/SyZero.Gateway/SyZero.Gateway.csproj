@@ -10,10 +10,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SyZero.Core\SyZero.ApiGateway\SyZero.ApiGateway.csproj" />
-    <ProjectReference Include="..\SyZero.Core\SyZero.Log4Net\SyZero.Log4Net.csproj" />
-    <ProjectReference Include="..\SyZero.Core\SyZero.OpenTelemetry\SyZero.OpenTelemetry.csproj" />
-    <ProjectReference Include="..\SyZero.Core\SyZero.Redis\SyZero.Redis.csproj" />
+    <ProjectReference Include="..\SyZero.Module\SyZero.ApiGateway\SyZero.ApiGateway.csproj" />
+    <ProjectReference Include="..\SyZero.Module\SyZero.Log4Net\SyZero.Log4Net.csproj" />
+    <ProjectReference Include="..\SyZero.Module\SyZero.OpenTelemetry\SyZero.OpenTelemetry.csproj" />
+    <ProjectReference Include="..\SyZero.Module\SyZero.Redis\SyZero.Redis.csproj" />
   </ItemGroup>
 
   <ItemGroup>

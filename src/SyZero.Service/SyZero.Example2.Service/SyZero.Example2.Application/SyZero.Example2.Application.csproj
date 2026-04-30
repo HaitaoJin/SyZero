@@ -12,7 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\SyZero.Core\SyZero.AutoMapper\SyZero.AutoMapper.csproj" />
+    <ProjectReference Include="..\..\..\SyZero.Module\SyZero.AutoMapper\SyZero.AutoMapper.csproj" />
     <ProjectReference Include="..\..\SyZero.Example1.Service\SyZero.Example1.IApplication\SyZero.Example1.IApplication.csproj" />
     <ProjectReference Include="..\SyZero.Example2.IApplication\SyZero.Example2.IApplication.csproj" />
     <ProjectReference Include="..\SyZero.Example2.Core\SyZero.Example2.Core.csproj" />

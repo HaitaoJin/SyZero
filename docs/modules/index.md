@@ -4,7 +4,7 @@ SyZero 模块按职责拆分，以下页面已对应仓库中的全部核心模�
 
 ## 核心
 
-1. [SyZero](/modules/SyZero)
+1. [SyZero.Core](/modules/SyZero.Core)
 2. [SyZero.AspNetCore](/modules/SyZero.AspNetCore)
 3. [SyZero.Web.Common](/modules/SyZero.Web.Common)
 

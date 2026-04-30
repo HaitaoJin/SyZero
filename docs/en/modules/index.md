@@ -4,7 +4,7 @@ All core module docs are available in this section.
 
 ## Core
 
-1. [SyZero](/en/modules/SyZero)
+1. [SyZero.Core](/en/modules/SyZero.Core)
 2. [SyZero.AspNetCore](/en/modules/SyZero.AspNetCore)
 3. [SyZero.Web.Common](/en/modules/SyZero.Web.Common)
 

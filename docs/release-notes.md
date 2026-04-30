@@ -1,5 +1,10 @@
 # 发布说明
 
+## v1.2.0
+
+- **破坏性变更**：核心 NuGet 包 `SyZero` 重命名为 `SyZero.Core`。请将 `dotnet add package SyZero` 替换为 `dotnet add package SyZero.Core`；程序集名称（`SyZero.dll`）与根命名空间（`SyZero`）保持不变，源代码无需修改 `using` 。
+- **仓库重构**：原 `src/SyZero.Core/SyZero.*` 下的 18 个可插拔模块项目迁移至新目录 `src/SyZero.Module/`；`src/SyZero.Core/SyZero/` 内容上提至 `src/SyZero.Core/`。
+
 ## v1.1.9
 
 - 修复错误

@@ -89,7 +89,7 @@ SyZero 是一个基于 .NET 的模块化微服务开发框架，提供了丰富�
 通过 NuGet 安装核心包：
 
 ```bash
-dotnet add package SyZero
+dotnet add package SyZero.Core
 ```
 
 根据需要安装其他模块：
@@ -462,8 +462,8 @@ await _eventBus.PublishBatchAsync(events);
 ```
 SyZero/
 ├── src/
-│   ├── SyZero.Core/                    # 核心模块
-│   │   ├── SyZero/                     # 核心库
+│   ├── SyZero.Core/                    # 核心库（NuGet 包：SyZero.Core）
+│   ├── SyZero.Module/                  # 可插拔框架模块
 │   │   ├── SyZero.AspNetCore/          # ASP.NET Core 集成
 │   │   ├── SyZero.AutoMapper/          # AutoMapper 支持
 │   │   ├── SyZero.Consul/              # Consul 服务发现

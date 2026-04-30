@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\SyZero.Core\SyZero.Web.Common\SyZero.Web.Common.csproj" />
+    <ProjectReference Include="..\..\..\SyZero.Module\SyZero.Web.Common\SyZero.Web.Common.csproj" />
   </ItemGroup>
 
   <Target Name="AppServiceCopy" AfterTargets="AfterBuild">

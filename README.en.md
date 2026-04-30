@@ -87,7 +87,7 @@ SyZero is a modular microservice framework for .NET. It provides rich components
 Install core package:
 
 ```bash
-dotnet add package SyZero
+dotnet add package SyZero.Core
 ```
 
 Install extra modules as needed:
@@ -213,8 +213,8 @@ SyZero provides a unified `IEventBus` abstraction:
 ```text
 SyZero/
 ├── src/
-│   ├── SyZero.Core/                    # Core modules
-│   │   ├── SyZero/                     # Core library
+│   ├── SyZero.Core/                    # Core library (NuGet package: SyZero.Core)
+│   ├── SyZero.Module/                  # Pluggable framework modules
 │   │   ├── SyZero.AspNetCore/          # ASP.NET Core integration
 │   │   ├── SyZero.AutoMapper/          # AutoMapper support
 │   │   ├── SyZero.Consul/              # Consul discovery

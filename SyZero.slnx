@@ -5,25 +5,27 @@
     <Platform Name="x86" />
   </Configurations>
   <Folder Name="/SyZero.Core/">
-    <Project Path="src/SyZero.Core/SyZero.ApiGateway/SyZero.ApiGateway.csproj" />
-    <Project Path="src/SyZero.Core/SyZero.AspNetCore.SpaProxy/SyZero.AspNetCore.SpaProxy.csproj" />
-    <Project Path="src/SyZero.Core/SyZero.AspNetCore/SyZero.AspNetCore.csproj" />
-    <Project Path="src/SyZero.Core/SyZero.AutoMapper/SyZero.AutoMapper.csproj" />
-    <Project Path="src/SyZero.Core/SyZero.Consul/SyZero.Consul.csproj" />
-    <Project Path="src/SyZero.Core/SyZero.DynamicGrpc/SyZero.DynamicGrpc.csproj" />
-    <Project Path="src/SyZero.Core/SyZero.DynamicWebApi/SyZero.DynamicWebApi.csproj" />
-    <Project Path="src/SyZero.Core/SyZero.EntityFrameworkCore/SyZero.EntityFrameworkCore.csproj" />
-    <Project Path="src/SyZero.Core/SyZero.Feign/SyZero.Feign.csproj" />
-    <Project Path="src/SyZero.Core/SyZero.Log4Net/SyZero.Log4Net.csproj" />
-    <Project Path="src/SyZero.Core/SyZero.MongoDB/SyZero.MongoDB.csproj" />
-    <Project Path="src/SyZero.Core/SyZero.Nacos/SyZero.Nacos.csproj" />
-    <Project Path="src/SyZero.Core/SyZero.OpenTelemetry/SyZero.OpenTelemetry.csproj" />
-    <Project Path="src/SyZero.Core/SyZero.RabbitMQ/SyZero.RabbitMQ.csproj" />
-    <Project Path="src/SyZero.Core/SyZero.Redis/SyZero.Redis.csproj" />
-    <Project Path="src/SyZero.Core/SyZero.SqlSugar/SyZero.SqlSugar.csproj" />
-    <Project Path="src/SyZero.Core/SyZero.Swagger/SyZero.Swagger.csproj" />
-    <Project Path="src/SyZero.Core/SyZero.Web.Common/SyZero.Web.Common.csproj" />
-    <Project Path="src/SyZero.Core/SyZero/SyZero.csproj" />
+    <Project Path="src/SyZero.Core/SyZero.Core.csproj" />
+  </Folder>
+  <Folder Name="/SyZero.Module/">
+    <Project Path="src/SyZero.Module/SyZero.ApiGateway/SyZero.ApiGateway.csproj" />
+    <Project Path="src/SyZero.Module/SyZero.AspNetCore.SpaProxy/SyZero.AspNetCore.SpaProxy.csproj" />
+    <Project Path="src/SyZero.Module/SyZero.AspNetCore/SyZero.AspNetCore.csproj" />
+    <Project Path="src/SyZero.Module/SyZero.AutoMapper/SyZero.AutoMapper.csproj" />
+    <Project Path="src/SyZero.Module/SyZero.Consul/SyZero.Consul.csproj" />
+    <Project Path="src/SyZero.Module/SyZero.DynamicGrpc/SyZero.DynamicGrpc.csproj" />
+    <Project Path="src/SyZero.Module/SyZero.DynamicWebApi/SyZero.DynamicWebApi.csproj" />
+    <Project Path="src/SyZero.Module/SyZero.EntityFrameworkCore/SyZero.EntityFrameworkCore.csproj" />
+    <Project Path="src/SyZero.Module/SyZero.Feign/SyZero.Feign.csproj" />
+    <Project Path="src/SyZero.Module/SyZero.Log4Net/SyZero.Log4Net.csproj" />
+    <Project Path="src/SyZero.Module/SyZero.MongoDB/SyZero.MongoDB.csproj" />
+    <Project Path="src/SyZero.Module/SyZero.Nacos/SyZero.Nacos.csproj" />
+    <Project Path="src/SyZero.Module/SyZero.OpenTelemetry/SyZero.OpenTelemetry.csproj" />
+    <Project Path="src/SyZero.Module/SyZero.RabbitMQ/SyZero.RabbitMQ.csproj" />
+    <Project Path="src/SyZero.Module/SyZero.Redis/SyZero.Redis.csproj" />
+    <Project Path="src/SyZero.Module/SyZero.SqlSugar/SyZero.SqlSugar.csproj" />
+    <Project Path="src/SyZero.Module/SyZero.Swagger/SyZero.Swagger.csproj" />
+    <Project Path="src/SyZero.Module/SyZero.Web.Common/SyZero.Web.Common.csproj" />
   </Folder>
   <Folder Name="/SyZero.Gateway/">
     <Project Path="src/SyZero.Gateway/SyZero.Gateway.csproj" />

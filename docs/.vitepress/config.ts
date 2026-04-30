@@ -1,7 +1,7 @@
 import { defineConfig } from "vitepress";
 
 const moduleLinks = [
-  { text: "SyZero", link: "/modules/SyZero" },
+  { text: "SyZero.Core", link: "/modules/SyZero.Core" },
   { text: "SyZero.ApiGateway", link: "/modules/SyZero.ApiGateway" },
   { text: "SyZero.AspNetCore", link: "/modules/SyZero.AspNetCore" },
   { text: "SyZero.AspNetCore.SpaProxy", link: "/modules/SyZero.AspNetCore.SpaProxy" },
