@@ -1,0 +1,120 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.Validation</name>
+    </assembly>
+    <members>
+        <member name="T:SyZero.Validation.DataAnnotationsValidator">
+            <summary>
+            基于 <c>System.ComponentModel.DataAnnotations</c> 的兜底校验器。
+            不依赖任何第三方校验库，对包含 <see cref="T:System.ComponentModel.DataAnnotations.ValidationAttribute"/> 标注的属性进行检查。
+            </summary>
+        </member>
+        <member name="M:SyZero.Validation.DataAnnotationsValidator.Validate(System.Object)">
+            <summary>
+            同步校验对象。
+            </summary>
+        </member>
+        <member name="M:SyZero.Validation.DataAnnotationsValidator.ValidateAsync(System.Object,System.Threading.CancellationToken)">
+            <summary>
+            异步入口（仅包装同步实现）。
+            </summary>
+        </member>
+        <member name="T:SyZero.Validation.ISyValidator`1">
+            <summary>
+            SyZero 校验器抽象。业务可基于此适配 FluentValidation 等任意校验库。
+            </summary>
+            <typeparam name="T">被校验的对象类型。</typeparam>
+        </member>
+        <member name="M:SyZero.Validation.ISyValidator`1.ValidateAsync(`0,System.Threading.CancellationToken)">
+            <summary>
+            校验对象，返回结果（<see cref="T:SyZero.Validation.SyValidationResult"/>）。
+            </summary>
+        </member>
+        <member name="T:SyZero.Validation.ISyValidatorRunner">
+            <summary>
+            非泛型校验器入口，基于运行时类型分派。
+            </summary>
+        </member>
+        <member name="M:SyZero.Validation.ISyValidatorRunner.ValidateAsync(System.Object,System.Threading.CancellationToken)">
+            <summary>
+            校验任意对象，自动定位 <see cref="T:SyZero.Validation.ISyValidator`1"/> 实现。
+            若未注册对应校验器，则使用内置 <see cref="T:SyZero.Validation.DataAnnotationsValidator"/> 兜底。
+            </summary>
+        </member>
+        <member name="T:SyZero.Validation.SyValidationError">
+            <summary>
+            单条校验错误。
+            </summary>
+        </member>
+        <member name="P:SyZero.Validation.SyValidationError.Field">
+            <summary>
+            错误所属字段名。可能为空（对象级错误）。
+            </summary>
+        </member>
+        <member name="P:SyZero.Validation.SyValidationError.Message">
+            <summary>
+            错误描述。
+            </summary>
+        </member>
+        <member name="M:SyZero.Validation.SyValidationError.#ctor(System.String,System.String)">
+            <summary>
+            创建一个校验错误。
+            </summary>
+        </member>
+        <member name="T:SyZero.Validation.SyValidationResult">
+            <summary>
+            校验结果聚合。
+            </summary>
+        </member>
+        <member name="P:SyZero.Validation.SyValidationResult.Errors">
+            <summary>
+            错误列表。<see cref="P:SyZero.Validation.SyValidationResult.IsValid"/> 为 true 时为空集合。
+            </summary>
+        </member>
+        <member name="P:SyZero.Validation.SyValidationResult.IsValid">
+            <summary>
+            是否校验通过。
+            </summary>
+        </member>
+        <member name="P:SyZero.Validation.SyValidationResult.Valid">
+            <summary>
+            校验通过的结果。
+            </summary>
+        </member>
+        <member name="M:SyZero.Validation.SyValidationResult.Invalid(System.Collections.Generic.IEnumerable{SyZero.Validation.SyValidationError})">
+            <summary>
+            创建一个包含若干错误的校验结果。
+            </summary>
+        </member>
+        <member name="M:SyZero.Validation.SyValidationResult.Invalid(System.String,System.String)">
+            <summary>
+            便捷构造：单条错误。
+            </summary>
+        </member>
+        <member name="T:SyZero.Validation.SyValidatorRunner">
+            <summary>
+            <see cref="T:SyZero.Validation.ISyValidatorRunner"/> 默认实现：先尝试解析 <see cref="T:SyZero.Validation.ISyValidator`1"/>，否则回退到 DataAnnotations。
+            </summary>
+        </member>
+        <member name="M:SyZero.Validation.SyValidatorRunner.#ctor(System.IServiceProvider,SyZero.Validation.DataAnnotationsValidator)">
+            <summary>
+            构造校验执行器。
+            </summary>
+        </member>
+        <member name="M:SyZero.Validation.SyValidatorRunner.ValidateAsync(System.Object,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="T:SyZero.SyZeroValidationExtension">
+            <summary>
+            SyZero.Validation 扩展方法。
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroValidationExtension.AddSyZeroValidation(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            注册 SyZero 校验框架（默认包含 DataAnnotations 兜底）。
+            业务可通过 <c>services.AddTransient&lt;ISyValidator&lt;MyDto&gt;, MyDtoValidator&gt;()</c> 注册具体校验器。
+            </summary>
+        </member>
+    </members>
+</doc>

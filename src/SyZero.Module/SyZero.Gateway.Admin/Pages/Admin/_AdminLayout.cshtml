@@ -1,0 +1,599 @@
+@{
+    var currentPath = Context.Request.Path.Value ?? string.Empty;
+    bool IsActive(string prefix, bool exact = false) =>
+        exact
+            ? currentPath.Equals(prefix, System.StringComparison.OrdinalIgnoreCase)
+              || currentPath.Equals(prefix + "/", System.StringComparison.OrdinalIgnoreCase)
+            : currentPath.StartsWith(prefix, System.StringComparison.OrdinalIgnoreCase);
+    string ActiveCls(string prefix, bool exact = false) => IsActive(prefix, exact) ? "active gw-menu-active" : string.Empty;
+
+    var user = Context.User?.Identity?.Name;
+    var role = Context.User?.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "Admin";
+    var isAdmin = string.Equals(role, "Admin", System.StringComparison.OrdinalIgnoreCase);
+    var isBuiltIn = string.Equals(
+        Context.User?.FindFirst("gw:builtin")?.Value,
+        "true", System.StringComparison.OrdinalIgnoreCase);
+    ViewData["IsAdmin"] = isAdmin;
+    ViewData["Role"] = role;
+    ViewData["IsBuiltIn"] = isBuiltIn;
+    if (string.IsNullOrEmpty(user) && Context.Request.Cookies.TryGetValue("syz_admin_auth", out var cookie))
+    {
+        try
+        {
+            var raw = System.Text.Encoding.UTF8.GetString(System.Convert.FromBase64String(cookie));
+            var idx = raw.IndexOf(':');
+            if (idx > 0) { user = raw.Substring(0, idx); }
+        }
+        catch { /* ignore */ }
+    }
+
+    // 计算面包屑标题。
+    string PageTitle()
+    {
+        if (IsActive("/admin", exact: true)) return "概览";
+        if (IsActive("/admin/routes")) return "路由管理";
+        if (IsActive("/admin/route-overview")) return "路由概览";
+        if (IsActive("/admin/swagger-endpoints")) return "Swagger 端点";
+        if (IsActive("/admin/backups")) return "备份";
+        if (IsActive("/admin/raw-editor")) return "原生 JSON";
+        if (IsActive("/admin/diff")) return "运行时 Diff";
+        if (IsActive("/admin/audit")) return "审计日志";
+        if (IsActive("/admin/rate-limiting")) return "限流管理";
+        if (IsActive("/admin/load-balancing")) return "负载均衡";
+        if (IsActive("/admin/users")) return "用户管理";
+        if (IsActive("/admin/tester")) return "路由测试器";
+        return ViewData["Title"]?.ToString() ?? "网关管理";
+    }
+}
+<!DOCTYPE html>
+<html lang="zh-cn" data-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@PageTitle() - SyZero 网关管理</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // 主题在 head 中尽早应用，避免闪烁。
+        (function () {
+            try {
+                var t = localStorage.getItem('gw-admin-theme') || 'light';
+                document.documentElement.setAttribute('data-theme', t);
+                var darks = ['dark', 'dracula', 'business', 'night', 'synthwave', 'black', 'halloween', 'forest', 'luxury', 'coffee', 'sunset'];
+                if (darks.indexOf(t) >= 0) document.documentElement.classList.add('gw-dark');
+                if (localStorage.getItem('gw-side-collapsed') === '1') document.documentElement.classList.add('gw-side-collapsed');
+            } catch {}
+        })();
+    </script>
+    <style>
+        body { font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+        .gw-brand-grad { background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%); }
+        .gw-text-grad { background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .gw-card-anim { animation: gwFadeIn .35s ease-out both; }
+        @@keyframes gwFadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+        .gw-side-icon { width: 1.15rem; height: 1.15rem; flex-shrink: 0; }
+        .gw-side-menu li > a { transition: background-color .15s ease, color .15s ease; position: relative; }
+        /* 侧栏选中状态：渐变左条 + 渐变背景 + 主色字（最高优先级，覆盖 daisyUI 默认 active/:where 规则）
+           注意：daisyUI 4.10+ 主题变量为 oklch（不是 hsl），必须用 oklch() 包裹才能解析 */
+        .gw-side-menu li > a.gw-menu-active,
+        .gw-side-menu li > a.gw-menu-active:hover,
+        .gw-side-menu li > a.gw-menu-active:focus,
+        .gw-side-menu li > a.gw-menu-active:active,
+        .gw-side-menu li > a.gw-menu-active.active,
+        ul.gw-side-menu li > a.active.gw-menu-active {
+            background-color: oklch(var(--p) / 0.16) !important;
+            background-image: linear-gradient(135deg, oklch(var(--p) / 0.24) 0%, oklch(var(--s) / 0.18) 100%) !important;
+            color: oklch(var(--p)) !important;
+            font-weight: 600;
+            box-shadow: inset 0 0 0 1px oklch(var(--p) / 0.32);
+        }
+        .gw-side-menu li > a.gw-menu-active::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 8px; bottom: 8px;
+            width: 3px; border-radius: 2px;
+            background: linear-gradient(180deg, oklch(var(--p)) 0%, oklch(var(--s)) 100%);
+        }
+        .gw-side-menu li > a.gw-menu-active .gw-side-icon { color: oklch(var(--p)); }
+        /* 折叠态下选中项也保持背景 */
+        html.gw-side-collapsed .gw-side-menu li > a.gw-menu-active {
+            background-image: linear-gradient(135deg, oklch(var(--p) / 0.30) 0%, oklch(var(--s) / 0.22) 100%) !important;
+        }
+        /* 通用加载骨架 */
+        .gw-skeleton { background: linear-gradient(90deg, hsl(var(--b3) / .35) 0%, hsl(var(--b3) / .55) 50%, hsl(var(--b3) / .35) 100%); background-size: 200% 100%; animation: gwSkel 1.4s ease-in-out infinite; border-radius: 0.4rem; }
+        @@keyframes gwSkel { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+        /* 空态 */
+        .gw-empty { padding: 2.5rem 1rem; text-align: center; color: hsl(var(--bc) / .55); }
+        .gw-empty svg { margin: 0 auto 0.75rem; opacity: 0.5; }
+        /* 统一卡片视觉：让所有 .card / .stats / table 容器更柔和 */
+        main .card, main .stats, main .rounded-box.bg-base-100, main .bg-base-100.shadow,
+        main .bg-base-100.shadow-sm, main > .bg-base-100, main .alert {
+            border-radius: 0.85rem;
+        }
+        main .card.bg-base-100, main .stats.bg-base-100 {
+            box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 4px 14px rgba(15,23,42,.06);
+            border: 1px solid hsl(var(--b3) / .35);
+        }
+        main table.table thead th { font-weight: 600; letter-spacing: .02em; }
+        .btn { border-radius: 0.6rem; }
+        /* 顶部加载进度条 */
+        #gw-progress { position: fixed; top: 0; left: 0; height: 2px; width: 0%; background: linear-gradient(90deg, hsl(var(--p)) 0%, hsl(var(--s)) 100%); box-shadow: 0 0 8px hsl(var(--p) / 0.5); z-index: 100; transition: width .25s ease, opacity .3s ease; opacity: 0; pointer-events: none; }
+        #gw-progress.active { opacity: 1; }
+        /* 返回顶部按钮 */
+        #gw-back-top { position: fixed; right: 1.25rem; bottom: 1.25rem; opacity: 0; transform: translateY(8px); transition: opacity .25s ease, transform .25s ease; pointer-events: none; z-index: 40; }
+        #gw-back-top.show { opacity: 1; transform: none; pointer-events: auto; }
+        /* Toast 增强：hover 暂停淖出 */
+        .gw-toast-item { animation: gwToastIn .22s ease-out both; max-width: 360px; }
+        @@keyframes gwToastIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: none; } }
+        /* dark/light 快捷切换图标联动 */
+        .gw-theme-sun, .gw-theme-moon { display: none; }
+        html.gw-dark .gw-theme-sun { display: inline-block; }
+        html:not(.gw-dark) .gw-theme-moon { display: inline-block; }
+        /* 侧边栏折叠（仅桌面 lg+ 生效）*/
+        .gw-side-collapse-ico-in { display: none; }
+        @@media (min-width: 1024px) {
+            html.gw-side-collapsed .gw-side-panel { width: 4.25rem !important; padding-left: .35rem !important; padding-right: .35rem !important; }
+            html.gw-side-collapsed .gw-side-label,
+            html.gw-side-collapsed .gw-side-brand-text { display: none !important; }
+            html.gw-side-collapsed .gw-side-brand { justify-content: center; padding-left: .25rem; padding-right: .25rem; gap: 0; }
+            html.gw-side-collapsed .gw-side-menu li > a { justify-content: center; padding-left: .5rem; padding-right: .5rem; }
+            html.gw-side-collapsed .menu-title { display: none !important; }
+            html.gw-side-collapsed .gw-side-foot { justify-content: center; }
+            html.gw-side-collapsed .gw-side-collapse-ico-out { display: none; }
+            html.gw-side-collapsed .gw-side-collapse-ico-in { display: inline-block; }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-base-200">
+    <div id="gw-progress"></div>
+    <button id="gw-back-top" class="btn btn-circle btn-primary shadow-lg" title="返回顶部" aria-label="返回顶部">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 15l7-7 7 7"/></svg>
+    </button>
+    <div class="drawer lg:drawer-open">
+        <input id="gw-drawer" type="checkbox" class="drawer-toggle" />
+
+        <div class="drawer-content flex flex-col min-h-screen">
+            <div class="navbar bg-base-100/80 backdrop-blur shadow-sm sticky top-0 z-30 border-b border-base-300">
+                <div class="flex-none lg:hidden">
+                    <label for="gw-drawer" class="btn btn-ghost btn-square btn-sm" aria-label="打开菜单">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    </label>
+                </div>
+                <div class="flex-none hidden lg:flex">
+                    <button id="gw-side-collapse" class="btn btn-ghost btn-square btn-sm" title="折叠侧边栏" aria-label="折叠侧边栏">
+                        <svg class="w-5 h-5 gw-side-collapse-ico-out" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>
+                        <svg class="w-5 h-5 gw-side-collapse-ico-in" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+                    </button>
+                </div>
+                <div class="flex-1 gap-3 min-w-0">
+                    <span class="lg:hidden inline-flex items-center gap-2 px-2">
+                        <span class="w-9 h-9 rounded-xl gw-brand-grad text-white inline-flex items-center justify-center text-sm font-bold shadow">SZ</span>
+                        <span class="text-base font-semibold gw-text-grad hidden sm:inline">SyZero 网关</span>
+                    </span>
+                    <div class="text-sm breadcrumbs hidden md:flex text-base-content/70 min-w-0">
+                        <ul>
+                            <li><a href="/admin">首页</a></li>
+                            <li class="truncate">@PageTitle()</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="flex-none gap-2">
+                    <span id="admin-sse-status" class="badge badge-warning badge-sm hidden sm:inline-flex" title="实时事件总线（SSE）连接状态">○ 重连中</span>
+                    <button id="gw-theme-toggle" class="btn btn-ghost btn-sm btn-square" title="快捷切换 dark / light" aria-label="快捷切换主题">
+                        <svg class="gw-theme-sun w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+                        <svg class="gw-theme-moon w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/></svg>
+                    </button>
+                    <div class="dropdown dropdown-end">
+                        <label tabindex="0" class="btn btn-ghost btn-sm gap-1" title="切换主题">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+                            <span class="hidden sm:inline">主题</span>
+                        </label>
+                        <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box shadow-lg w-44 p-2 z-50 max-h-80 overflow-y-auto">
+                            @foreach (var t in new[] { "light", "dark", "corporate", "business", "emerald", "cupcake", "synthwave", "dracula", "winter", "night" })
+                            {
+                                <li><a data-theme-set="@t">@t</a></li>
+                            }
+                        </ul>
+                    </div>
+                    @if (!string.IsNullOrEmpty(user))
+                    {
+                        <div class="dropdown dropdown-end">
+                            <label tabindex="0" class="btn btn-ghost btn-sm gap-2">
+                                <div class="avatar placeholder">
+                                    <div class="bg-primary text-primary-content rounded-full w-7">
+                                        <span class="text-xs">@user.Substring(0, 1).ToUpper()</span>
+                                    </div>
+                                </div>
+                                <span class="hidden sm:inline">@user</span>
+                            </label>
+                            <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box shadow-lg w-44 p-2 z-50">
+                                <li class="menu-title">
+                                    <span class="flex items-center gap-1">@user
+                                        @if (isAdmin)
+                                        {
+                                            <span class="badge badge-primary badge-xs">Admin</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge badge-ghost badge-xs">Reader</span>
+                                        }
+                                        @if (isBuiltIn)
+                                        {
+                                            <span class="badge badge-outline badge-xs ml-1" title="appsettings 内置">内置</span>
+                                        }
+                                    </span>
+                                </li>
+                                <li><a href="/admin/users">用户管理</a></li>
+                                <li><a href="/admin/logout">退出登录</a></li>
+                            </ul>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <main class="flex-1 container mx-auto p-4 gw-card-anim w-full">
+                @{
+                    var pageTitle = PageTitle();
+                    var subtitle = ViewData["Subtitle"] as string;
+                }
+                <div class="mb-4 flex items-center gap-3">
+                    <span class="w-10 h-10 rounded-xl gw-brand-grad text-white inline-flex items-center justify-center shadow-sm">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3-9 4 18 3-9h4"/></svg>
+                    </span>
+                    <div class="min-w-0">
+                        <h1 class="text-2xl font-semibold leading-tight gw-text-grad truncate">@pageTitle</h1>
+                        @if (!string.IsNullOrEmpty(subtitle))
+                        {
+                            <p class="text-sm text-base-content/60 mt-0.5">@subtitle</p>
+                        }
+                    </div>
+                </div>
+                @RenderBody()
+            </main>
+
+            <footer class="footer footer-center p-4 text-base-content/60 text-xs border-t border-base-300/50">
+                <aside>
+                    <span>SyZero · Gateway Admin <span class="badge badge-ghost badge-sm ml-1">v1.2.3</span></span>
+                    <span class="opacity-50">·</span>
+                    <a class="link link-hover" href="https://github.com/SyZeroToInfinity/SyZero" target="_blank" rel="noopener">GitHub</a>
+                </aside>
+            </footer>
+        </div>
+
+        <aside class="drawer-side z-40">
+            <label for="gw-drawer" aria-label="关闭菜单" class="drawer-overlay"></label>
+            <div class="bg-base-100 min-h-full p-3 shadow-xl border-r border-base-300 flex flex-col gw-side-panel" style="width:16rem; transition: width .2s ease;">
+                <a href="/admin" class="flex items-center gap-2 px-2 py-3 mb-2 border-b border-base-300/60 hover:bg-base-200/60 rounded-lg transition gw-side-brand" title="返回首页 / SyZero 网关管理台">
+                    <span class="w-10 h-10 rounded-xl gw-brand-grad text-white inline-flex items-center justify-center text-sm font-bold shadow flex-shrink-0">SZ</span>
+                    <span class="flex flex-col leading-tight gw-side-brand-text">
+                        <span class="text-base font-semibold gw-text-grad">SyZero</span>
+                        <span class="text-[11px] text-base-content/60">网关管理台</span>
+                    </span>
+                    <label for="gw-drawer" class="btn btn-ghost btn-sm btn-square ml-auto lg:hidden" aria-label="关闭菜单">✕</label>
+                </a>
+                <ul class="menu rounded-box gw-side-menu" data-auto-close="true">
+                    <li>
+                        <a href="/admin" class="@ActiveCls("/admin", exact: true)" title="概览">
+                            <svg class="gw-side-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9M5 10v10h4v-6h6v6h4V10"/></svg>
+                            <span class="gw-side-label">概览</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/routes" class="@ActiveCls("/admin/routes")" title="路由管理">
+                            <svg class="gw-side-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+                            <span class="gw-side-label">路由管理</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/route-overview" class="@ActiveCls("/admin/route-overview")" title="路由概览">
+                            <svg class="gw-side-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18"/></svg>
+                            <span class="gw-side-label">路由概览</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/swagger-endpoints" class="@ActiveCls("/admin/swagger-endpoints")" title="Swagger 端点">
+                            <svg class="gw-side-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v4H4zM4 10h16v4H4zM4 16h16v4H4z"/></svg>
+                            <span class="gw-side-label">Swagger 端点</span>
+                        </a>
+                    </li>
+                    <li class="menu-title gw-side-label"><span>高级</span></li>
+                    <li>
+                        <a href="/admin/rate-limiting" class="@ActiveCls("/admin/rate-limiting")" title="限流管理">
+                            <svg class="gw-side-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 100 18 9 9 0 000-18z"/><path d="M12 7v5l3 2"/></svg>
+                            <span class="gw-side-label">限流管理</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/load-balancing" class="@ActiveCls("/admin/load-balancing")" title="负载均衡">
+                            <svg class="gw-side-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><circle cx="12" cy="18" r="3"/><path d="M6 9l6 6M18 9l-6 6"/></svg>
+                            <span class="gw-side-label">负载均衡</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/backups" class="@ActiveCls("/admin/backups")" title="备份">
+                            <svg class="gw-side-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+                            <span class="gw-side-label">备份</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/raw-editor" class="@ActiveCls("/admin/raw-editor")" title="原生 JSON">
+                            <svg class="gw-side-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg>
+                            <span class="gw-side-label">原生 JSON</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/diff" class="@ActiveCls("/admin/diff")" title="运行时 Diff">
+                            <svg class="gw-side-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M7 8l-4 4 4 4M17 8l4 4-4 4"/></svg>
+                            <span class="gw-side-label">运行时 Diff</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/audit" class="@ActiveCls("/admin/audit")" title="审计日志">
+                            <svg class="gw-side-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+                            <span class="gw-side-label">审计日志</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/users" class="@ActiveCls("/admin/users")" title="用户管理">
+                            <svg class="gw-side-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 11a4 4 0 10-8 0 4 4 0 008 0zM3 21a7 7 0 0114 0M17 11a3 3 0 100-6M21 21a5 5 0 00-7-4.6"/></svg>
+                            <span class="gw-side-label">用户管理</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/tester" class="@ActiveCls("/admin/tester")" title="路由测试器">
+                            <svg class="gw-side-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l5 5L20 7"/></svg>
+                            <span class="gw-side-label">路由测试器</span>
+                        </a>
+                    </li>
+                </ul>
+                <div class="mt-auto pt-3 flex items-center justify-center gw-side-foot">
+                    <span class="text-[11px] text-base-content/40 gw-side-label">SyZero v1.2.3</span>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <div id="toast-host" class="toast toast-end z-50"></div>
+    <script>
+        // ===== 主题切换 =====
+        var gwDarkThemes = ['dark', 'dracula', 'business', 'night', 'synthwave', 'black', 'halloween', 'forest', 'luxury', 'coffee', 'sunset'];
+        function gwApplyTheme(t) {
+            document.documentElement.setAttribute('data-theme', t);
+            try { localStorage.setItem('gw-admin-theme', t); } catch {}
+            if (gwDarkThemes.indexOf(t) >= 0) document.documentElement.classList.add('gw-dark');
+            else document.documentElement.classList.remove('gw-dark');
+        }
+        document.querySelectorAll('[data-theme-set]').forEach(el => {
+            el.addEventListener('click', () => {
+                gwApplyTheme(el.getAttribute('data-theme-set'));
+            });
+        });
+        (function () {
+            var btn = document.getElementById('gw-theme-toggle');
+            if (!btn) return;
+            btn.addEventListener('click', function () {
+                var cur = document.documentElement.getAttribute('data-theme') || 'light';
+                var isDark = gwDarkThemes.indexOf(cur) >= 0;
+                gwApplyTheme(isDark ? 'light' : 'dark');
+            });
+        })();
+
+        // ===== Toast =====
+        window.adminToast = function (msg, type) {
+            const host = document.getElementById('toast-host');
+            const div = document.createElement('div');
+            type = type || 'info';
+            const icons = {
+                info: '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
+                success: '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
+                warning: '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 00-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z"/></svg>',
+                error: '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+            };
+            div.className = 'gw-toast-item alert alert-' + type + ' shadow-lg flex items-start gap-2';
+            div.innerHTML = (icons[type] || icons.info) + '<span class="flex-1 text-sm">' + msg + '</span>'
+                + '<button class="btn btn-ghost btn-xs btn-circle" aria-label="关闭">✕</button>';
+            host.appendChild(div);
+            let paused = false;
+            let elapsed = 0;
+            const lifeMs = type === 'error' ? 6000 : 3000;
+            const timer = setInterval(function () {
+                if (paused) return;
+                elapsed += 100;
+                if (elapsed >= lifeMs) { clearInterval(timer); fadeOut(); }
+            }, 100);
+            function fadeOut() {
+                div.style.transition = 'opacity .3s, transform .3s';
+                div.style.opacity = '0';
+                div.style.transform = 'translateX(20px)';
+                setTimeout(function () { div.remove(); }, 320);
+            }
+            div.addEventListener('mouseenter', function () { paused = true; });
+            div.addEventListener('mouseleave', function () { paused = false; });
+            div.querySelector('button').addEventListener('click', function () { clearInterval(timer); fadeOut(); });
+        };
+
+        // ===== 顶部进度条 =====
+        (function () {
+            var bar = document.getElementById('gw-progress');
+            var pending = 0; var width = 0; var timer = null;
+            window.adminProgress = {
+                start: function () {
+                    pending++;
+                    if (pending === 1) {
+                        width = 10; bar.style.width = '10%'; bar.classList.add('active');
+                        clearInterval(timer);
+                        timer = setInterval(function () {
+                            if (width < 85) { width += (90 - width) * 0.08; bar.style.width = width + '%'; }
+                        }, 200);
+                    }
+                },
+                done: function () {
+                    pending = Math.max(0, pending - 1);
+                    if (pending === 0) {
+                        clearInterval(timer); timer = null;
+                        width = 100; bar.style.width = '100%';
+                        setTimeout(function () { bar.classList.remove('active'); bar.style.width = '0%'; width = 0; }, 350);
+                    }
+                }
+            };
+        })();
+
+        // ===== 返回顶部 =====
+        (function () {
+            var btn = document.getElementById('gw-back-top');
+            window.addEventListener('scroll', function () {
+                if (window.scrollY > 240) btn.classList.add('show'); else btn.classList.remove('show');
+            }, { passive: true });
+            btn.addEventListener('click', function () { window.scrollTo({ top: 0, behavior: 'smooth' }); });
+        })();
+
+        // ===== 移动端：点击侧栏菜单后自动关闭抽屉 =====
+        (function () {
+            var drawerInput = document.getElementById('gw-drawer');
+            if (!drawerInput) return;
+            document.querySelectorAll('.gw-side-menu a[href]').forEach(function (a) {
+                a.addEventListener('click', function () {
+                    if (window.matchMedia('(max-width: 1023.98px)').matches) {
+                        drawerInput.checked = false;
+                    }
+                });
+            });
+        })();
+
+        // ===== 桌面侧边栏折叠 =====
+        (function () {
+            var btn = document.getElementById('gw-side-collapse');
+            if (!btn) return;
+            function syncTitle() {
+                var collapsed = document.documentElement.classList.contains('gw-side-collapsed');
+                btn.title = collapsed ? '展开侧边栏' : '折叠侧边栏';
+                btn.setAttribute('aria-label', btn.title);
+            }
+            syncTitle();
+            btn.addEventListener('click', function () {
+                document.documentElement.classList.toggle('gw-side-collapsed');
+                try { localStorage.setItem('gw-side-collapsed', document.documentElement.classList.contains('gw-side-collapsed') ? '1' : '0'); } catch {}
+                syncTitle();
+            });
+        })();
+
+        // ===== Fetch 包装：401 自动跳登录页 + 顶部进度条 =====
+        window.adminFetch = async function (url, options) {
+            options = options || {};
+            options.headers = Object.assign({ 'Content-Type': 'application/json' }, options.headers || {});
+            options.credentials = options.credentials || 'same-origin';
+            if (window.adminProgress) window.adminProgress.start();
+            try {
+                const resp = await fetch(url, options);
+                if (resp.status === 401) {
+                    const ret = encodeURIComponent(window.location.pathname + window.location.search);
+                    window.location.replace('/admin/login?returnUrl=' + ret);
+                    throw new Error('未登录或会话已过期');
+                }
+                if (resp.status === 204 || resp.status === 201) return null;
+                const text = await resp.text();
+                const data = text ? JSON.parse(text) : null;
+                if (!resp.ok) {
+                    const msg = (data && (data.title || data.detail)) || ('请求失败 ' + resp.status);
+                    throw new Error(msg);
+                }
+                return data;
+            } finally {
+                if (window.adminProgress) window.adminProgress.done();
+            }
+        };
+
+        // ===== 加载骨架 / 空态 =====
+        window.adminSkeletonRows = function (rowCount, colCount) {
+            rowCount = rowCount || 4; colCount = colCount || 4;
+            let html = '';
+            for (let r = 0; r < rowCount; r++) {
+                html += '<tr>';
+                for (let c = 0; c < colCount; c++) {
+                    html += '<td><div class="gw-skeleton h-4" style="width:' + (50 + Math.floor(Math.random() * 40)) + '%"></div></td>';
+                }
+                html += '</tr>';
+            }
+            return html;
+        };
+        window.adminEmpty = function (msg, hint) {
+            return '<div class="gw-empty">'
+                + '<svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg>'
+                + '<div class="text-sm">' + (msg || '暂无数据') + '</div>'
+                + (hint ? '<div class="text-xs opacity-60 mt-1">' + hint + '</div>' : '')
+                + '</div>';
+        };
+
+        // ---------- SSE 实时事件总线 ----------
+        // 单页订阅 /admin-api/events，将事件分发到 window.addEventListener('admin:event', ...)
+        // 同时根据事件类型弹出 toast 提示。页面可监听特定 type 触发自动刷新。
+        (function () {
+            if (window.__adminSse) return;
+            let es = null;
+            let backoff = 1000;
+            let badgeEl = null;
+            function setStatus(state) {
+                if (!badgeEl) return;
+                badgeEl.classList.remove('badge-success', 'badge-warning', 'badge-error');
+                if (state === 'live') { badgeEl.classList.add('badge-success'); badgeEl.textContent = '● 实时'; }
+                else if (state === 'reconnect') { badgeEl.classList.add('badge-warning'); badgeEl.textContent = '○ 重连中'; }
+                else { badgeEl.classList.add('badge-error'); badgeEl.textContent = '× 离线'; }
+            }
+            function attachBadge() {
+                badgeEl = document.getElementById('admin-sse-status');
+                if (badgeEl) setStatus(es && es.readyState === 1 ? 'live' : 'reconnect');
+            }
+            function connect() {
+                try {
+                    es = new EventSource('/admin-api/events', { withCredentials: true });
+                    es.onopen = function () { backoff = 1000; setStatus('live'); };
+                    es.onerror = function () {
+                        setStatus('reconnect');
+                        try { es.close(); } catch { }
+                        es = null;
+                        // 自动重连：指数退避到 30s 上限
+                        setTimeout(connect, backoff);
+                        backoff = Math.min(backoff * 2, 30000);
+                    };
+                    es.onmessage = function (e) { dispatch({ type: 'message', data: e.data }); };
+                    // 监听所有已知事件名（统一通过 event:<type>）
+                    var knownEvents = [
+                        'config.reload', 'config.replace',
+                        'route.create', 'route.update', 'route.delete', 'route.move',
+                        'route.clone', 'route.bulk-toggle', 'route.bulk-tags', 'route.reorder', 'route.import',
+                        'swagger.create', 'swagger.update', 'swagger.delete',
+                        'backup.restore', 'backup.delete'
+                    ];
+                    knownEvents.forEach(function (t) {
+                        es.addEventListener(t, function (ev) {
+                            var payload; try { payload = JSON.parse(ev.data); } catch { payload = { type: t }; }
+                            payload.type = payload.type || t;
+                            dispatch(payload);
+                        });
+                    });
+                } catch (err) {
+                    setStatus('offline');
+                }
+            }
+            function dispatch(evt) {
+                window.dispatchEvent(new CustomEvent('admin:event', { detail: evt }));
+                if (evt && evt.type && evt.type !== 'message') {
+                    var who = evt.user ? '@@' + evt.user : '';
+                    var toast = window.adminToast;
+                    if (toast) toast(evt.summary || evt.type, 'info');
+                    // 控制台辅助
+                    try { console.debug('[admin-sse]', evt.type, who, evt); } catch { }
+                }
+            }
+            window.__adminSse = { connect: connect, attachBadge: attachBadge };
+            // 页面加载完成后启动
+            if (document.readyState === 'complete' || document.readyState === 'interactive') {
+                attachBadge(); connect();
+            } else {
+                document.addEventListener('DOMContentLoaded', function () { attachBadge(); connect(); });
+            }
+        })();
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

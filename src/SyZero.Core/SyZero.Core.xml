@@ -1,12 +1,191 @@
 <?xml version="1.0"?>
 <doc>
     <assembly>
-        <name>SyZero</name>
+        <name>SyZero.Core</name>
     </assembly>
     <members>
+        <member name="M:SyZero.AppConfig.ResetCacheForTests(System.String)">
+            <summary>
+            仅供测试场景重置缓存，避免单元测试相互污染。
+            受 InternalsVisibleTo 控制，不暴露给业务代码。
+            </summary>
+            <param name="fieldName">支持 <c>serverOptions</c> 或 <c>connectionOptions</c>（与历史命名兼容）。</param>
+        </member>
         <member name="P:SyZero.Application.Attributes.DynamicApiAttribute.Module">
             <summary>
             Equivalent to AreaName
+            </summary>
+        </member>
+        <member name="T:SyZero.Application.DynamicApi.DynamicApiAssemblyScanner">
+            <summary>
+            动态 API Provider 共用的程序集发现器。
+            默认排除 BCL / Microsoft / netstandard 等系统程序集，调用方可追加额外排除规则。
+            </summary>
+        </member>
+        <member name="M:SyZero.Application.DynamicApi.DynamicApiAssemblyScanner.GetAssemblies(System.Func{System.Reflection.Assembly,System.Boolean})">
+            <summary>
+            获取候选程序集集合。
+            </summary>
+            <param name="extraExclude">额外的排除谓词；返回 true 表示该程序集应被排除。</param>
+        </member>
+        <member name="M:SyZero.Application.DynamicApi.DynamicApiAssemblyScanner.GetLoadableTypes(System.Reflection.Assembly)">
+            <summary>
+            安全获取程序集导出类型，吞掉 <see cref="T:System.Reflection.ReflectionTypeLoadException"/>。
+            </summary>
+        </member>
+        <member name="M:SyZero.Application.DynamicApi.DynamicApiAssemblyScanner.IsSystemAssembly(System.Reflection.Assembly)">
+            <summary>
+            判断是否为常见的系统/框架程序集。
+            </summary>
+        </member>
+        <member name="T:SyZero.Application.DynamicApi.DynamicApiAttributeCache">
+             <summary>
+             动态 API Provider 共用的特性查找缓存。
+             在 <see cref="T:SyZero.ReflectionHelper"/> 现有反射方法之上叠加缓存，
+             供 DynamicWebApi / DynamicGrpc 等 Provider 高频调用。
+            
+             <para>
+             缓存键基数由当前进程已加载程序集中的 <see cref="T:System.Reflection.TypeInfo"/> / <see cref="T:System.Reflection.MemberInfo"/> 数量决定，
+             在常规场景下有界（不会随请求量增长），因此使用无界 <see cref="T:System.Collections.Concurrent.ConcurrentDictionary`2"/> 即可。
+             若运行时存在动态 <c>AssemblyBuilder</c>/<c>Collectible AssemblyLoadContext</c> 持续加载新类型的场景，
+             请在卸载窗口主动调用 <see cref="M:SyZero.Application.DynamicApi.DynamicApiAttributeCache.Clear"/> 释放缓存，避免长期持有 <see cref="T:System.Reflection.MemberInfo"/> 引用。
+             </para>
+             </summary>
+        </member>
+        <member name="M:SyZero.Application.DynamicApi.DynamicApiAttributeCache.GetTypeAttributeOrNull``1(System.Reflection.TypeInfo)">
+            <summary>
+            在类型及其实现的接口上完整搜索单个特性（带缓存）。
+            </summary>
+        </member>
+        <member name="M:SyZero.Application.DynamicApi.DynamicApiAttributeCache.GetMemberAttributeOrNull``1(System.Reflection.MemberInfo,System.Boolean)">
+            <summary>
+            获取成员上的单个特性（带缓存）。
+            </summary>
+        </member>
+        <member name="M:SyZero.Application.DynamicApi.DynamicApiAttributeCache.Clear">
+            <summary>
+            清空全部特性缓存（用于动态加载程序集 / 单元测试场景）。
+            </summary>
+        </member>
+        <member name="T:SyZero.Application.DynamicApi.DynamicApiNameNormalizer">
+            <summary>
+            动态 API Provider 共用的名称归一化工具：去除指定后缀、应用自定义委托。
+            </summary>
+        </member>
+        <member name="M:SyZero.Application.DynamicApi.DynamicApiNameNormalizer.RemovePostfix(System.String,System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            按长度倒序匹配并移除首个命中的后缀（忽略大小写）。
+            </summary>
+            <param name="name">原始名称。</param>
+            <param name="postfixes">候选后缀集合，可包含空白项（自动忽略）。</param>
+        </member>
+        <member name="M:SyZero.Application.DynamicApi.DynamicApiNameNormalizer.Normalize(System.String,System.Collections.Generic.IEnumerable{System.String},System.Func{System.String,System.String})">
+            <summary>
+            同 <see cref="M:SyZero.Application.DynamicApi.DynamicApiNameNormalizer.RemovePostfix(System.String,System.Collections.Generic.IEnumerable{System.String})"/>，但若提供 <paramref name="customNormalizer"/>，
+            则优先使用该委托结果。
+            </summary>
+        </member>
+        <member name="T:SyZero.Application.DynamicApi.DynamicApiOptionsBase">
+            <summary>
+            动态 API Provider 选项的可选公共基类（轻量契约）。
+            提供 <see cref="P:SyZero.Application.DynamicApi.DynamicApiOptionsBase.DefaultAreaName"/> 与 <see cref="M:SyZero.Application.DynamicApi.DynamicApiOptionsBase.Validate"/> 模板，让 Provider 自身保留差异化字段。
+            </summary>
+            <remarks>
+            字段级复用故意保持最小，避免与既有公开属性（如 <c>RemoveControllerPostfixes</c> /
+            <c>RemoveServicePostfixes</c>、<c>AssemblyOptions</c> 的具体类型）发生破坏性变更。
+            通用算法请直接调用 <see cref="T:SyZero.Application.DynamicApi.DynamicApiNameNormalizer"/>。
+            </remarks>
+        </member>
+        <member name="P:SyZero.Application.DynamicApi.DynamicApiOptionsBase.DefaultAreaName">
+            <summary>
+            默认区域 / 模块名（写入路由的 area 段或 gRPC 服务名的模块部分）。
+            </summary>
+        </member>
+        <member name="M:SyZero.Application.DynamicApi.DynamicApiOptionsBase.Validate">
+            <summary>
+            校验配置合法性。子类实现以追加自身校验。
+            </summary>
+        </member>
+        <member name="T:SyZero.Application.DynamicApi.DynamicApiServiceCollectionExtensions">
+            <summary>
+            动态 API Provider 共用的 <see cref="T:Microsoft.Extensions.DependencyInjection.IServiceCollection"/> 扩展。
+            </summary>
+        </member>
+        <member name="M:SyZero.Application.DynamicApi.DynamicApiServiceCollectionExtensions.IsAdded``1(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            检查指定服务类型是否已注册。
+            </summary>
+        </member>
+        <member name="M:SyZero.Application.DynamicApi.DynamicApiServiceCollectionExtensions.IsAdded(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Type)">
+            <summary>
+            检查指定服务类型是否已注册。
+            </summary>
+        </member>
+        <member name="M:SyZero.Application.DynamicApi.DynamicApiServiceCollectionExtensions.GetSingletonInstanceOrNull``1(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            获取已注册的单例实例（未注册返回 null）。
+            </summary>
+        </member>
+        <member name="M:SyZero.Application.DynamicApi.DynamicApiServiceCollectionExtensions.GetSingletonInstance``1(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            获取已注册的单例实例（未注册时抛出 <see cref="T:System.InvalidOperationException"/>）。
+            </summary>
+        </member>
+        <member name="M:SyZero.Application.DynamicApi.DynamicApiServiceCollectionExtensions.BuildServiceProviderFromFactory(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            通过已注册的 <see cref="T:Microsoft.Extensions.DependencyInjection.IServiceProviderFactory`1"/> 构建 <see cref="T:System.IServiceProvider"/>。
+            </summary>
+        </member>
+        <member name="M:SyZero.Application.DynamicApi.DynamicApiServiceCollectionExtensions.BuildServiceProviderFromFactory``1(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Action{``0})">
+            <summary>
+            使用指定 <see cref="T:Microsoft.Extensions.DependencyInjection.IServiceProviderFactory`1"/> 构建容器。
+            </summary>
+        </member>
+        <member name="T:SyZero.Application.DynamicApi.DynamicApiTypeFilter">
+            <summary>
+            动态 API Provider 共用的类型筛选规则。
+            集中实现「实现 <see cref="T:SyZero.Application.Service.IDynamicApi"/> + 公有非抽象非泛型 + 必须有 <see cref="T:SyZero.Application.Attributes.DynamicApiAttribute"/>
+            + 没有 <see cref="T:SyZero.Application.Attributes.NonDynamicApiAttribute"/> + 不是 <see cref="T:SyZero.Client.IFallback"/>」这一组通用判定，
+            各 Provider 仅需追加自身的排除特性。
+            </summary>
+        </member>
+        <member name="M:SyZero.Application.DynamicApi.DynamicApiTypeFilter.IsStructuralCandidate(System.Reflection.TypeInfo,System.Boolean)">
+            <summary>
+            是否满足动态 API 的基本结构要求（不要求 <see cref="T:SyZero.Application.Attributes.DynamicApiAttribute"/>）。
+            </summary>
+        </member>
+        <member name="M:SyZero.Application.DynamicApi.DynamicApiTypeFilter.IsCandidate(System.Reflection.TypeInfo,System.Collections.Generic.IEnumerable{System.Type},System.Boolean)">
+            <summary>
+            完整判定一个类型是否是某个 Provider 想要发布的动态 API 类型。
+            </summary>
+            <param name="typeInfo">候选类型。</param>
+            <param name="extraExcludeAttributes">Provider 自身的排除特性类型集合（如 NonWebApiServiceAttribute / NonGrpcServiceAttribute）。</param>
+            <param name="requireClass">是否要求是非抽象类（gRPC / WebApi 实际上都要求 true）。</param>
+        </member>
+        <member name="M:SyZero.Application.DynamicApi.DynamicApiTypeFilter.IsMethodExcluded(System.Reflection.MemberInfo,System.Collections.Generic.IEnumerable{System.Type})">
+            <summary>
+            判断方法是否被 Provider 标记为「不发布」。
+            同时检查通用的 <see cref="T:SyZero.Application.Attributes.NonDynamicApiAttribute"/> / <see cref="T:SyZero.Application.Attributes.NonDynamicMethodAttribute"/>
+            与 Provider 自身的排除特性集合。
+            </summary>
+        </member>
+        <member name="T:SyZero.Application.DynamicApi.DynamicApiTypeHelper">
+            <summary>
+            动态 API Provider 共用的类型工具方法。
+            </summary>
+        </member>
+        <member name="M:SyZero.Application.DynamicApi.DynamicApiTypeHelper.IsPrimitiveExtendedIncludingNullable(System.Type,System.Boolean)">
+            <summary>
+            判断类型是否为「扩展原始类型」（含可空包装）。
+            扩展原始类型 = CLR 原始类型 + string / decimal / DateTime / DateTimeOffset / TimeSpan / Guid。
+            </summary>
+            <param name="type">待检测类型。</param>
+            <param name="includeEnums">是否将枚举也视为原始类型。</param>
+        </member>
+        <member name="T:SyZero.Application.DynamicApi.IAssemblyDynamicApiOptions">
+            <summary>
+            程序集级别动态 API 选项的统一标记接口。
+            各 Provider 的 Assembly*Options 实现该接口，以便未来跨 Provider 的工具方法处理。
             </summary>
         </member>
         <member name="T:SyZero.Application.Routing.QueryAttribute">
@@ -241,6 +420,32 @@
             <param name="exprireTime">过期时间（秒） 默认24小时</param>
             <returns></returns>
         </member>
+        <member name="T:SyZero.Cache.IMultiLevelCache">
+            <summary>
+            多级缓存抽象（L1 = 进程内内存，L2 = 分布式缓存）。
+            内置缓存穿透（空值缓存）/击穿（SingleFlight 单飞）/雪崩（随机过期）保护。
+            </summary>
+        </member>
+        <member name="M:SyZero.Cache.IMultiLevelCache.GetOrCreateAsync``1(System.String,System.Func{System.Threading.CancellationToken,System.Threading.Tasks.Task{``0}},System.TimeSpan,System.Threading.CancellationToken)">
+            <summary>
+            获取缓存；不存在则调用 <paramref name="factory"/> 加载并写入两级缓存。
+            </summary>
+            <typeparam name="T">值类型。</typeparam>
+            <param name="key">缓存键。</param>
+            <param name="factory">数据加载委托；返回 null 时按穿透保护策略缓存空值（如启用）。</param>
+            <param name="absoluteExpiration">L2 绝对过期时间，会自动叠加随机抖动避免雪崩。</param>
+            <param name="cancellationToken">取消令牌。</param>
+        </member>
+        <member name="M:SyZero.Cache.IMultiLevelCache.SetAsync``1(System.String,``0,System.TimeSpan,System.Threading.CancellationToken)">
+            <summary>
+            显式写入两级缓存。
+            </summary>
+        </member>
+        <member name="M:SyZero.Cache.IMultiLevelCache.RemoveAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            同时移除 L1 与 L2。
+            </summary>
+        </member>
         <member name="T:SyZero.Cache.MemoryCache">
             <summary>
             基于内存的缓存实现
@@ -317,6 +522,48 @@
             清理过期的key记录
             </summary>
         </member>
+        <member name="T:SyZero.Cache.MultiLevelCache">
+            <summary>
+            默认多级缓存实现：L1 = <see cref="T:Microsoft.Extensions.Caching.Memory.IMemoryCache"/>，L2 = <see cref="T:Microsoft.Extensions.Caching.Distributed.IDistributedCache"/>。
+            内置 SingleFlight（防击穿）、空值缓存（防穿透）、随机抖动（防雪崩）。
+            </summary>
+        </member>
+        <member name="T:SyZero.Cache.MultiLevelCacheOptions">
+            <summary>
+            多级缓存配置。
+            </summary>
+        </member>
+        <member name="P:SyZero.Cache.MultiLevelCacheOptions.L1ExpirationSeconds">
+            <summary>
+            L1（进程内）默认过期时间（秒），用于把 L2 的长过期时间在本地短暂缓存。
+            </summary>
+        </member>
+        <member name="P:SyZero.Cache.MultiLevelCacheOptions.EnableNullCache">
+            <summary>
+            是否启用空值缓存（穿透保护）；防止恶意请求大量穿透到底层存储。
+            </summary>
+        </member>
+        <member name="P:SyZero.Cache.MultiLevelCacheOptions.NullCacheSeconds">
+            <summary>
+            空值缓存过期时间（秒）。
+            </summary>
+        </member>
+        <member name="P:SyZero.Cache.MultiLevelCacheOptions.JitterRatio">
+            <summary>
+            雪崩防护：在 L2 过期时间上随机叠加的抖动比例（0~1），实际过期时间 = base * (1 + rand(0, jitter))。
+            </summary>
+        </member>
+        <member name="T:SyZero.SyZeroMultiLevelCacheExtension">
+            <summary>
+            多级缓存与分布式缓存注册扩展。
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroMultiLevelCacheExtension.AddSyZeroMultiLevelCache(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,System.Action{SyZero.Cache.MultiLevelCacheOptions},System.String)">
+            <summary>
+            注册多级缓存（L1 内存 + L2 <see cref="T:Microsoft.Extensions.Caching.Distributed.IDistributedCache"/>）。
+            若未注册 <see cref="T:Microsoft.Extensions.Caching.Distributed.IDistributedCache"/>，则回退使用进程内内存实现，可在生产中替换为 SyZero.Redis。
+            </summary>
+        </member>
         <member name="T:SyZero.Client.IClient">
             <summary>
             客户端IClient
@@ -330,14 +577,244 @@
             <param name="cancellationToken"></param>
             <returns></returns>
         </member>
+        <member name="T:SyZero.Client.RemoteService.IRemoteServiceProvider">
+            <summary>
+            远程服务 Provider（服务级抽象）
+            每种远程调用方案（Feign、WebApiClient、自研 RPC 等）实现一个 Provider，
+            负责把扫描到的接口注册成可注入的代理。
+            </summary>
+        </member>
+        <member name="P:SyZero.Client.RemoteService.IRemoteServiceProvider.Name">
+            <summary>
+            Provider 名称（用于诊断/日志）
+            </summary>
+        </member>
+        <member name="M:SyZero.Client.RemoteService.IRemoteServiceProvider.Register(Microsoft.Extensions.DependencyInjection.IServiceCollection,SyZero.Client.RemoteService.RemoteServiceOptions)">
+            <summary>
+            把符合条件的接口代理注册到 DI 容器
+            </summary>
+            <param name="services">服务集合</param>
+            <param name="options">远程服务配置</param>
+        </member>
+        <member name="T:SyZero.Client.RemoteService.IRemoteServiceProxyFactory">
+            <summary>
+            远程服务代理工厂（协议级抽象）
+            一个 Provider 可注册多个协议工厂（例如同时支持 HTTP 与 gRPC）
+            </summary>
+        </member>
+        <member name="P:SyZero.Client.RemoteService.IRemoteServiceProxyFactory.Protocol">
+            <summary>
+            工厂支持的协议
+            </summary>
+        </member>
+        <member name="M:SyZero.Client.RemoteService.IRemoteServiceProxyFactory.CreateProxy(System.Type,System.String,SyZero.Client.RemoteService.RemoteServiceItem,SyZero.Serialization.IJsonSerialize)">
+            <summary>
+            创建代理实例
+            </summary>
+            <param name="targetType">目标接口类型</param>
+            <param name="endPoint">解析后的服务端点</param>
+            <param name="service">服务配置（已合并全局默认值）</param>
+            <param name="jsonSerialize">JSON 序列化器</param>
+        </member>
+        <member name="T:SyZero.Client.RemoteService.RemoteServiceItem">
+            <summary>
+            远程服务条目（单个被调用服务的描述）
+            </summary>
+        </member>
+        <member name="P:SyZero.Client.RemoteService.RemoteServiceItem.ServiceName">
+            <summary>
+            注册中心中的服务名称
+            </summary>
+        </member>
+        <member name="P:SyZero.Client.RemoteService.RemoteServiceItem.AssemblyName">
+            <summary>
+            接口契约所在的程序集名称
+            （Provider 据此匹配应当为哪些接口生成代理）
+            </summary>
+        </member>
+        <member name="T:SyZero.Client.RemoteService.RemoteServiceOptions">
+            <summary>
+            远程服务调用配置
+            </summary>
+        </member>
+        <member name="F:SyZero.Client.RemoteService.RemoteServiceOptions.SectionName">
+            <summary>
+            默认配置节名称
+            </summary>
+        </member>
+        <member name="P:SyZero.Client.RemoteService.RemoteServiceOptions.Service">
+            <summary>
+            服务条目列表
+            </summary>
+        </member>
+        <member name="P:SyZero.Client.RemoteService.RemoteServiceOptions.Global">
+            <summary>
+            全局默认配置
+            </summary>
+        </member>
+        <member name="M:SyZero.Client.RemoteService.RemoteServiceOptions.Validate">
+            <summary>
+            校验配置项
+            </summary>
+        </member>
+        <member name="T:SyZero.Client.RemoteService.RemoteServiceProtocol">
+            <summary>
+            远程服务通信协议类型
+            </summary>
+        </member>
+        <member name="F:SyZero.Client.RemoteService.RemoteServiceProtocol.Http">
+            <summary>
+            HTTP 协议
+            </summary>
+        </member>
+        <member name="F:SyZero.Client.RemoteService.RemoteServiceProtocol.Grpc">
+            <summary>
+            gRPC 协议
+            </summary>
+        </member>
+        <member name="T:SyZero.Client.RemoteService.RemoteServiceProxyFactoryManager">
+            <summary>
+            远程服务代理工厂管理器
+            维护 协议 → 工厂 的映射，由 Provider 内部使用
+            </summary>
+        </member>
+        <member name="M:SyZero.Client.RemoteService.RemoteServiceProxyFactoryManager.RegisterFactory(SyZero.Client.RemoteService.IRemoteServiceProxyFactory)">
+            <summary>
+            注册（或覆盖）某个协议的工厂
+            </summary>
+        </member>
+        <member name="M:SyZero.Client.RemoteService.RemoteServiceProxyFactoryManager.GetFactory(SyZero.Client.RemoteService.RemoteServiceProtocol)">
+            <summary>
+            获取指定协议的工厂
+            </summary>
+        </member>
+        <member name="M:SyZero.Client.RemoteService.RemoteServiceProxyFactoryManager.CreateProxy(System.Type,System.String,SyZero.Client.RemoteService.RemoteServiceItem,SyZero.Serialization.IJsonSerialize)">
+            <summary>
+            创建代理（按服务配置中的协议自动派发到对应工厂）
+            </summary>
+        </member>
+        <member name="M:SyZero.Client.RemoteService.RemoteServiceProxyFactoryManager.GetRegisteredProtocols">
+            <summary>
+            已注册的协议列表
+            </summary>
+        </member>
+        <member name="M:SyZero.Client.RemoteService.RemoteServiceProxyFactoryManager.IsProtocolRegistered(SyZero.Client.RemoteService.RemoteServiceProtocol)">
+            <summary>
+            协议是否已注册
+            </summary>
+        </member>
+        <member name="T:SyZero.Client.RemoteService.RemoteServiceSetting">
+            <summary>
+            远程服务通用设置
+            </summary>
+        </member>
+        <member name="P:SyZero.Client.RemoteService.RemoteServiceSetting.Protocol">
+            <summary>
+            通信协议（默认 HTTP）
+            </summary>
+        </member>
+        <member name="P:SyZero.Client.RemoteService.RemoteServiceSetting.Strategy">
+            <summary>
+            负载均衡策略
+            </summary>
+        </member>
+        <member name="P:SyZero.Client.RemoteService.RemoteServiceSetting.Retry">
+            <summary>
+            重试次数
+            </summary>
+        </member>
+        <member name="P:SyZero.Client.RemoteService.RemoteServiceSetting.Timeout">
+            <summary>
+            超时时间（秒），默认 30 秒
+            </summary>
+        </member>
+        <member name="P:SyZero.Client.RemoteService.RemoteServiceSetting.EnableSsl">
+            <summary>
+            是否启用 SSL/TLS
+            </summary>
+        </member>
+        <member name="P:SyZero.Client.RemoteService.RemoteServiceSetting.MaxMessageSize">
+            <summary>
+            最大消息大小（字节），默认 0 表示使用默认值
+            主要用于 gRPC 协议
+            </summary>
+        </member>
         <member name="P:SyZero.Client.RequestTemplate.IsForm">
             <summary>
             判断是否为表单的post提交
             </summary>
         </member>
+        <member name="T:SyZero.RemoteServiceExtensions">
+            <summary>
+            远程服务调用注册扩展
+            </summary>
+        </member>
+        <member name="M:SyZero.RemoteServiceExtensions.AddRemoteService(Microsoft.Extensions.DependencyInjection.IServiceCollection,SyZero.Client.RemoteService.IRemoteServiceProvider,SyZero.Client.RemoteService.RemoteServiceOptions)">
+            <summary>
+            使用指定的 Provider 注册远程服务
+            </summary>
+        </member>
+        <member name="M:SyZero.RemoteServiceExtensions.AddRemoteService``1(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,System.String)">
+            <summary>
+            使用指定的 Provider 注册远程服务（从配置读取）
+            </summary>
+        </member>
+        <member name="M:SyZero.RemoteServiceExtensions.AddRemoteService(Microsoft.Extensions.DependencyInjection.IServiceCollection,SyZero.Client.RemoteService.IRemoteServiceProvider,Microsoft.Extensions.Configuration.IConfiguration,System.String)">
+            <summary>
+            使用指定的 Provider 实例注册远程服务（从配置读取）
+            </summary>
+        </member>
+        <member name="M:SyZero.RemoteServiceExtensions.AddRemoteService``1(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Action{SyZero.Client.RemoteService.RemoteServiceOptions},Microsoft.Extensions.Configuration.IConfiguration,System.String)">
+            <summary>
+            使用指定的 Provider 注册远程服务（从配置读取并支持额外配置）
+            </summary>
+        </member>
+        <member name="M:SyZero.RemoteServiceExtensions.AddRemoteService(Microsoft.Extensions.DependencyInjection.IServiceCollection,SyZero.Client.RemoteService.IRemoteServiceProvider,System.Action{SyZero.Client.RemoteService.RemoteServiceOptions},Microsoft.Extensions.Configuration.IConfiguration,System.String)">
+            <summary>
+            使用指定的 Provider 实例注册远程服务（从配置读取并支持额外配置）
+            </summary>
+        </member>
+        <member name="T:SyZero.Configurations.ConfigurationChangedNotifier">
+            <summary>
+            默认实现：基于 <see cref="M:Microsoft.Extensions.Configuration.IConfiguration.GetReloadToken"/> + <see cref="M:Microsoft.Extensions.Primitives.ChangeToken.OnChange(System.Func{Microsoft.Extensions.Primitives.IChangeToken},System.Action)"/>。
+            对支持 reloadOnChange 的 provider（Nacos / Consul / appsettings.json）自动生效。
+            </summary>
+        </member>
         <member name="T:SyZero.Configurations.DbType">
             <summary>
             数据库类型
+            </summary>
+        </member>
+        <member name="T:SyZero.Configurations.ConfigurationChangedEventArgs">
+            <summary>
+            配置变更事件参数。
+            </summary>
+        </member>
+        <member name="P:SyZero.Configurations.ConfigurationChangedEventArgs.UtcAt">
+            <summary>
+            触发变更通知的 UTC 时间。
+            </summary>
+        </member>
+        <member name="P:SyZero.Configurations.ConfigurationChangedEventArgs.Section">
+            <summary>
+            触发变更的配置节（可选，由 publisher 传入）。
+            </summary>
+        </member>
+        <member name="T:SyZero.Configurations.IConfigurationChangedNotifier">
+            <summary>
+            配置热更新通知抽象。
+            默认实现监听 <see cref="T:Microsoft.Extensions.Configuration.IConfiguration"/> 的 ChangeToken，
+            与 Nacos / Consul / appsettings.json 等支持 reload 的 provider 自动联动。
+            </summary>
+        </member>
+        <member name="E:SyZero.Configurations.IConfigurationChangedNotifier.Changed">
+            <summary>
+            当任意配置发生变更时触发。
+            </summary>
+        </member>
+        <member name="M:SyZero.Configurations.IConfigurationChangedNotifier.Notify(System.String)">
+            <summary>
+            由 provider 主动触发一次变更（用于不走 IConfiguration 的自定义来源）。
             </summary>
         </member>
         <member name="T:SyZero.Configurations.SyZeroConnectionOptions">
@@ -437,24 +914,41 @@
             作为瞬变物体注入
             </summary>
         </member>
+        <member name="T:SyZero.Domain.Entities.Entity`1">
+            <summary>
+            带泛型主键的实体基类。默认主键由调用方负责赋值。
+            </summary>
+            <typeparam name="TKey">主键类型</typeparam>
+        </member>
+        <member name="P:SyZero.Domain.Entities.Entity`1.Id">
+            <summary>
+            主键
+            </summary>
+        </member>
         <member name="T:SyZero.Domain.Entities.Entity">
             <summary>
-            实体继承此类  常用主键类型long
+            实体继承此类（默认 long 主键，使用 SYID 雪花 ID 自动生成）。
             </summary>
         </member>
         <member name="P:SyZero.Domain.Entities.Entity.Id">
             <summary>
-            根
+            主键
+            </summary>
+        </member>
+        <member name="T:SyZero.Domain.Entities.IEntity`1">
+            <summary>
+            定义带泛型主键的实体接口。系统中的所有实体建议实现此接口或继承自 <see cref="T:SyZero.Domain.Entities.IEntity"/>。
+            </summary>
+            <typeparam name="TKey">主键类型</typeparam>
+        </member>
+        <member name="P:SyZero.Domain.Entities.IEntity`1.Id">
+            <summary>
+            实体主键
             </summary>
         </member>
         <member name="T:SyZero.Domain.Entities.IEntity">
             <summary>
-            定义基本实体类型的接口。系统中的所有实体都必须实现此接口。  常用long类型主键
-            </summary>
-        </member>
-        <member name="P:SyZero.Domain.Entities.IEntity.Id">
-            <summary>
-            实体Id
+            定义基本实体类型的接口（默认 long 主键，兼容历史用法）。
             </summary>
         </member>
         <member name="T:SyZero.Domain.Model.IDomainModel`1">
@@ -671,6 +1165,18 @@
             <param name="where">条件</param>
             <param name="cancellationToken">异步取消凭据</param>
             <returns></returns>
+        </member>
+        <member name="T:SyZero.Domain.Repository.IRepository`2">
+            <summary>
+            通用仓储接口（自定义主键类型）。
+            </summary>
+            <typeparam name="TEntity">实体类型</typeparam>
+            <typeparam name="TKey">主键类型</typeparam>
+        </member>
+        <member name="T:SyZero.Domain.Repository.IRepository`1">
+            <summary>
+            通用仓储接口（默认 long 主键，兼容历史用法）。
+            </summary>
         </member>
         <member name="T:SyZero.Domain.Repository.ITransactionScope">
             <summary>
@@ -1225,11 +1731,12 @@
             适用于开发测试环境或单机部署场景
             </summary>
         </member>
-        <member name="M:SyZero.EventBus.LocalEventBus.LocalEventBus.#ctor(SyZero.EventBus.LocalEventBus.LocalEventBusOptions)">
+        <member name="M:SyZero.EventBus.LocalEventBus.LocalEventBus.#ctor(SyZero.EventBus.LocalEventBus.LocalEventBusOptions,Microsoft.Extensions.Logging.ILogger{SyZero.EventBus.LocalEventBus.LocalEventBus})">
             <summary>
             构造函数
             </summary>
             <param name="options">配置选项</param>
+            <param name="logger">日志记录器，可为空（默认使用 <see cref="T:Microsoft.Extensions.Logging.Abstractions.NullLogger`1"/>）</param>
         </member>
         <member name="T:SyZero.EventBus.LocalEventBus.LocalEventBusOptions">
             <summary>
@@ -1606,7 +2113,7 @@
         </member>
         <member name="M:SyZero.ReflectionHelper.GetAssemblies">
             <summary>
-                ��ȡ���еĳ���
+                获取所有的程序集
             </summary>
         </member>
         <member name="M:SyZero.ReflectionHelper.GetTypes">
@@ -1799,6 +2306,28 @@
             成功
             </summary>
         </member>
+        <member name="T:SyZero.Runtime.Security.DefaultPermissionChecker">
+            <summary>
+            默认权限检查器：基于当前会话 <see cref="P:SyZero.Runtime.Session.ISySession.Permission"/> 列表判断。
+            通过 <see cref="T:SyZero.Dependency.IScopedDependency"/> 自动注册到 DI 容器（与 <see cref="T:SyZero.Runtime.Session.ISySession"/> 同生命周期）。
+            </summary>
+        </member>
+        <member name="T:SyZero.Runtime.Security.IPermissionChecker">
+            <summary>
+            权限检查器抽象。框架内置默认实现 <see cref="T:SyZero.Runtime.Security.DefaultPermissionChecker"/>，
+            业务可通过依赖注入替换为自定义实现（如对接 ASP.NET Core Identity / RBAC 数据库）。
+            </summary>
+        </member>
+        <member name="M:SyZero.Runtime.Security.IPermissionChecker.IsHas(System.String)">
+            <summary>
+            是否拥有指定权限。
+            </summary>
+        </member>
+        <member name="M:SyZero.Runtime.Security.IPermissionChecker.Authorize(System.String)">
+            <summary>
+            检查权限，无权限时抛出 <see cref="T:SyZero.SyMessageException"/>。
+            </summary>
+        </member>
         <member name="M:SyZero.Runtime.Security.IToken.GetPrincipal(System.String)">
             <summary>
             此方法用解码字符串token，并返回秘钥的信息对象
@@ -1815,7 +2344,12 @@
         </member>
         <member name="T:SyZero.Runtime.Security.PermissionChecker">
             <summary>
-            权限检查
+            权限检查（静态门面）。
+            <para>
+            注：推荐通过 <see cref="T:SyZero.Runtime.Security.IPermissionChecker"/> 注入式使用，便于单元测试与替换实现。
+            此静态入口保留以兼容旧代码，内部委托到 DI 容器中的 <see cref="T:SyZero.Runtime.Security.IPermissionChecker"/>，
+            若未注册则回退到基于 <see cref="T:SyZero.Runtime.Session.ISySession"/> 的简易检查。
+            </para>
             </summary>
         </member>
         <member name="M:SyZero.Runtime.Security.PermissionChecker.IsHas(System.String)">
@@ -2262,11 +2796,12 @@
             当前实例ID
             </summary>
         </member>
-        <member name="M:SyZero.Service.LocalServiceManagement.LocalServiceManagement.#ctor(SyZero.Service.LocalServiceManagement.LocalServiceManagementOptions)">
+        <member name="M:SyZero.Service.LocalServiceManagement.LocalServiceManagement.#ctor(SyZero.Service.LocalServiceManagement.LocalServiceManagementOptions,Microsoft.Extensions.Logging.ILogger{SyZero.Service.LocalServiceManagement.LocalServiceManagement})">
             <summary>
             构造函数
             </summary>
             <param name="options">配置选项</param>
+            <param name="logger">日志记录器，可为空（默认使用 <see cref="T:Microsoft.Extensions.Logging.Abstractions.NullLogger`1"/>）</param>
         </member>
         <member name="M:SyZero.Service.LocalServiceManagement.LocalServiceManagement.TryAcquireLeadership">
             <summary>
@@ -2662,14 +3197,11 @@
             <param name="sectionName">配置节名称，默认为 "LocalServiceManagement"</param>
             <returns>服务集合</returns>
         </member>
-        <member name="M:SyZero.SyZeroExtension.RegisterServiceAsync(System.IServiceProvider)">
+        <member name="T:SyZero.SyZeroBootstrapper">
             <summary>
-            注册服务到服务管理中心
-            </summary>
-        </member>
-        <member name="M:SyZero.SyZeroExtension.DeregisterServiceAsync(System.IServiceProvider)">
-            <summary>
-            注销服务
+            SyZero 框架启动 / 关闭钩子，
+            通过 <see cref="T:Microsoft.Extensions.Hosting.IHostedService"/> 在宿主启动 / 停止阶段以异步方式
+            完成服务注册中心的注册与注销，避免在 <c>UseSyZero</c> 中同步阻塞调用异步方法。
             </summary>
         </member>
         <member name="M:SyZero.SyZeroExtension.AddSyZero(Microsoft.Extensions.DependencyInjection.IServiceCollection)">

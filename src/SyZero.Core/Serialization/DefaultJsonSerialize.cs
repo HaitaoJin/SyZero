@@ -29,7 +29,7 @@ namespace SyZero.Serialization
         /// <typeparam name="T">对象类型</typeparam>
         /// <param name="jsonText">Json字符串</param>
         /// <returns></returns>
-        public T JSONToObject<T>(string jsonText)
+        public T? JSONToObject<T>(string jsonText)
         {
             if (string.IsNullOrEmpty(jsonText))
             {
@@ -51,7 +51,7 @@ namespace SyZero.Serialization
         /// </summary>
         /// <param name="obj">Obj</param>
         /// <returns></returns>
-        public string ObjectToJSON(object obj)
+        public string? ObjectToJSON(object obj)
         {
             if (obj == null)
             {

@@ -74,15 +74,31 @@ namespace SyZero.Example2.Web
             //注入Feign
             builder.Services.AddSyZeroFeign();
 
+            // ============================================================
+            // v1.5.0 集成示例（默认开启 AI Echo；Kafka / Outbox 以注释提供）
+            // ============================================================
+            // AI 抽象：默认 EchoChatClient 占位，业务通过 ISyChatClient 调用即可
+            builder.Services.AddSyZeroAIEcho();
+            // 接入真正的大模型时（OpenAI / Azure OpenAI / Ollama 等），改为：
+            // builder.Services.AddSyZeroAIChatClient(new OpenAIChatClient(...));
+
+            // Kafka 消息总线示例
+            // builder.Services.AddSyZeroKafka(o =>
+            // {
+            //     o.BootstrapServers = "kafka:9092";
+            //     o.GroupId = AppConfig.ServerOptions.Name;
+            // });
+            // builder.Services.AddHostedService<MyKafkaConsumer>();
+
+            // 分布式事务 Outbox（搭配 SyZero.EventBus.* 使用）
+            // builder.Services.AddSyZeroOutbox();
+            // 生产环境建议替换为 EF Core 持久化 Outbox：
+            // builder.Services.AddSyZeroOutboxEfCore(opt => opt.UseSqlServer(connectionString));
+
             var app = builder.Build();
 
-            // 请求 URL 日志中间件
-            app.Use(async (context, next) =>
-            {
-                var request = context.Request;
-                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {request.Method} {request.Scheme}://{request.Host}{request.Path}{request.QueryString}");
-                await next();
-            });
+            // SyZero.Diagnostics：统一请求诊断中间件（替代手写 Console 日志）
+            app.UseSyZeroDiagnostics();
 
             app.UseSyZero();
             if (app.Environment.IsDevelopment())

@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 using SyZero.Service;
 using SyZero.Service.LocalServiceManagement;
@@ -28,9 +29,9 @@ namespace SyZero
 
             options.Validate();
 
-            var instance = new LocalServiceManagement(options);
-            services.AddSingleton<IServiceManagement>(instance);
-            services.AddSingleton(instance);
+            services.AddSingleton<LocalServiceManagement>(sp =>
+                new LocalServiceManagement(options, sp.GetService<ILogger<LocalServiceManagement>>()));
+            services.AddSingleton<IServiceManagement>(sp => sp.GetRequiredService<LocalServiceManagement>());
 
             return services;
         }
@@ -42,7 +43,7 @@ namespace SyZero
         /// <param name="configuration">配置，为 null 时使用 AppConfig.Configuration</param>
         /// <param name="sectionName">配置节名称，默认为 "LocalServiceManagement"</param>
         /// <returns>服务集合</returns>
-        public static IServiceCollection AddLocalServiceManagement(this IServiceCollection services, IConfiguration configuration = null, string sectionName = LocalServiceManagementOptions.SectionName)
+        public static IServiceCollection AddLocalServiceManagement(this IServiceCollection services, IConfiguration? configuration = null, string sectionName = LocalServiceManagementOptions.SectionName)
         {
             var config = configuration ?? AppConfig.Configuration;
             var options = new LocalServiceManagementOptions();
@@ -58,7 +59,7 @@ namespace SyZero
         /// <param name="configuration">配置，为 null 时使用 AppConfig.Configuration</param>
         /// <param name="sectionName">配置节名称，默认为 "LocalServiceManagement"</param>
         /// <returns>服务集合</returns>
-        public static IServiceCollection AddLocalServiceManagement(this IServiceCollection services, Action<LocalServiceManagementOptions> optionsAction, IConfiguration configuration = null, string sectionName = LocalServiceManagementOptions.SectionName)
+        public static IServiceCollection AddLocalServiceManagement(this IServiceCollection services, Action<LocalServiceManagementOptions> optionsAction, IConfiguration? configuration = null, string sectionName = LocalServiceManagementOptions.SectionName)
         {
             var config = configuration ?? AppConfig.Configuration;
             var options = new LocalServiceManagementOptions();

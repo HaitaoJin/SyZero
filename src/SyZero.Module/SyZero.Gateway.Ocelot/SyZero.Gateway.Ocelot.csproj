@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Description>SyZero 网关模块的 Ocelot 实现，提供 IGateway / IGatewayConfigurationStore / IGatewayConfigurationApplier 的 Ocelot 后端。原名 SyZero.Ocelot，自 v1.6.0 起改名为 SyZero.Gateway.Ocelot 以与抽象包 SyZero.Gateway.Abstractions、面板包 SyZero.Gateway.Admin、YARP 实现包 SyZero.Gateway.YARP 在命名上对齐。</Description>
+    <PackageTags>SyZero;Gateway;Ocelot</PackageTags>
+    <IsPackable>true</IsPackable>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\SyZero.Core\SyZero.Core.csproj" />
+    <ProjectReference Include="..\SyZero.Gateway.Abstractions\SyZero.Gateway.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MMLib.SwaggerForOcelot" />
+    <PackageReference Include="Ocelot" />
+    <PackageReference Include="Ocelot.Cache.CacheManager" />
+    <PackageReference Include="Ocelot.Provider.Consul" />
+    <PackageReference Include="Ocelot.Provider.Polly" />
+    <PackageReference Include="Swashbuckle.AspNetCore" />
+  </ItemGroup>
+</Project>

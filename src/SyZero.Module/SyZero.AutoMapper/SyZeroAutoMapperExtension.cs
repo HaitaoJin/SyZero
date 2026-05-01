@@ -16,6 +16,7 @@ namespace SyZero
         /// </summary>
         /// <param name="services">服务集合</param>
         /// <returns>服务集合</returns>
+        [Obsolete("AutoMapper 14+ 已改为商业授权，本模块锁定在 13.0.1 且存在已知 CVE。建议改用 SyZero.Mapster（MIT），见 docs/modules/SyZero.Mapster.md。", false)]
         public static IServiceCollection AddSyZeroAutoMapper(this IServiceCollection services)
         {
             ArgumentNullException.ThrowIfNull(services);
@@ -29,6 +30,7 @@ namespace SyZero
         /// <param name="services">服务集合</param>
         /// <param name="assemblies">要扫描的程序集</param>
         /// <returns>服务集合</returns>
+        [Obsolete("AutoMapper 14+ 已改为商业授权，本模块锁定在 13.0.1 且存在已知 CVE。建议改用 SyZero.Mapster（MIT），见 docs/modules/SyZero.Mapster.md。", false)]
         public static IServiceCollection AddSyZeroAutoMapper(this IServiceCollection services, params Assembly[] assemblies)
         {
             ArgumentNullException.ThrowIfNull(services);
@@ -43,6 +45,7 @@ namespace SyZero
         /// <param name="configAction">AutoMapper 配置委托</param>
         /// <param name="assemblies">要扫描的程序集</param>
         /// <returns>服务集合</returns>
+        [Obsolete("AutoMapper 14+ 已改为商业授权，本模块锁定在 13.0.1 且存在已知 CVE。建议改用 SyZero.Mapster（MIT），见 docs/modules/SyZero.Mapster.md。", false)]
         public static IServiceCollection AddSyZeroAutoMapper(
             this IServiceCollection services,
             Action<IMapperConfigurationExpression>? configAction,

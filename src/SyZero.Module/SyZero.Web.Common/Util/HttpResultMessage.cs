@@ -1,11 +1,11 @@
-﻿namespace SyZero.Web.Common
+namespace SyZero.Web.Common
 {
     public class HttpResultMessage<T> : HttpResultMessage
     {
         /// <summary>
         /// 数据集
         /// </summary>
-        public T Entity { get; set; }
+        public T? Entity { get; set; }
 
         /// <summary>
         /// 生成自定义服务数据集
@@ -82,7 +82,7 @@
         /// <summary>
         ///返回客户端的消息
         /// </summary>
-        public string Message { get; set; }
+        public string Message { get; set; } = string.Empty;
 
         /// <summary>
         /// 状态码

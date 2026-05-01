@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.DistributedTransaction.EntityFrameworkCore</name>
+    </assembly>
+    <members>
+        <member name="T:SyZero.DistributedTransaction.EntityFrameworkCore.OutboxMessageEntity">
+            <summary>EF Core 持久化的 Outbox 行实体。</summary>
+        </member>
+        <member name="T:SyZero.DistributedTransaction.EntityFrameworkCore.OutboxDbContext">
+            <summary>承载 Outbox 表的 DbContext，可独立或合并到业务 DbContext。</summary>
+        </member>
+        <member name="T:SyZero.DistributedTransaction.EntityFrameworkCore.EfCoreOutboxStore">
+            <summary>基于 EF Core 的 <see cref="T:SyZero.DistributedTransaction.IOutboxStore"/> 实现。</summary>
+        </member>
+        <member name="T:SyZero.SyZeroDistributedTransactionEfCoreExtension">
+            <summary>SyZero.DistributedTransaction.EntityFrameworkCore 的 DI 扩展。</summary>
+        </member>
+        <member name="M:SyZero.SyZeroDistributedTransactionEfCoreExtension.AddSyZeroOutboxEfCore(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Action{Microsoft.EntityFrameworkCore.DbContextOptionsBuilder})">
+            <summary>注册 OutboxDbContext 与基于 EF 的 IOutboxStore（替换默认 MemoryOutboxStore）。</summary>
+        </member>
+    </members>
+</doc>

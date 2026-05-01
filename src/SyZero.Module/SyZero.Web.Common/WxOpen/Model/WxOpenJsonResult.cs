@@ -8,7 +8,7 @@
         /// <summary>
         /// 返回结果信息
         /// </summary>
-        public string errmsg { get; set; }
+        public string errmsg { get; set; } = string.Empty;
 
 
         public override string ToString()

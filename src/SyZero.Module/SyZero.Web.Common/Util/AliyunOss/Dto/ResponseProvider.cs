@@ -8,7 +8,7 @@ namespace SyZero.Web.Common
         /// </summary>
         /// <param name="msg">消息内容</param>
         /// <returns></returns>
-        public static ServerResponse Success(string msg = null)
+        public static ServerResponse Success(string? msg = null)
         {
             var result = new ServerResponse { Status = true, Message = msg };
             return result;
@@ -32,7 +32,7 @@ namespace SyZero.Web.Common
         /// <param name="data">业务数据</param>
         /// <param name="msg">消息内容</param>
         /// <returns></returns>
-        public static ServerResponse<T> Success<T>(T data, string msg = null) where T : class, new()
+        public static ServerResponse<T> Success<T>(T data, string? msg = null) where T : class, new()
         {
             var result = new ServerResponse<T> { Data = data, Status = true, Message = msg };
 
@@ -44,7 +44,7 @@ namespace SyZero.Web.Common
         /// </summary>
         /// <param name="msg">消息内容</param>
         /// <returns></returns>
-        public static ServerResponse<T> Error<T>(string msg = null) where T : class, new()
+        public static ServerResponse<T> Error<T>(string? msg = null) where T : class, new()
         {
             var result = new ServerResponse<T> { Data = null, Status = false, Message = msg };
 

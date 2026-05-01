@@ -44,6 +44,7 @@ namespace SyZero.EntityFrameworkCore
             services.AddDbContext<TContext>(optionsAction);
             services.TryAddScoped<DbContext>(serviceProvider => serviceProvider.GetRequiredService<TContext>());
             services.TryAddScoped(typeof(IRepository<>), typeof(EfRepository<>));
+            services.TryAddScoped(typeof(IRepository<,>), typeof(EfRepository<,>));
             services.TryAddScoped<IUnitOfWork, UnitOfWork>();
 
             return services;

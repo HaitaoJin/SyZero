@@ -35,6 +35,17 @@ jobs:
       - name: Build
         run: dotnet build --configuration Release ./SyZero.slnx --no-restore
 
+      - name: Test
+        run: dotnet test ./src/SyZero.Tests/SyZero.Tests.csproj --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: official-test-results
+          path: '**/TestResults/*.trx'
+          if-no-files-found: ignore
+
       - name: Create the package
         run: dotnet pack --configuration Release ./SyZero.slnx --no-restore --output ./nuget
 

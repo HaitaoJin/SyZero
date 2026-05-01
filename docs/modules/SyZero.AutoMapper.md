@@ -2,6 +2,14 @@
 
 SyZero 框架的 AutoMapper 集成模块，提供对象映射自动配置。
 
+> ⚠️ **重要提示（自 SyZero 1.3.0 起）**
+>
+> AutoMapper 自 14.x 起改为商业授权。SyZero.AutoMapper 将继续锁定在 AutoMapper 13.0.1（最后一个 MIT 版本，存在已知 CVE [GHSA-rvv3-g6hj-g44x](https://github.com/advisories/GHSA-rvv3-g6hj-g44x)）。
+>
+> **建议新项目使用 [SyZero.Mapster](./SyZero.Mapster.md)**（MIT、性能更优、API 更现代）。两者都实现 `IObjectMapper`，业务代码无需修改。
+>
+> SyZero.AutoMapper 进入「维护模式」，仅修复严重 Bug，不再添加新功能。
+
 ## 📦 安装
 
 ```bash

@@ -1,4 +1,4 @@
-# SyZero.Core
+﻿# SyZero.Core
 
 SyZero.Core 是一个轻量级的 .NET 微服务框架核心库，提供依赖注入、基础领域模型、服务管理和轻量级事件总线等通用能力。
 
@@ -15,7 +15,11 @@ dotnet add package SyZero.Core
 - 💾 **仓储与工作单元接口** - 统一抽象，方便接入 EF Core、SqlSugar、MongoDB
 - 🌐 **轻量级服务管理** - 内置 `LocalServiceManagement`、`DBServiceManagement`
 - 📣 **轻量级事件总线** - 内置 `LocalEventBus`、`DBEventBus`
-- 🔧 **配置与工具** - 统一配置读取、异常模型、常用扩展工具
+- 🛰 **远程服务调用抽象** - `IRemoteServiceProvider` / `IRemoteServiceProxyFactory` / `RemoteServiceOptions`，由 [`SyZero.Feign`](./SyZero.Feign) 等模块提供具体 Provider 实现，未来可平行新增更多 Provider
+
+> 💡 v1.6.0 起，原本位于本包的网关抽象（`IGateway` / `IGatewayConfigurationStore` / `GatewayConfiguration` 等）已迁移到独立包 [`SyZero.Gateway.Abstractions`](./SyZero.Gateway.Abstractions)，请按需引用。
+- 🧬 **动态 API Provider 抽象** - `SyZero.Application.DynamicApi.*`：`DynamicApiTypeFilter` / `DynamicApiNameNormalizer` / `DynamicApiAttributeCache` / `DynamicApiAssemblyScanner` / `DynamicApiOptionsBase` 等公共能力，被 [`SyZero.DynamicWebApi`](./SyZero.DynamicWebApi) 与 [`SyZero.DynamicGrpc`](./SyZero.DynamicGrpc) 共用，方便后续平行新增 Provider
+- �🔧 **配置与工具** - 统一配置读取、异常模型、常用扩展工具
 
 ---
 

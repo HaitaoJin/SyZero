@@ -1,0 +1,28 @@
+@page "/admin/logout"
+@model SyZero.Gateway.Admin.Pages.Admin.LogoutModel
+@{ Layout = null; }
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="utf-8" />
+    <title>正在退出 · SyZero 网关管理</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        body { font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+               display:flex; align-items:center; justify-content:center; min-height:100vh;
+               background:linear-gradient(135deg,#0f172a,#1e293b); color:#e2e8f0; margin:0; }
+    </style>
+</head>
+<body>
+    <div>正在安全退出...</div>
+    <script>
+        (async () => {
+            try {
+                await fetch('/admin-api/auth/logout', { method: 'POST', credentials: 'same-origin' });
+            } catch {}
+            window.location.replace('/admin/login');
+        })();
+    </script>
+</body>
+</html>
+

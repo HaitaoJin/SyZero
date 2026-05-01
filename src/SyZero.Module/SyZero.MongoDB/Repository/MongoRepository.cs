@@ -10,16 +10,31 @@ using SyZero.Domain.Repository;
 
 namespace SyZero.MongoDB
 {
-    public class MongoRepository<TEntity> : IRepository<TEntity> where TEntity : class, IEntity
+    /// <summary>
+    /// 默认 long 主键的 Mongo 仓储（兼容历史用法）。
+    /// </summary>
+    public class MongoRepository<TEntity> : MongoRepository<TEntity, long>, IRepository<TEntity>
+        where TEntity : class, IEntity
+    {
+        public MongoRepository(IMongoContext context) : base(context)
+        {
+        }
+    }
+
+    /// <summary>
+    /// 通用 Mongo 仓储（自定义主键类型）。
+    /// </summary>
+    public class MongoRepository<TEntity, TKey> : IRepository<TEntity, TKey>
+        where TEntity : class, IEntity<TKey>
     {
         private readonly IMongoContext _Context;
         private IMongoCollection<TEntity> _collection;
+
         public MongoRepository(IMongoContext context)
         {
             _Context = context;
             _collection = _Context.Set<TEntity>();
         }
-
 
         #region Insert
         public TEntity Add(TEntity entity)
@@ -48,21 +63,22 @@ namespace SyZero.MongoDB
         #endregion
 
         #region Count
-        public long Count(Expression<Func<TEntity, bool>> where)
+        public int Count(Expression<Func<TEntity, bool>> where)
         {
-            return _collection.CountDocuments(where);
+            return checked((int)_collection.CountDocuments(where));
         }
 
-        public async Task<long> CountAsync(Expression<Func<TEntity, bool>> where, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<int> CountAsync(Expression<Func<TEntity, bool>> where, CancellationToken cancellationToken = default(CancellationToken))
         {
-            return await _collection.CountDocumentsAsync(where, cancellationToken: cancellationToken);
+            return checked((int)await _collection.CountDocumentsAsync(where, cancellationToken: cancellationToken));
         }
         #endregion
 
         #region Delete
-        public long Delete(long id)
+        public long Delete(TKey id)
         {
-            return _collection.DeleteOne(a => a.Id == id).DeletedCount;
+            var filter = Builders<TEntity>.Filter.Eq(e => e.Id, id);
+            return _collection.DeleteOne(filter).DeletedCount;
         }
 
         public long Delete(Expression<Func<TEntity, bool>> where)
@@ -70,9 +86,10 @@ namespace SyZero.MongoDB
             return _collection.DeleteOne(where).DeletedCount;
         }
 
-        public async Task<long> DeleteAsync(long id, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<long> DeleteAsync(TKey id, CancellationToken cancellationToken = default(CancellationToken))
         {
-            var result = await _collection.DeleteOneAsync(a => a.Id == id, cancellationToken);
+            var filter = Builders<TEntity>.Filter.Eq(e => e.Id, id);
+            var result = await _collection.DeleteOneAsync(filter, cancellationToken);
             return result.DeletedCount;
         }
 
@@ -105,9 +122,10 @@ namespace SyZero.MongoDB
             return reulst.ToEnumerable().AsQueryable();
         }
 
-        public TEntity GetModel(long id)
+        public TEntity GetModel(TKey id)
         {
-            return GetModel(a => a.Id == id);
+            var filter = Builders<TEntity>.Filter.Eq(e => e.Id, id);
+            return _collection.FindSync(filter).FirstOrDefault();
         }
 
         public TEntity GetModel(Expression<Func<TEntity, bool>> where)
@@ -116,11 +134,11 @@ namespace SyZero.MongoDB
             return result.FirstOrDefault();
         }
 
-
-
-        public async Task<TEntity> GetModelAsync(long id, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<TEntity> GetModelAsync(TKey id, CancellationToken cancellationToken = default(CancellationToken))
         {
-            return await GetModelAsync(a => a.Id == id, cancellationToken);
+            var filter = Builders<TEntity>.Filter.Eq(e => e.Id, id);
+            var result = await _collection.FindAsync(filter, cancellationToken: cancellationToken);
+            return result.FirstOrDefault(cancellationToken);
         }
 
         public async Task<TEntity> GetModelAsync(Expression<Func<TEntity, bool>> where, CancellationToken cancellationToken = default(CancellationToken))
@@ -158,16 +176,14 @@ namespace SyZero.MongoDB
         {
             return Task.Run(() => GetPaged(pageIndex, pageSize, sortBy, where, isDesc), cancellationToken);
         }
-
-
         #endregion
 
-        #region Updata
+        #region Update
         public long Update(TEntity entity)
         {
             var doc = entity.ToBsonDocument();
-            var result = _collection.UpdateOne(Builders<TEntity>.Filter.Eq(e => e.Id, entity.Id),
-                new BsonDocumentUpdateDefinition<TEntity>(doc));
+            var filter = Builders<TEntity>.Filter.Eq(e => e.Id, entity.Id);
+            var result = _collection.UpdateOne(filter, new BsonDocumentUpdateDefinition<TEntity>(doc));
             return result.ModifiedCount;
         }
 
@@ -182,8 +198,8 @@ namespace SyZero.MongoDB
         public async Task<long> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default(CancellationToken))
         {
             var doc = entity.ToBsonDocument();
-            var result = await _collection.UpdateOneAsync(Builders<TEntity>.Filter.Eq(e => e.Id, entity.Id),
-                new BsonDocumentUpdateDefinition<TEntity>(doc), cancellationToken: cancellationToken);
+            var filter = Builders<TEntity>.Filter.Eq(e => e.Id, entity.Id);
+            var result = await _collection.UpdateOneAsync(filter, new BsonDocumentUpdateDefinition<TEntity>(doc), cancellationToken: cancellationToken);
             return result.ModifiedCount;
         }
 
@@ -194,99 +210,6 @@ namespace SyZero.MongoDB
                 reulst += await UpdateAsync(item, cancellationToken);
             return reulst;
         }
-
-        TEntity IBaseRepository<TEntity, long>.Add(TEntity entity)
-        {
-            return Add(entity);
-        }
-
-        Task<TEntity> IBaseRepository<TEntity, long>.AddAsync(TEntity entity, CancellationToken cancellationToken)
-        {
-            return AddAsync(entity, cancellationToken);
-        }
-
-        int IBaseRepository<TEntity, long>.AddList(IQueryable<TEntity> entities)
-        {
-            return AddList(entities);
-        }
-
-        Task<int> IBaseRepository<TEntity, long>.AddListAsync(IQueryable<TEntity> entities, CancellationToken cancellationToken)
-        {
-            return AddListAsync(entities, cancellationToken);
-        }
-
-        int IBaseRepository<TEntity, long>.Count(Expression<Func<TEntity, bool>> where)
-        {
-            return checked((int)Count(where));
-        }
-
-        async Task<int> IBaseRepository<TEntity, long>.CountAsync(Expression<Func<TEntity, bool>> where, CancellationToken cancellationToken)
-        {
-            return checked((int)await CountAsync(where, cancellationToken));
-        }
-
-        IQueryable<TEntity> IBaseRepository<TEntity, long>.GetList()
-        {
-            return GetList();
-        }
-
-        IQueryable<TEntity> IBaseRepository<TEntity, long>.GetList(Expression<Func<TEntity, bool>> where)
-        {
-            return GetList(where);
-        }
-
-        Task<IQueryable<TEntity>> IBaseRepository<TEntity, long>.GetListAsync(CancellationToken cancellationToken)
-        {
-            return GetListAsync(cancellationToken);
-        }
-
-        Task<IQueryable<TEntity>> IBaseRepository<TEntity, long>.GetListAsync(Expression<Func<TEntity, bool>> where, CancellationToken cancellationToken)
-        {
-            return GetListAsync(where, cancellationToken);
-        }
-
-        TEntity IBaseRepository<TEntity, long>.GetModel(long id)
-        {
-            return GetModel(id);
-        }
-
-        TEntity IBaseRepository<TEntity, long>.GetModel(Expression<Func<TEntity, bool>> where)
-        {
-            return GetModel(where);
-        }
-
-        Task<TEntity> IBaseRepository<TEntity, long>.GetModelAsync(long id, CancellationToken cancellationToken)
-        {
-            return GetModelAsync(id, cancellationToken);
-        }
-
-        Task<TEntity> IBaseRepository<TEntity, long>.GetModelAsync(Expression<Func<TEntity, bool>> where, CancellationToken cancellationToken)
-        {
-            return GetModelAsync(where, cancellationToken);
-        }
-
-        IQueryable<TEntity> IBaseRepository<TEntity, long>.GetPaged(int pageIndex, int pageSize, Expression<Func<TEntity, object>> sortBy, bool isDesc)
-        {
-            return GetPaged(pageIndex, pageSize, sortBy, isDesc);
-        }
-
-        IQueryable<TEntity> IBaseRepository<TEntity, long>.GetPaged(int pageIndex, int pageSize, Expression<Func<TEntity, object>> sortBy, Expression<Func<TEntity, bool>> where, bool isDesc)
-        {
-            return GetPaged(pageIndex, pageSize, sortBy, where, isDesc);
-        }
-
-        Task<IQueryable<TEntity>> IBaseRepository<TEntity, long>.GetPagedAsync(int pageIndex, int pageSize, Expression<Func<TEntity, object>> sortBy, bool isDesc, CancellationToken cancellationToken)
-        {
-            return GetPagedAsync(pageIndex, pageSize, sortBy, isDesc, cancellationToken);
-        }
-
-        Task<IQueryable<TEntity>> IBaseRepository<TEntity, long>.GetPagedAsync(int pageIndex, int pageSize, Expression<Func<TEntity, object>> sortBy, Expression<Func<TEntity, bool>> where, bool isDesc, CancellationToken cancellationToken)
-        {
-            return GetPagedAsync(pageIndex, pageSize, sortBy, where, isDesc, cancellationToken);
-        }
-
-
         #endregion
-
     }
 }

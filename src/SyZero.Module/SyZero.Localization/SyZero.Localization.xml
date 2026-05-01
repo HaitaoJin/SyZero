@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.Localization</name>
+    </assembly>
+    <members>
+        <member name="T:SyZero.Localization.ISyStringLocalizer">
+            <summary>
+            SyZero 字符串本地化抽象，业务直接依赖此接口而非 Microsoft.Extensions.Localization。
+            </summary>
+        </member>
+        <member name="P:SyZero.Localization.ISyStringLocalizer.Item(System.String)">
+            <summary>按 key 取本地化字符串；缺失时返回 key 本身。</summary>
+        </member>
+        <member name="P:SyZero.Localization.ISyStringLocalizer.Item(System.String,System.Object[])">
+            <summary>带格式化参数的本地化。</summary>
+        </member>
+        <member name="T:SyZero.Localization.DefaultSyStringLocalizer">
+            <summary>
+            包装 <see cref="T:Microsoft.Extensions.Localization.IStringLocalizerFactory"/> 的默认实现，使用单一资源类型 <see cref="T:SyZero.Localization.SharedResource"/>。
+            </summary>
+        </member>
+        <member name="T:SyZero.Localization.SharedResource">
+            <summary>共享资源类型占位（业务可放 Resources/SharedResource.zh-CN.resx 等）。</summary>
+        </member>
+        <member name="M:SyZero.Localization.SyZeroLocalizationExtension.AddSyZeroLocalization(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.String,System.Action{Microsoft.Extensions.Localization.LocalizationOptions})">
+            <summary>
+            注册 .resx 资源本地化与 SyZero 适配。<paramref name="resourcesPath"/> 默认 "Resources"。
+            </summary>
+        </member>
+    </members>
+</doc>

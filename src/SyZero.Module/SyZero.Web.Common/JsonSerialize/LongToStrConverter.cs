@@ -9,7 +9,7 @@ namespace SyZero.Web.Common
     /// </summary>
     public class LongToStrConverter : JsonConverter
     {
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
         {
             if (value == null)
             {
@@ -26,7 +26,7 @@ namespace SyZero.Web.Common
             writer.WriteValue(Convert.ToInt64(value, CultureInfo.InvariantCulture).ToString(CultureInfo.InvariantCulture));
         }
 
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue,
+        public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue,
             JsonSerializer serializer)
         {
             if (reader.TokenType == JsonToken.Null)
@@ -71,7 +71,7 @@ namespace SyZero.Web.Common
             }
         }
 
-        private static object GetDefaultValue(Type objectType)
+        private static object? GetDefaultValue(Type objectType)
         {
             var targetType = Nullable.GetUnderlyingType(objectType);
             if (targetType != null)

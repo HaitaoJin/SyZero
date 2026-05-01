@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Description>SyZero 网关抽象层（IGateway / IGatewayConfigurationStore / IGatewayConfigurationApplier / GatewayConfiguration / GatewayRoute / GatewaySwaggerEndPoint 等），不绑定具体网关实现。Ocelot / YARP 等具体实现以及 SyZero.Gateway.Admin 管理面板均依赖本包。</Description>
+    <PackageTags>SyZero;Gateway;Abstractions;Ocelot;YARP</PackageTags>
+    <IsPackable>true</IsPackable>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration" />
+  </ItemGroup>
+
+</Project>

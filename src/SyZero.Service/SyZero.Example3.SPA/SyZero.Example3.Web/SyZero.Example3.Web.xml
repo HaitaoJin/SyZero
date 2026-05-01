@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.Example3.Web</name>
+    </assembly>
+    <members>
+        <member name="T:SyZero.Example3.Web.Core.Filter.AppExceptionFilter">
+            <summary>
+            异常过滤器
+            </summary>
+        </member>
+        <member name="T:SyZero.Example3.Web.Core.Filter.AppResultFilter">
+            <summary>
+            结果过滤器
+            </summary>
+        </member>
+        <member name="M:SyZero.Example3.Web.Core.Models.ResultModel.#ctor(System.Object)">
+            <summary>
+            自定义
+            </summary>
+            <param name="Data">数据对象 例如:{status=500,action="6666"}</param>
+        </member>
+        <member name="P:SyZero.Example3.Web.Core.Models.ResultModel.code">
+            <summary>
+            成功状态码
+            </summary>
+        </member>
+        <member name="P:SyZero.Example3.Web.Core.Models.ResultModel.data">
+            <summary>
+            数据对象
+            </summary>
+        </member>
+    </members>
+</doc>

@@ -14,7 +14,7 @@ namespace SyZero.Util
         /// <summary>
         /// Autofac依赖注入静态服务
         /// </summary>
-        public static IServiceProvider ServiceProvider { get; set; }
+        public static IServiceProvider ServiceProvider { get; set; } = null!;
 
         /// <summary>
         /// 设置当前异步上下文中的作用域服务提供者
@@ -33,7 +33,7 @@ namespace SyZero.Util
         /// </summary>
         /// <typeparam name="T">接口类型</typeparam>
         /// <returns></returns>
-        public static T GetService<T>() where T : class
+        public static T? GetService<T>() where T : class
         {
             return GetCurrentServiceProvider().GetService<T>();
         }
@@ -53,7 +53,7 @@ namespace SyZero.Util
         /// </summary>
         /// <typeparam name="T">接口类型</typeparam>
         /// <returns></returns>
-        public static T GetScopeService<T>() where T : class
+        public static T? GetScopeService<T>() where T : class
         {
             return GetCurrentServiceProvider().GetService<T>();
         }

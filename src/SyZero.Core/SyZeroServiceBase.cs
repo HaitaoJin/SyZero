@@ -13,16 +13,16 @@ namespace SyZero
         /// <summary>
         /// 持久化
         /// </summary>
-        public IUnitOfWork UnitOfWork => SyZeroUtil.GetScopeService<IUnitOfWork>();
+        public IUnitOfWork UnitOfWork => SyZeroUtil.GetScopeService<IUnitOfWork>()!;
 
         /// <summary>
         /// 日志
         /// </summary>
-        public ILogger<SyZeroServiceBase> Logger => SyZeroUtil.GetService<ILogger<SyZeroServiceBase>>();
+        public ILogger<SyZeroServiceBase> Logger => SyZeroUtil.GetService<ILogger<SyZeroServiceBase>>()!;
 
         /// <summary>
         /// 实体映射
         /// </summary>
-        public IObjectMapper ObjectMapper => SyZeroUtil.GetService<IObjectMapper>();
+        public IObjectMapper ObjectMapper => SyZeroUtil.GetService<IObjectMapper>()!;
     }
 }

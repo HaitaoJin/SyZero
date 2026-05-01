@@ -52,11 +52,6 @@
             默认服务前缀
             </summary>
         </member>
-        <member name="P:SyZero.DynamicGrpc.DynamicGrpcOptions.DefaultAreaName">
-            <summary>
-            默认区域/模块名称
-            </summary>
-        </member>
         <member name="P:SyZero.DynamicGrpc.DynamicGrpcOptions.RemoveServicePostfixes">
             <summary>
             需要移除的服务名称后缀
@@ -208,38 +203,21 @@
             <summary>
             使用指定选项初始化
             </summary>
-            <param name="options">Dynamic gRPC 选项</param>
         </member>
         <member name="M:SyZero.DynamicGrpc.DynamicGrpcServiceTypeProvider.IsGrpcService(System.Reflection.TypeInfo)">
             <summary>
             判断指定类型是否可以作为动态 gRPC 服务
-            </summary>
-            <param name="typeInfo">类型信息</param>
-            <returns>如果类型是有效的动态 gRPC 服务则返回 true</returns>
-        </member>
-        <member name="M:SyZero.DynamicGrpc.DynamicGrpcServiceTypeProvider.IsValidDynamicGrpcService(System.Reflection.TypeInfo)">
-            <summary>
-            验证类型是否为有效的动态 gRPC 服务
-            </summary>
-        </member>
-        <member name="M:SyZero.DynamicGrpc.DynamicGrpcServiceTypeProvider.IsDynamicGrpcType(System.Reflection.TypeInfo)">
-            <summary>
-            检查类型是否符合动态 gRPC 的基本要求
             </summary>
         </member>
         <member name="M:SyZero.DynamicGrpc.DynamicGrpcServiceTypeProvider.GetServiceName(System.String)">
             <summary>
             获取服务名称（移除后缀）
             </summary>
-            <param name="serviceName">原始服务名称</param>
-            <returns>处理后的服务名称</returns>
         </member>
         <member name="M:SyZero.DynamicGrpc.DynamicGrpcServiceTypeProvider.GetMethodName(System.String)">
             <summary>
             获取方法名称（移除后缀）
             </summary>
-            <param name="methodName">原始方法名称</param>
-            <returns>处理后的方法名称</returns>
         </member>
         <member name="M:SyZero.DynamicGrpc.DynamicGrpcServiceTypeProvider.ClearCache">
             <summary>
@@ -275,116 +253,6 @@
             <summary>
             默认超时时间（秒）
             </summary>
-        </member>
-        <member name="T:SyZero.DynamicGrpc.Helpers.ReflectionHelper">
-            <summary>
-            反射辅助类
-            </summary>
-        </member>
-        <member name="M:SyZero.DynamicGrpc.Helpers.ReflectionHelper.GetSingleAttributeOrDefaultByFullSearch``1(System.Reflection.TypeInfo)">
-            <summary>
-            通过完整搜索获取单个特性（包括接口）
-            </summary>
-            <typeparam name="TAttribute">特性类型</typeparam>
-            <param name="info">类型信息</param>
-            <returns>特性实例或 null</returns>
-        </member>
-        <member name="M:SyZero.DynamicGrpc.Helpers.ReflectionHelper.GetSingleAttributeOrDefaultByFullSearchInternal``1(System.Reflection.TypeInfo)">
-            <summary>
-            实际执行搜索的内部方法
-            </summary>
-        </member>
-        <member name="M:SyZero.DynamicGrpc.Helpers.ReflectionHelper.GetSingleAttributeOrDefault``1(System.Reflection.MemberInfo,``0,System.Boolean)">
-            <summary>
-            获取成员的单个特性
-            </summary>
-            <typeparam name="TAttribute">特性类型</typeparam>
-            <param name="memberInfo">成员信息</param>
-            <param name="defaultValue">默认值</param>
-            <param name="inherit">是否包含继承的特性</param>
-            <returns>特性实例或默认值</returns>
-        </member>
-        <member name="M:SyZero.DynamicGrpc.Helpers.ReflectionHelper.GetSingleAttributeOrNull``1(System.Reflection.MemberInfo,System.Boolean)">
-            <summary>
-            获取成员的单个特性，不存在则返回 null
-            </summary>
-            <typeparam name="TAttribute">特性类型</typeparam>
-            <param name="memberInfo">成员信息</param>
-            <param name="inherit">是否包含继承的特性</param>
-            <returns>特性实例或 null</returns>
-        </member>
-        <member name="M:SyZero.DynamicGrpc.Helpers.ReflectionHelper.GetAssemblies">
-            <summary>
-            获取所有动态 gRPC 相关的程序集
-            </summary>
-            <returns>程序集列表</returns>
-        </member>
-        <member name="M:SyZero.DynamicGrpc.Helpers.ReflectionHelper.IsSystemAssembly(System.Reflection.Assembly)">
-            <summary>
-            判断是否为系统程序集
-            </summary>
-        </member>
-        <member name="M:SyZero.DynamicGrpc.Helpers.ReflectionHelper.ClearCache">
-            <summary>
-            清除缓存
-            </summary>
-        </member>
-        <member name="T:SyZero.DynamicGrpc.Helpers.ServiceCollectionExtensions">
-            <summary>
-            服务集合扩展方法
-            </summary>
-        </member>
-        <member name="M:SyZero.DynamicGrpc.Helpers.ServiceCollectionExtensions.IsAdded``1(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
-            <summary>
-            检查服务是否已添加
-            </summary>
-        </member>
-        <member name="M:SyZero.DynamicGrpc.Helpers.ServiceCollectionExtensions.IsAdded(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Type)">
-            <summary>
-            检查服务是否已添加
-            </summary>
-        </member>
-        <member name="M:SyZero.DynamicGrpc.Helpers.ServiceCollectionExtensions.GetSingletonInstanceOrNull``1(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
-            <summary>
-            获取单例实例或 null
-            </summary>
-        </member>
-        <member name="M:SyZero.DynamicGrpc.Helpers.ServiceCollectionExtensions.GetSingletonInstance``1(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
-            <summary>
-            获取单例实例
-            </summary>
-        </member>
-        <member name="T:SyZero.DynamicGrpc.Helpers.TypeHelper">
-            <summary>
-            类型辅助类
-            </summary>
-        </member>
-        <member name="M:SyZero.DynamicGrpc.Helpers.TypeHelper.IsPrimitiveExtendedIncludingNullable(System.Type,System.Boolean)">
-            <summary>
-            判断类型是否为原始类型（包括可空类型）
-            </summary>
-            <param name="type">类型</param>
-            <param name="includeEnums">是否包括枚举</param>
-            <returns>是否为原始类型</returns>
-        </member>
-        <member name="M:SyZero.DynamicGrpc.Helpers.TypeHelper.IsPrimitiveExtended(System.Type,System.Boolean)">
-            <summary>
-            判断类型是否为扩展的原始类型
-            </summary>
-        </member>
-        <member name="M:SyZero.DynamicGrpc.Helpers.TypeHelper.IsValidGrpcServiceType(System.Type)">
-            <summary>
-            判断类型是否可以作为 gRPC 服务类型
-            </summary>
-            <param name="type">类型</param>
-            <returns>是否可以作为 gRPC 服务</returns>
-        </member>
-        <member name="M:SyZero.DynamicGrpc.Helpers.TypeHelper.IsValidGrpcServiceInterface(System.Type)">
-            <summary>
-            判断类型是否为有效的 gRPC 服务接口
-            </summary>
-            <param name="type">类型</param>
-            <returns>是否为有效的服务接口</returns>
         </member>
     </members>
 </doc>

@@ -1,4 +1,4 @@
-# SyZero
+﻿# SyZero
 
 <p align="center">
   <img src="docs/public/icon/logo.png" alt="SyZero Logo" width="120"/>
@@ -68,7 +68,10 @@ SyZero is a modular microservice framework for .NET. It provides rich components
 |------|------|------|
 | **SyZero.Consul** | [![NuGet](https://img.shields.io/nuget/v/SyZero.Consul?style=flat-square)](https://www.nuget.org/packages/SyZero.Consul) | Consul registration and discovery |
 | **SyZero.Nacos** | [![NuGet](https://img.shields.io/nuget/v/SyZero.Nacos?style=flat-square)](https://www.nuget.org/packages/SyZero.Nacos) | Nacos registration and configuration |
-| **SyZero.ApiGateway** | [![NuGet](https://img.shields.io/nuget/v/SyZero.ApiGateway?style=flat-square)](https://www.nuget.org/packages/SyZero.ApiGateway) | API gateway support |
+| **SyZero.Gateway.Abstractions** | [![NuGet](https://img.shields.io/nuget/v/SyZero.Gateway.Abstractions?style=flat-square)](https://www.nuget.org/packages/SyZero.Gateway.Abstractions) | Gateway abstraction layer (`IGateway` / `IGatewayConfigurationStore` / `GatewayConfiguration`, ...) |
+| **SyZero.Gateway.Ocelot** | [![NuGet](https://img.shields.io/nuget/v/SyZero.Gateway.Ocelot?style=flat-square)](https://www.nuget.org/packages/SyZero.Gateway.Ocelot) | Ocelot-backed `IGateway` implementation |
+| **SyZero.Gateway.YARP** | [![NuGet](https://img.shields.io/nuget/v/SyZero.Gateway.YARP?style=flat-square)](https://www.nuget.org/packages/SyZero.Gateway.YARP) | YARP-backed `IGateway` implementation (peer of Ocelot) |
+| **SyZero.Gateway.Admin** | [![NuGet](https://img.shields.io/nuget/v/SyZero.Gateway.Admin?style=flat-square)](https://www.nuget.org/packages/SyZero.Gateway.Admin) | Gateway admin panel (decoupled from implementation) |
 | **SyZero.Feign** | [![NuGet](https://img.shields.io/nuget/v/SyZero.Feign?style=flat-square)](https://www.nuget.org/packages/SyZero.Feign) | Declarative HTTP client |
 
 ### Utilities and Extensions

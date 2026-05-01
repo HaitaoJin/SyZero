@@ -4,7 +4,7 @@ namespace SyZero.Application.Service.Dto
 {
     public class ListResultDto<T> : IListResult<T>
     {
-        public IList<T> list { get; set; }
+        public IList<T> list { get; set; } = new List<T>();
 
         /// <summary>
         /// 返回列表数据

@@ -53,6 +53,7 @@ namespace SyZero
             services.AddSingleton(Options.Create(options));
             services.TryAddSingleton<SyZero.MongoDB.IMongoContext, SyZero.MongoDB.MongoContext>();
             services.TryAddScoped(typeof(IRepository<>), typeof(SyZero.MongoDB.MongoRepository<>));
+            services.TryAddScoped(typeof(IRepository<,>), typeof(SyZero.MongoDB.MongoRepository<,>));
 
             return services;
         }

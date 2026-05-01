@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.Idempotency</name>
+    </assembly>
+    <members>
+        <member name="T:SyZero.Idempotency.IdempotencyMiddleware">
+            <summary>
+            幂等性中间件：根据 <c>Idempotency-Key</c> 头复用之前的响应。
+            </summary>
+        </member>
+        <member name="T:SyZero.Idempotency.IdempotencyOptions">
+            <summary>
+            幂等中间件配置。
+            </summary>
+        </member>
+        <member name="P:SyZero.Idempotency.IdempotencyOptions.HeaderName">
+            <summary>
+            请求头名称，默认 <c>Idempotency-Key</c>。
+            </summary>
+        </member>
+        <member name="P:SyZero.Idempotency.IdempotencyOptions.ExpirationSeconds">
+            <summary>
+            key 的过期时间（秒），默认 24 小时。
+            </summary>
+        </member>
+        <member name="P:SyZero.Idempotency.IdempotencyOptions.InflightRejectionStatusCode">
+            <summary>
+            当首个请求仍在处理（已占位但未保存）时，并发请求返回的状态码。
+            </summary>
+        </member>
+        <member name="P:SyZero.Idempotency.IdempotencyOptions.Methods">
+            <summary>
+            仅对这些 HTTP 方法生效（默认 POST / PUT / PATCH / DELETE；GET / HEAD 默认幂等）。
+            </summary>
+        </member>
+        <member name="T:SyZero.Idempotency.IdempotencyEntry">
+            <summary>
+            已缓存响应的轻量快照。
+            </summary>
+        </member>
+        <member name="T:SyZero.Idempotency.IIdempotencyStore">
+            <summary>
+            幂等键存储抽象。
+            </summary>
+        </member>
+        <member name="M:SyZero.Idempotency.IIdempotencyStore.TryReserveAsync(System.String,System.TimeSpan,System.Threading.CancellationToken)">
+            <summary>
+            尝试占用一个 key（首次调用返回 true，之后调用返回 false 直到 key 过期或被填充）。
+            </summary>
+        </member>
+        <member name="M:SyZero.Idempotency.IIdempotencyStore.SaveAsync(System.String,SyZero.Idempotency.IdempotencyEntry,System.TimeSpan,System.Threading.CancellationToken)">
+            <summary>
+            写入已经完成的响应快照（覆盖此前的占位）。
+            </summary>
+        </member>
+        <member name="M:SyZero.Idempotency.IIdempotencyStore.GetAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            读取响应快照；若仅占位未完成返回 null（中间件应回 409 / 等待）。
+            </summary>
+        </member>
+        <member name="T:SyZero.Idempotency.MemoryIdempotencyStore">
+            <summary>
+            进程内 <see cref="T:SyZero.Idempotency.IIdempotencyStore"/> 默认实现：仅适合单实例。
+            多实例请使用 SyZero.Redis 中的 RedisIdempotencyStore（基于 SET NX）。
+            </summary>
+        </member>
+        <member name="T:SyZero.SyZeroIdempotencyExtension">
+            <summary>
+            SyZero.Idempotency 注册扩展。
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroIdempotencyExtension.AddSyZeroIdempotency(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,System.Action{SyZero.Idempotency.IdempotencyOptions},System.String)">
+            <summary>
+            注册幂等中间件 + 内存默认存储；引入 SyZero.Redis 时可用 Redis 存储覆盖。
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroIdempotencyExtension.UseSyZeroIdempotency(Microsoft.AspNetCore.Builder.IApplicationBuilder)">
+            <summary>
+            启用幂等中间件（建议放在路由之后、终结点之前）。
+            </summary>
+        </member>
+    </members>
+</doc>

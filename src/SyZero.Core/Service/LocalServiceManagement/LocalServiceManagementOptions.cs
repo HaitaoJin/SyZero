@@ -23,7 +23,7 @@ namespace SyZero.Service.LocalServiceManagement
         /// 数据文件路径
         /// <para>默认值: %TEMP%/syzero_services.json</para>
         /// </summary>
-        public string DataFilePath { get; set; }
+        public string? DataFilePath { get; set; }
 
         /// <summary>
         /// 是否启用文件监听（多进程同步）

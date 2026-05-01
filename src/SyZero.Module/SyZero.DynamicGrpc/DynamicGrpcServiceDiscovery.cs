@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using SyZero.Application.DynamicApi;
 
 namespace SyZero.DynamicGrpc
 {
@@ -23,7 +24,7 @@ namespace SyZero.DynamicGrpc
             typeProvider ??= new DynamicGrpcServiceTypeProvider(options);
 
             return GetCandidateAssemblies(options)
-                .SelectMany(GetLoadableTypes)
+                .SelectMany(DynamicApiAssemblyScanner.GetLoadableTypes)
                 .Where(type => type != null)
                 .Select(type => type.GetTypeInfo())
                 .Where(typeProvider.IsGrpcService)
@@ -39,19 +40,14 @@ namespace SyZero.DynamicGrpc
                 return options.AssemblyOptions.Keys;
             }
 
-            return Helpers.ReflectionHelper.GetAssemblies();
-        }
-
-        private static IEnumerable<Type> GetLoadableTypes(Assembly assembly)
-        {
-            try
+            // gRPC 场景额外排除 Grpc.* / Google.* 库
+            return DynamicApiAssemblyScanner.GetAssemblies(asm =>
             {
-                return assembly.GetTypes();
-            }
-            catch (ReflectionTypeLoadException ex)
-            {
-                return ex.Types.OfType<Type>();
-            }
+                var name = asm.GetName().Name;
+                return name != null && (
+                    name.StartsWith("Grpc", StringComparison.OrdinalIgnoreCase) ||
+                    name.StartsWith("Google", StringComparison.OrdinalIgnoreCase));
+            });
         }
     }
 }

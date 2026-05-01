@@ -2,6 +2,6 @@
 {
     public class PageAndSortQueryDto : PageQueryDto, IPageAndSortQuery, IPageQuery, ISortQuery, ILimitQuery
     {
-        public string Sort { get; set; }
+        public string Sort { get; set; } = string.Empty;
     }
 }

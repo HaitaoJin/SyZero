@@ -12,17 +12,17 @@ namespace SyZero.Service
         /// <summary>
         /// 服务ID
         /// </summary>
-        public string ServiceID { get; set; }
+        public string ServiceID { get; set; } = string.Empty;
 
         /// <summary>
         /// 服务名称
         /// </summary>
-        public string ServiceName { get; set; }
+        public string ServiceName { get; set; } = string.Empty;
 
         /// <summary>
         /// 服务地址
         /// </summary>
-        public string ServiceAddress { get; set; }
+        public string ServiceAddress { get; set; } = string.Empty;
 
         /// <summary>
         /// 服务端口
@@ -37,22 +37,22 @@ namespace SyZero.Service
         /// <summary>
         /// 服务版本
         /// </summary>
-        public string Version { get; set; }
+        public string Version { get; set; } = string.Empty;
 
         /// <summary>
         /// 服务分组/命名空间
         /// </summary>
-        public string Group { get; set; }
+        public string Group { get; set; } = string.Empty;
 
         /// <summary>
         /// 服务标签（用于分类和过滤）
         /// </summary>
-        public List<string> Tags { get; set; }
+        public List<string> Tags { get; set; } = new List<string>();
 
         /// <summary>
         /// 服务元数据（扩展信息）
         /// </summary>
-        public Dictionary<string, string> Metadata { get; set; }
+        public Dictionary<string, string> Metadata { get; set; } = new Dictionary<string, string>();
 
         #endregion
 
@@ -98,7 +98,7 @@ namespace SyZero.Service
         /// <summary>
         /// 健康检查地址
         /// </summary>
-        public string HealthCheckUrl { get; set; }
+        public string HealthCheckUrl { get; set; } = string.Empty;
 
         /// <summary>
         /// 健康检查间隔（秒）
@@ -113,12 +113,12 @@ namespace SyZero.Service
         /// <summary>
         /// 服务实例所在区域/数据中心
         /// </summary>
-        public string Region { get; set; }
+        public string Region { get; set; } = string.Empty;
 
         /// <summary>
         /// 可用区
         /// </summary>
-        public string Zone { get; set; }
+        public string Zone { get; set; } = string.Empty;
 
         #endregion
     }

@@ -23,13 +23,13 @@ namespace SyZero.EventBus.LocalEventBus
         /// 订阅数据文件路径
         /// <para>默认值: %TEMP%/syzero_eventbus_subscriptions.json</para>
         /// </summary>
-        public string SubscriptionFilePath { get; set; }
+        public string? SubscriptionFilePath { get; set; }
 
         /// <summary>
         /// 事件数据文件路径（用于持久化待处理事件）
         /// <para>默认值: %TEMP%/syzero_eventbus_events.json</para>
         /// </summary>
-        public string EventFilePath { get; set; }
+        public string? EventFilePath { get; set; }
 
         /// <summary>
         /// 是否启用文件监听（多进程同步订阅信息）
@@ -77,7 +77,7 @@ namespace SyZero.EventBus.LocalEventBus
         /// 死信队列文件路径
         /// <para>默认值: %TEMP%/syzero_eventbus_deadletter.json</para>
         /// </summary>
-        public string DeadLetterFilePath { get; set; }
+        public string? DeadLetterFilePath { get; set; }
 
         /// <summary>
         /// 是否自动清理过期事件

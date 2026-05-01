@@ -6,7 +6,7 @@ namespace SyZero.Web.Common
 {
     public class JsonSerialize : IJsonSerialize
     {
-        public T JSONToObject<T>(string jsonText)
+        public T? JSONToObject<T>(string jsonText)
         {
             try
             {

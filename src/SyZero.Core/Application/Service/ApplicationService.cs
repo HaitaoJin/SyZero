@@ -7,9 +7,9 @@ namespace SyZero.Application.Service
 {
     public class ApplicationService : SyZeroServiceBase, IApplicationService
     {
-        public ISySession SySession => SyZeroUtil.GetScopeService<ISySession>();
+        public ISySession SySession => SyZeroUtil.GetScopeService<ISySession>()!;
 
-        protected virtual void CheckPermission(string permissionName = null)
+        protected virtual void CheckPermission(string? permissionName = null)
         {
             if (!SySession.UserId.HasValue)
             {

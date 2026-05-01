@@ -5,6 +5,8 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using SyZero.Cache;
 using SyZero.Domain.Entities;
 using SyZero.Domain.Repository;
@@ -21,16 +23,17 @@ namespace SyZero.Service.DBServiceManagement
     public class DBServiceManagement : IServiceManagement, IDisposable
     {
         private readonly IServiceRegistryRepository _repository;
-        private readonly ILeaderElectionRepository _leaderRepository;
+        private readonly ILeaderElectionRepository? _leaderRepository;
         private readonly ICache _cache;
         private readonly DBServiceManagementOptions _options;
+        private readonly ILogger _logger;
         private readonly ConcurrentDictionary<string, Action<List<ServiceInfo>>> _subscriptions = new ConcurrentDictionary<string, Action<List<ServiceInfo>>>();
         private static readonly ThreadLocal<Random> RandomProvider = new ThreadLocal<Random>(() => new Random(Guid.NewGuid().GetHashCode()));
         private readonly HttpClient _httpClient;
         private readonly string _instanceId;
-        private Timer _healthCheckTimer;
-        private Timer _cleanupTimer;
-        private Timer _leaderRenewTimer;
+        private Timer? _healthCheckTimer;
+        private Timer? _cleanupTimer;
+        private Timer? _leaderRenewTimer;
         private bool _isLeader = false;
 
         /// <summary>
@@ -47,12 +50,14 @@ namespace SyZero.Service.DBServiceManagement
             IServiceRegistryRepository repository,
             ICache cache,
             DBServiceManagementOptions options,
-            ILeaderElectionRepository leaderRepository = null)
+            ILeaderElectionRepository? leaderRepository = null,
+            ILogger<DBServiceManagement>? logger = null)
         {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
             _cache = cache ?? throw new ArgumentNullException(nameof(cache));
             _options = options ?? new DBServiceManagementOptions();
             _leaderRepository = leaderRepository;
+            _logger = (ILogger?)logger ?? NullLogger<DBServiceManagement>.Instance;
             _instanceId = Guid.NewGuid().ToString("N");
 
             // 初始化 HttpClient 用于健康检查
@@ -133,7 +138,7 @@ namespace SyZero.Service.DBServiceManagement
                     }
 
                     // 锁已过期，可以抢占
-                    Console.WriteLine($"SyZero.DB: Leader 锁已过期 (原 Leader: {currentLock.InstanceId})，尝试获取...");
+                    _logger.LogInformation("Leader 锁已过期 (原 Leader: {InstanceId})，尝试获取...", currentLock.InstanceId);
                 }
 
                 // 尝试获取锁
@@ -142,12 +147,12 @@ namespace SyZero.Service.DBServiceManagement
 
                 if (success)
                 {
-                    Console.WriteLine($"SyZero.DB: 当前实例 [{_instanceId}] 成为 Leader");
+                    _logger.LogInformation("当前实例 [{InstanceId}] 成为 Leader", _instanceId);
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"SyZero.DB: 获取 Leader 权限失败: {ex.Message}");
+                _logger.LogError(ex, "获取 Leader 权限失败");
                 _isLeader = false;
             }
         }
@@ -163,11 +168,11 @@ namespace SyZero.Service.DBServiceManagement
             {
                 const string leaderKey = "ServiceManagement";
                 await _leaderRepository.ReleaseLeaderLockAsync(leaderKey, _instanceId);
-                Console.WriteLine($"SyZero.DB: 实例 [{_instanceId}] 释放 Leader 权限");
+                _logger.LogInformation("实例 [{InstanceId}] 释放 Leader 权限", _instanceId);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"SyZero.DB: 释放 Leader 权限失败: {ex.Message}");
+                _logger.LogError(ex, "释放 Leader 权限失败");
             }
             finally
             {
@@ -184,7 +189,7 @@ namespace SyZero.Service.DBServiceManagement
             var cacheKey = $"DB:Service:{serviceName}";
             if (_cache.Exist(cacheKey))
             {
-                return _cache.Get<List<ServiceInfo>>(cacheKey);
+                return _cache.Get<List<ServiceInfo>>(cacheKey)!;
             }
 
             var entities = await _repository.GetByServiceNameAsync(serviceName);
@@ -203,7 +208,7 @@ namespace SyZero.Service.DBServiceManagement
             var cacheKey = $"DB:HealthyService:{serviceName}";
             if (_cache.Exist(cacheKey))
             {
-                return _cache.Get<List<ServiceInfo>>(cacheKey);
+                return _cache.Get<List<ServiceInfo>>(cacheKey)!;
             }
 
             var entities = await _repository.GetHealthyByServiceNameAsync(serviceName, _options.ServiceExpireSeconds);
@@ -453,7 +458,7 @@ namespace SyZero.Service.DBServiceManagement
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"SyZero.DB: {operationName}失败: {ex.Message}");
+                    _logger.LogError(ex, "{OperationName}失败", operationName);
                 }
             });
         }
@@ -498,8 +503,8 @@ namespace SyZero.Service.DBServiceManagement
                 ServiceProtocol = serviceInfo.ServiceProtocol.ToString(),
                 Version = serviceInfo.Version,
                 Group = serviceInfo.Group,
-                Tags = serviceInfo.Tags != null ? string.Join(",", serviceInfo.Tags) : null,
-                Metadata = SerializeMetadata(serviceInfo.Metadata),
+                Tags = serviceInfo.Tags != null ? string.Join(",", serviceInfo.Tags) : null!,
+                Metadata = SerializeMetadata(serviceInfo.Metadata) ?? string.Empty,
                 IsHealthy = serviceInfo.IsHealthy,
                 Enabled = serviceInfo.Enabled,
                 Weight = serviceInfo.Weight,
@@ -511,7 +516,7 @@ namespace SyZero.Service.DBServiceManagement
             };
         }
 
-        private string SerializeMetadata(Dictionary<string, string> metadata)
+        private string? SerializeMetadata(Dictionary<string, string> metadata)
         {
             if (metadata == null || metadata.Count == 0)
                 return null;
@@ -534,10 +539,10 @@ namespace SyZero.Service.DBServiceManagement
 
         public void Dispose()
         {
-            // 释放 Leader 权限
+            // 释放 Leader 权限：Dispose 是同步接口，使用 Task.Run 转到线程池线程防止死锁。
             if (_options.EnableLeaderElection && _leaderRepository != null)
             {
-                ReleaseLeadershipAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+                Task.Run(ReleaseLeadershipAsync).GetAwaiter().GetResult();
             }
 
             _leaderRenewTimer?.Dispose();

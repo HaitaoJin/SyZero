@@ -19,15 +19,15 @@ namespace SyZero.Application.Service
     {
         protected readonly IRepository<TEntity> Repository;
 
-        protected virtual string GetPermissionName { get; set; }
+        protected virtual string? GetPermissionName { get; set; }
 
-        protected virtual string GetAllPermissionName { get; set; }
+        protected virtual string? GetAllPermissionName { get; set; }
 
-        protected virtual string CreatePermissionName { get; set; }
+        protected virtual string? CreatePermissionName { get; set; }
 
-        protected virtual string UpdatePermissionName { get; set; }
+        protected virtual string? UpdatePermissionName { get; set; }
 
-        protected virtual string DeletePermissionName { get; set; }
+        protected virtual string? DeletePermissionName { get; set; }
 
         protected CrudAppServiceBase(IRepository<TEntity> repository)
         {
@@ -118,7 +118,7 @@ namespace SyZero.Application.Service
         /// </summary>
         protected virtual TEntityDto MapToEntityDto(TEntity entity)
         {
-            return ObjectMapper.Map<TEntityDto>(entity);
+            return ObjectMapper.Map<TEntityDto>(entity)!;
         }
 
         /// <summary>
@@ -128,7 +128,7 @@ namespace SyZero.Application.Service
         /// </summary>
         protected virtual TEntity MapToEntity(TCreateInput createInput)
         {
-            return ObjectMapper.Map<TEntity>(createInput);
+            return ObjectMapper.Map<TEntity>(createInput)!;
         }
 
         /// <summary>

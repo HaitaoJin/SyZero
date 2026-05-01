@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -15,7 +16,7 @@ namespace SyZero.Application.Routing
 
         public static System.Net.Http.HttpMethod GetHttpVerbV2(MemberInfo member)
         {
-            MemberInfo method = member.GetInterfaceMemberInfo();
+            MemberInfo? method = member.GetInterfaceMemberInfo();
 
             // 如果未找到接口成员，回退到使用原始成员
             if (method == null)
@@ -28,9 +29,9 @@ namespace SyZero.Application.Routing
             return apiMethod?.Method ?? System.Net.Http.HttpMethod.Get;
         }
 
-        public static string GetHttpTemplateV2(MemberInfo member)
+        public static string? GetHttpTemplateV2(MemberInfo member)
         {
-            MemberInfo method = member.GetInterfaceMemberInfo();
+            MemberInfo? method = member.GetInterfaceMemberInfo();
 
             // 如果未找到接口成员，回退到使用原始成员
             if (method == null)
@@ -65,14 +66,14 @@ namespace SyZero.Application.Routing
         {
             if (string.IsNullOrEmpty(areaName))
             {
-                areaName = action.ReflectedType.Assembly.GetName().Name.Replace(".IApplication","");
+                areaName = action.ReflectedType?.Assembly.GetName().Name?.Replace(".IApplication", "") ?? string.Empty;
             }
-            string cname = GetControllerName(action.DeclaringType.FullName.Split('.')[action.DeclaringType.FullName.Split('.').Length - 1]);
+            string cname = GetControllerName(action.DeclaringType?.FullName?.Split('.').LastOrDefault() ?? string.Empty);
             var apiPreFix = GetApiPreFix();
 
-            var template = action.GetCustomAttribute<HttpMethodAttribute>().Path;
+            var template = action.GetCustomAttribute<HttpMethodAttribute>()?.Path;
 
-            return $"{apiPreFix}/{areaName}/{cname.Substring(1)}/{template ?? action.Name}".Replace("//", "/");
+            return $"{apiPreFix}/{areaName}/{cname?.Substring(1)}/{template ?? action.Name}".Replace("//", "/");
         }
 
         public static string GetRouteUrlByInterface(string endPoint,string areaName, MemberInfo action)
@@ -82,7 +83,7 @@ namespace SyZero.Application.Routing
 
         public static string GetControllerName(string controllerName)
         {
-            return controllerName.RemovePostFix(RemoveControllerPostfixes.ToArray());
+            return controllerName.RemovePostFix(RemoveControllerPostfixes.ToArray()) ?? string.Empty;
         }
     }
 }

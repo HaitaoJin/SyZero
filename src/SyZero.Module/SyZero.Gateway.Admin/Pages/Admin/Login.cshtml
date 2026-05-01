@@ -1,0 +1,159 @@
+@page "/admin/login"
+@model SyZero.Gateway.Admin.Pages.Admin.LoginModel
+@{
+    Layout = null;
+    var returnUrl = string.IsNullOrEmpty(Model.ReturnUrl) ? "/admin" : Model.ReturnUrl;
+}
+<!DOCTYPE html>
+<html lang="zh-cn" data-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>登录 · SyZero 网关管理</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" />
+    <style>
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            min-height: 100vh;
+            background: radial-gradient(circle at 20% 20%, #6366f1 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, #06b6d4 0%, transparent 50%),
+                        linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        }
+        .glass-card {
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(14px);
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.45);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4">
+    <div class="w-full max-w-md">
+        <div class="glass-card rounded-3xl p-8 md:p-10">
+            <div class="flex flex-col items-center mb-6">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-cyan-500 text-white flex items-center justify-center text-2xl font-bold shadow-lg">SZ</div>
+                <h1 class="mt-4 text-2xl font-bold text-slate-800">SyZero 网关管理</h1>
+                <p class="text-sm text-slate-500 mt-1">登录后管理路由、Swagger、备份与审计</p>
+            </div>
+
+            <div id="error-alert" class="alert alert-error mb-4 hidden">
+                <span id="error-text"></span>
+            </div>
+
+            <form id="login-form" class="space-y-4" autocomplete="on">
+                <label class="form-control w-full">
+                    <div class="label"><span class="label-text font-medium">用户名</span></div>
+                    <input id="username" name="username" type="text" required autofocus
+                           class="input input-bordered w-full" placeholder="请输入用户名" autocomplete="username" />
+                </label>
+                <label class="form-control w-full">
+                    <div class="label"><span class="label-text font-medium">密码</span></div>
+                    <input id="password" name="password" type="password" required
+                           class="input input-bordered w-full" placeholder="请输入密码" autocomplete="current-password" />
+                </label>
+                <label class="label cursor-pointer justify-start gap-3 px-0">
+                    <input id="remember" type="checkbox" class="checkbox checkbox-sm checkbox-primary" />
+                    <span class="label-text">记住我（7 天）</span>
+                </label>
+
+                <div id="captcha-block" class="hidden space-y-2">
+                    <div class="label py-0"><span class="label-text font-medium">验证码</span>
+                        <button type="button" id="captcha-refresh" class="label-text-alt link link-primary">换一张</button>
+                    </div>
+                    <div class="flex gap-2 items-center">
+                        <span id="captcha-question" class="badge badge-lg badge-outline font-mono px-3 py-3"></span>
+                        <input id="captcha-answer" type="text" inputmode="numeric" autocomplete="off"
+                               class="input input-bordered flex-1" placeholder="请输入计算结果" />
+                    </div>
+                </div>
+
+                <button id="submit-btn" type="submit"
+                        class="btn btn-primary w-full bg-gradient-to-r from-indigo-500 to-cyan-500 border-none text-white">
+                    登 录
+                </button>
+            </form>
+
+            <div class="mt-6 text-xs text-center text-slate-400">
+                凭据来自 <code class="text-slate-500">Gateway:Admin:Username/Password</code> 配置项
+            </div>
+        </div>
+        <div class="text-center mt-4 text-xs text-white/60">
+            © SyZero · Gateway Admin
+        </div>
+    </div>
+
+    <script>
+        const RETURN_URL = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(returnUrl));
+        const form = document.getElementById('login-form');
+        const errAlert = document.getElementById('error-alert');
+        const errText = document.getElementById('error-text');
+        const btn = document.getElementById('submit-btn');
+        const captchaBlock = document.getElementById('captcha-block');
+        const captchaQ = document.getElementById('captcha-question');
+        const captchaA = document.getElementById('captcha-answer');
+        let currentCaptchaId = null;
+
+        async function loadCaptcha() {
+            try {
+                const res = await fetch('/admin-api/auth/captcha', { credentials: 'same-origin' });
+                if (!res.ok) throw new Error(res.status);
+                const j = await res.json();
+                currentCaptchaId = j.id;
+                captchaQ.textContent = j.question;
+                captchaA.value = '';
+            } catch (e) {
+                captchaQ.textContent = '加载失败';
+                currentCaptchaId = null;
+            }
+        }
+        function showCaptcha() {
+            captchaBlock.classList.remove('hidden');
+            if (!currentCaptchaId) loadCaptcha();
+        }
+        document.getElementById('captcha-refresh').addEventListener('click', loadCaptcha);
+
+        function showError(msg) {
+            errText.textContent = msg;
+            errAlert.classList.remove('hidden');
+        }
+        function hideError() { errAlert.classList.add('hidden'); }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideError();
+            btn.disabled = true;
+            const original = btn.innerHTML;
+            btn.innerHTML = '<span class="loading loading-spinner loading-sm"></span> 登录中...';
+            try {
+                const body = {
+                    username: document.getElementById('username').value,
+                    password: document.getElementById('password').value,
+                    remember: document.getElementById('remember').checked,
+                    captchaId: currentCaptchaId,
+                    captchaAnswer: captchaA.value,
+                };
+                const res = await fetch('/admin-api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                    credentials: 'same-origin',
+                });
+                if (!res.ok) {
+                    let msg = '登录失败 (' + res.status + ')';
+                    let needCaptcha = false;
+                    try { const j = await res.json(); if (j) { if (j.title) msg = j.title; if (j.requireCaptcha) needCaptcha = true; } } catch {}
+                    showError(msg);
+                    if (needCaptcha) { showCaptcha(); loadCaptcha(); }
+                    return;
+                }
+                window.location.href = RETURN_URL || '/admin';
+            } catch (ex) {
+                showError('网络异常: ' + ex);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = original;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using SyZero.Application.DynamicApi;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -8,7 +9,7 @@ namespace SyZero.DynamicWebApi
     /// <summary>
     /// Dynamic WebApi 配置选项
     /// </summary>
-    public class DynamicWebApiOptions
+    public class DynamicWebApiOptions : DynamicApiOptionsBase
     {
         /// <summary>
         /// 配置节名称
@@ -35,11 +36,6 @@ namespace SyZero.DynamicWebApi
         /// <para>默认值: "POST"</para>
         /// </summary>
         public string DefaultHttpVerb { get; set; }
-
-        /// <summary>
-        /// 默认区域名称
-        /// </summary>
-        public string DefaultAreaName { get; set; }
 
         /// <summary>
         /// API 路由前缀
@@ -91,7 +87,7 @@ namespace SyZero.DynamicWebApi
         /// 验证所有配置是否有效
         /// </summary>
         /// <exception cref="ArgumentException">配置无效时抛出</exception>
-        public void Validate()
+        public override void Validate()
         {
             if (string.IsNullOrEmpty(DefaultHttpVerb))
             {

@@ -4,6 +4,16 @@
         <name>SyZero.SqlSugar</name>
     </assembly>
     <members>
+        <member name="T:SyZero.SqlSugar.Repositories.SqlSugarRepository`1">
+            <summary>
+            默认 long 主键的 SqlSugar 仓储（兼容历史用法）。
+            </summary>
+        </member>
+        <member name="T:SyZero.SqlSugar.Repositories.SqlSugarRepository`2">
+            <summary>
+            通用 SqlSugar 仓储（自定义主键类型）。
+            </summary>
+        </member>
         <member name="T:SyZero.SqlSugar.SqlSugarTransactionScope">
             <summary>
             SqlSugar 事务作用域

@@ -16,7 +16,7 @@ namespace SyZero.ObjectMapper
         /// <typeparam name="TDestination">目标类型</typeparam>
         /// <param name="source">源对象</param>
         /// <returns>映射后的目标对象</returns>
-        public TDestination Map<TDestination>(object source)
+        public TDestination? Map<TDestination>(object? source)
         {
             if (source == null)
             {
@@ -24,7 +24,7 @@ namespace SyZero.ObjectMapper
             }
 
             var destination = Activator.CreateInstance<TDestination>();
-            MapProperties(source, destination);
+            MapProperties(source, destination!);
             return destination;
         }
 
@@ -48,7 +48,7 @@ namespace SyZero.ObjectMapper
                 destination = Activator.CreateInstance<TDestination>();
             }
 
-            MapProperties(source, destination);
+            MapProperties(source, destination!);
             return destination;
         }
 

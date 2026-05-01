@@ -8,6 +8,8 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using SyZero.Dependency;
 using SyZero.Runtime.Security;
 
@@ -24,16 +26,17 @@ namespace SyZero.Service.LocalServiceManagement
         private readonly ConcurrentDictionary<string, bool> _healthStatus = new ConcurrentDictionary<string, bool>();
         private static readonly ThreadLocal<Random> RandomProvider = new ThreadLocal<Random>(() => new Random(Guid.NewGuid().GetHashCode()));
         private readonly LocalServiceManagementOptions _options;
+        private readonly ILogger _logger;
         private readonly string _dataFilePath;
         private readonly string _leaderLockFilePath;
         private readonly string _instanceId;
         private readonly object _stateLock = new object();
         private readonly object _fileLock = new object();
         private readonly HttpClient _httpClient;
-        private FileSystemWatcher _fileWatcher;
-        private Timer _healthCheckTimer;
-        private Timer _cleanupTimer;
-        private Timer _leaderRenewTimer;
+        private FileSystemWatcher? _fileWatcher;
+        private Timer? _healthCheckTimer;
+        private Timer? _cleanupTimer;
+        private Timer? _leaderRenewTimer;
         private bool _isLeader = false;
 
         /// <summary>
@@ -50,9 +53,11 @@ namespace SyZero.Service.LocalServiceManagement
         /// 构造函数
         /// </summary>
         /// <param name="options">配置选项</param>
-        public LocalServiceManagement(LocalServiceManagementOptions options = null)
+        /// <param name="logger">日志记录器，可为空（默认使用 <see cref="NullLogger{T}"/>）</param>
+        public LocalServiceManagement(LocalServiceManagementOptions? options = null, ILogger<LocalServiceManagement>? logger = null)
         {
             _options = options ?? new LocalServiceManagementOptions();
+            _logger = (ILogger?)logger ?? NullLogger<LocalServiceManagement>.Instance;
             _dataFilePath = _options.GetDataFilePath();
             _instanceId = Guid.NewGuid().ToString("N");
             
@@ -161,7 +166,7 @@ namespace SyZero.Service.LocalServiceManagement
                                 }
 
                                 // 锁已过期，可以抢占
-                                Console.WriteLine($"SyZero.Local: Leader 锁已过期 (原 Leader: {lockInfo.InstanceId})，尝试获取...");
+                                _logger.LogInformation("Leader 锁已过期 (原 Leader: {InstanceId})，尝试获取...", lockInfo.InstanceId);
                             }
                         }
                         catch
@@ -181,11 +186,11 @@ namespace SyZero.Service.LocalServiceManagement
                     };
                     SaveLeaderLock(newLock);
                     _isLeader = true;
-                    Console.WriteLine($"SyZero.Local: 当前实例 [{_instanceId}] 成为 Leader");
+                    _logger.LogInformation("当前实例 [{InstanceId}] 成为 Leader", _instanceId);
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"SyZero.Local: 获取 Leader 权限失败: {ex.Message}");
+                    _logger.LogError(ex, "获取 Leader 权限失败");
                     _isLeader = false;
                 }
             }
@@ -220,13 +225,13 @@ namespace SyZero.Service.LocalServiceManagement
                         if (lockInfo != null && lockInfo.InstanceId == _instanceId)
                         {
                             File.Delete(_leaderLockFilePath);
-                            Console.WriteLine($"SyZero.Local: 实例 [{_instanceId}] 释放 Leader 权限");
+                            _logger.LogInformation("实例 [{InstanceId}] 释放 Leader 权限", _instanceId);
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"SyZero.Local: 释放 Leader 权限失败: {ex.Message}");
+                    _logger.LogError(ex, "释放 Leader 权限失败");
                 }
                 finally
                 {
@@ -369,7 +374,7 @@ namespace SyZero.Service.LocalServiceManagement
 
         public Task DeregisterService(string serviceId)
         {
-            string changedServiceName = null;
+            string? changedServiceName = null;
 
             lock (_stateLock)
             {
@@ -422,7 +427,7 @@ namespace SyZero.Service.LocalServiceManagement
         /// <param name="isHealthy">是否健康</param>
         public void SetServiceHealth(string serviceId, bool isHealthy)
         {
-            string changedServiceName = null;
+            string? changedServiceName = null;
             lock (_stateLock)
             {
                 _healthStatus[serviceId] = isHealthy;
@@ -596,7 +601,7 @@ namespace SyZero.Service.LocalServiceManagement
                             kvp.Value.Remove(service);
                             _healthStatus.TryRemove(service.ServiceID, out _);
                             changedServices.Add(kvp.Key);
-                            Console.WriteLine($"SyZero.Local: 自动清理过期服务 [{service.ServiceName}] ID={service.ServiceID}");
+                            _logger.LogInformation("自动清理过期服务 [{ServiceName}] ID={ServiceID}", service.ServiceName, service.ServiceID);
                         }
 
                         if (kvp.Value.Count == 0)
@@ -617,7 +622,7 @@ namespace SyZero.Service.LocalServiceManagement
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"SyZero.Local: 清理过期服务失败: {ex.Message}");
+                _logger.LogError(ex, "清理过期服务失败");
             }
 
             return Task.CompletedTask;
@@ -693,7 +698,7 @@ namespace SyZero.Service.LocalServiceManagement
                 catch (Exception ex)
                 {
                     // 记录错误但不抛出异常，避免影响主流程
-                    Console.WriteLine($"SyZero.Local:保存服务数据到文件失败: {ex.Message}");
+                    _logger.LogError(ex, "保存服务数据到文件失败");
                 }
             }
         }
@@ -730,7 +735,7 @@ namespace SyZero.Service.LocalServiceManagement
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"SyZero.Local:从文件加载服务数据失败: {ex.Message}");
+                    _logger.LogError(ex, "从文件加载服务数据失败");
                 }
             }
         }
@@ -767,7 +772,7 @@ namespace SyZero.Service.LocalServiceManagement
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"SyZero.Local:初始化文件监听器失败: {ex.Message}");
+                _logger.LogError(ex, "初始化文件监听器失败");
             }
         }
 
@@ -862,7 +867,7 @@ namespace SyZero.Service.LocalServiceManagement
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"SyZero.Local: {operationName}失败: {ex.Message}");
+                    _logger.LogError(ex, "{OperationName}失败", operationName);
                 }
             });
         }
@@ -905,7 +910,7 @@ namespace SyZero.Service.LocalServiceManagement
             /// <summary>
             /// 持有锁的实例ID
             /// </summary>
-            public string InstanceId { get; set; }
+            public string InstanceId { get; set; } = string.Empty;
 
             /// <summary>
             /// 获取锁的时间

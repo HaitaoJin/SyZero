@@ -13,7 +13,7 @@ namespace SyZero.Runtime.Session
     {
         private readonly IJsonSerialize _jsonSerialize;
 
-        public ClaimsPrincipal Principal { get; private set; }
+        public ClaimsPrincipal? Principal { get; private set; }
 
         public SySession(IJsonSerialize jsonSerialize)
         {
@@ -33,7 +33,7 @@ namespace SyZero.Runtime.Session
             }
         }
 
-        public string UserRole
+        public string? UserRole
         {
             get
             {
@@ -46,7 +46,7 @@ namespace SyZero.Runtime.Session
             }
         }
 
-        public string UserName
+        public string? UserName
         {
             get
             {
@@ -59,7 +59,7 @@ namespace SyZero.Runtime.Session
             }
         }
 
-        public List<string> Permission
+        public List<string>? Permission
         {
             get
             {
@@ -72,7 +72,7 @@ namespace SyZero.Runtime.Session
             }
         }
 
-        public string Token
+        public string? Token
         {
             get
             {
@@ -87,7 +87,7 @@ namespace SyZero.Runtime.Session
 
         public ISySession Parse(string token)
         {
-            Principal = SyZeroUtil.GetService<IToken>().GetPrincipal(token);
+            Principal = SyZeroUtil.GetService<IToken>()!.GetPrincipal(token);
             return this;
         }
 

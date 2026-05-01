@@ -1,37 +1,53 @@
 using Grpc.Net.Client;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using SyZero.Client.RemoteService;
 using SyZero.Serialization;
+using SyZero.Util;
 
 namespace SyZero.Feign.Proxy
 {
     /// <summary>
     /// gRPC 协议代理工厂
     /// </summary>
-    public class GrpcProxyFactory : IFeignProxyFactory
+    public class GrpcProxyFactory : IRemoteServiceProxyFactory
     {
         /// <summary>
         /// gRPC 通道缓存（按端点地址缓存）
         /// </summary>
         private static readonly ConcurrentDictionary<string, GrpcChannel> _channelCache = new ConcurrentDictionary<string, GrpcChannel>();
 
+        private static ILogger ResolveLogger()
+        {
+            try
+            {
+                return SyZeroUtil.GetService<ILogger<GrpcProxyFactory>>() ?? (ILogger)NullLogger<GrpcProxyFactory>.Instance;
+            }
+            catch
+            {
+                return NullLogger<GrpcProxyFactory>.Instance;
+            }
+        }
+
         /// <summary>
         /// 支持的协议类型
         /// </summary>
-        public FeignProtocol Protocol => FeignProtocol.Grpc;
+        public RemoteServiceProtocol Protocol => RemoteServiceProtocol.Grpc;
 
         /// <summary>
         /// 创建 gRPC 代理实例
         /// </summary>
-        public object CreateProxy(Type targetType, string endPoint, FeignService feignService, IJsonSerialize jsonSerialize)
+        public object CreateProxy(Type targetType, string endPoint, RemoteServiceItem service, IJsonSerialize jsonSerialize)
         {
             try
             {
                 // 获取或创建 gRPC 通道（复用通道）
-                var channel = GetOrCreateChannel(endPoint, feignService);
+                var channel = GetOrCreateChannel(endPoint, service);
 
                 // 获取 gRPC 客户端类型
                 var clientType = GetGrpcClientType(targetType);
@@ -46,7 +62,7 @@ namespace SyZero.Feign.Proxy
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"gRPC 代理创建失败: EndPoint({endPoint}) {ex.Message}");
+                ResolveLogger().LogError(ex, "gRPC 代理创建失败: EndPoint({EndPoint}) ServiceName({ServiceName})", endPoint, service?.ServiceName);
                 throw;
             }
         }
@@ -54,13 +70,13 @@ namespace SyZero.Feign.Proxy
         /// <summary>
         /// 获取或创建 gRPC 通道
         /// </summary>
-        private GrpcChannel GetOrCreateChannel(string endPoint, FeignService feignService)
+        private GrpcChannel GetOrCreateChannel(string endPoint, RemoteServiceItem service)
         {
-            var cacheKey = $"{endPoint}_{feignService.EnableSsl}_{feignService.MaxMessageSize}";
-            
+            var cacheKey = $"{endPoint}_{service.EnableSsl}_{service.MaxMessageSize}";
+
             return _channelCache.GetOrAdd(cacheKey, _ =>
             {
-                var channelOptions = CreateChannelOptions(feignService);
+                var channelOptions = CreateChannelOptions(service);
                 return GrpcChannel.ForAddress(endPoint, channelOptions);
             });
         }
@@ -68,26 +84,26 @@ namespace SyZero.Feign.Proxy
         /// <summary>
         /// 创建 gRPC 通道选项
         /// </summary>
-        private GrpcChannelOptions CreateChannelOptions(FeignService feignService)
+        private GrpcChannelOptions CreateChannelOptions(RemoteServiceItem service)
         {
             var options = new GrpcChannelOptions
             {
                 // 设置最大消息大小
-                MaxReceiveMessageSize = feignService.MaxMessageSize > 0 ? (int?)feignService.MaxMessageSize : null,
-                MaxSendMessageSize = feignService.MaxMessageSize > 0 ? (int?)feignService.MaxMessageSize : null,
+                MaxReceiveMessageSize = service.MaxMessageSize > 0 ? (int?)service.MaxMessageSize : null,
+                MaxSendMessageSize = service.MaxMessageSize > 0 ? (int?)service.MaxMessageSize : null,
             };
 
             // 非 SSL 时需要特殊处理
-            if (!feignService.EnableSsl)
+            if (!service.EnableSsl)
             {
                 AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
                 var handler = new System.Net.Http.SocketsHttpHandler
-                    {
-                        EnableMultipleHttp2Connections = true,
-                        PooledConnectionIdleTimeout = TimeSpan.FromMinutes(5),
-                        KeepAlivePingDelay = TimeSpan.FromSeconds(60),
-                        KeepAlivePingTimeout = TimeSpan.FromSeconds(30),
-                    };
+                {
+                    EnableMultipleHttp2Connections = true,
+                    PooledConnectionIdleTimeout = TimeSpan.FromMinutes(5),
+                    KeepAlivePingDelay = TimeSpan.FromSeconds(60),
+                    KeepAlivePingTimeout = TimeSpan.FromSeconds(30),
+                };
                 options.HttpHandler = handler;
             }
 

@@ -91,7 +91,7 @@ namespace SyZero.Web.Common.Util
                         var value = dataToken.Type == JTokenType.String
                             ? dataToken.Value<string>()
                             : dataToken.ToString(Formatting.None);
-                        responseTemplate.Body = (T)(object)value;
+                        responseTemplate.Body = (T?)(object?)value;
                     }
                     else
                     {
@@ -111,7 +111,7 @@ namespace SyZero.Web.Common.Util
             return responseTemplate;
         }
 
-        private static void AddHeaders(RestRequest request, IDictionary<string, string> headers)
+        private static void AddHeaders(RestRequest request, IDictionary<string, string>? headers)
         {
             if (headers == null)
             {

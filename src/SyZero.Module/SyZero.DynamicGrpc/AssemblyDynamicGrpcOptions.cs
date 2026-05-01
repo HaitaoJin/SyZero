@@ -1,9 +1,11 @@
+using SyZero.Application.DynamicApi;
+
 namespace SyZero.DynamicGrpc
 {
     /// <summary>
     /// 程序集级别的 Dynamic gRPC 选项
     /// </summary>
-    public class AssemblyDynamicGrpcOptions
+    public class AssemblyDynamicGrpcOptions : IAssemblyDynamicApiOptions
     {
         /// <summary>
         /// 服务前缀

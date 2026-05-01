@@ -1,4 +1,4 @@
-# SyZero — Agent 指南
+﻿# SyZero — Agent 指南
 
 SyZero 是一个 **.NET 9** 模块化微服务框架，发布为一组 NuGet 包（`SyZero.*`，当前版本 `1.1.10`）。
 面向用户的中文/英文文档：[README.md](README.md) · [README.en.md](README.en.md) · [docs/](docs/index.md)
@@ -10,7 +10,7 @@ SyZero 是一个 **.NET 9** 模块化微服务框架，发布为一组 NuGet 包
 | 路径 | 用途 |
 |---|---|
 | [src/SyZero.Core/](src/SyZero.Core) | 框架内核 NuGet 包 `SyZero.Core`（`AssemblyName=SyZero`、根命名空间 `SyZero`），提供依赖注入、应用基础设施、仓储/工作单元抽象、轻量服务管理与事件总线 |
-| [src/SyZero.Module/](src/SyZero.Module) | 框架可插拔模块包，每个子目录就是一个独立 NuGet 包（`SyZero.AspNetCore`、`SyZero.Redis`、`SyZero.Consul`、`SyZero.Nacos`、`SyZero.SqlSugar`、`SyZero.EntityFrameworkCore`、`SyZero.DynamicWebApi`、`SyZero.DynamicGrpc`、`SyZero.RabbitMQ`、`SyZero.OpenTelemetry`、`SyZero.ApiGateway`、`SyZero.Feign`、`SyZero.Swagger`、`SyZero.AutoMapper`、`SyZero.Log4Net`、`SyZero.MongoDB`、`SyZero.AspNetCore.SpaProxy`、`SyZero.Web.Common`） |
+| [src/SyZero.Module/](src/SyZero.Module) | 框架可插拔模块包，每个子目录就是一个独立 NuGet 包（`SyZero.AspNetCore`、`SyZero.Redis`、`SyZero.Consul`、`SyZero.Nacos`、`SyZero.SqlSugar`、`SyZero.EntityFrameworkCore`、`SyZero.DynamicWebApi`、`SyZero.DynamicGrpc`、`SyZero.RabbitMQ`、`SyZero.OpenTelemetry`、`SyZero.Gateway.Abstractions`、`SyZero.Gateway.Ocelot`、`SyZero.Gateway.YARP`、`SyZero.Gateway.Admin`、`SyZero.Feign`、`SyZero.Swagger`、`SyZero.AutoMapper`、`SyZero.Log4Net`、`SyZero.MongoDB`、`SyZero.AspNetCore.SpaProxy`、`SyZero.Web.Common`） |
 | [src/SyZero.Service/](src/SyZero.Service) | 示例业务服务（`SyZero.Example1.Service`、`SyZero.Example2.Service`），演示 **Web / Application / IApplication / Core** 分层，是新业务服务的参考模板 |
 | [src/SyZero.Gateway/](src/SyZero.Gateway) | 基于 Ocelot 的 API 网关示例 |
 | [src/SyZero.Tests/](src/SyZero.Tests) | 单一 xUnit 测试项目，引用并测试所有模块（按模块拆分文件，如 `RedisTests.cs`、`SqlSugarTests.cs`） |

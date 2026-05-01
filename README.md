@@ -1,4 +1,4 @@
-# SyZero
+﻿# SyZero
 
 <p align="center">
   <img src="docs/public/icon/logo.png" alt="SyZero Logo" width="120"/>
@@ -68,7 +68,10 @@ SyZero 是一个基于 .NET 的模块化微服务开发框架，提供了丰富�
 |------|----------|------|
 | **SyZero.Consul** | [![NuGet](https://img.shields.io/nuget/v/SyZero.Consul?style=flat-square)](https://www.nuget.org/packages/SyZero.Consul) | Consul 服务注册与发现 |
 | **SyZero.Nacos** | [![NuGet](https://img.shields.io/nuget/v/SyZero.Nacos?style=flat-square)](https://www.nuget.org/packages/SyZero.Nacos) | Nacos 服务注册与配置中心 |
-| **SyZero.ApiGateway** | [![NuGet](https://img.shields.io/nuget/v/SyZero.ApiGateway?style=flat-square)](https://www.nuget.org/packages/SyZero.ApiGateway) | API 网关支持 |
+| **SyZero.Gateway.Abstractions** | [![NuGet](https://img.shields.io/nuget/v/SyZero.Gateway.Abstractions?style=flat-square)](https://www.nuget.org/packages/SyZero.Gateway.Abstractions) | 网关抽象层（`IGateway` / `IGatewayConfigurationStore` / `GatewayConfiguration` 等） |
+| **SyZero.Gateway.Ocelot** | [![NuGet](https://img.shields.io/nuget/v/SyZero.Gateway.Ocelot?style=flat-square)](https://www.nuget.org/packages/SyZero.Gateway.Ocelot) | API 网关支持（基于 Ocelot 的 `IGateway` 实现） |
+| **SyZero.Gateway.YARP** | [![NuGet](https://img.shields.io/nuget/v/SyZero.Gateway.YARP?style=flat-square)](https://www.nuget.org/packages/SyZero.Gateway.YARP) | API 网关支持（基于 YARP 的 `IGateway` 实现，与 Ocelot 同级互斥） |
+| **SyZero.Gateway.Admin** | [![NuGet](https://img.shields.io/nuget/v/SyZero.Gateway.Admin?style=flat-square)](https://www.nuget.org/packages/SyZero.Gateway.Admin) | 网关可视化管理面板（与具体实现解耦） |
 | **SyZero.Feign** | [![NuGet](https://img.shields.io/nuget/v/SyZero.Feign?style=flat-square)](https://www.nuget.org/packages/SyZero.Feign) | 声明式 HTTP 客户端 |
 
 > 💡 **内置服务管理**：SyZero 核心模块还提供了 `LocalServiceManagement`（基于文件）、`DBServiceManagement`（基于数据库）和 `RedisServiceManagement`（基于 Redis）三种轻量级服务管理实现，适用于开发测试或简单部署场景。

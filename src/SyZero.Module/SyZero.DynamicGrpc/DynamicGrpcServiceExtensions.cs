@@ -6,8 +6,8 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ProtoBuf.Grpc.Server;
+using SyZero.Application.DynamicApi;
 using SyZero.Application.Service;
-using SyZero.DynamicGrpc.Helpers;
 
 namespace SyZero.DynamicGrpc
 {
@@ -238,7 +238,8 @@ namespace SyZero.DynamicGrpc
                 var interfaces = serviceType.GetInterfaces()
                     .Where(i => typeof(IDynamicApi).IsAssignableFrom(i) &&
                                 i != typeof(IDynamicApi) &&
-                                TypeHelper.IsValidGrpcServiceInterface(i));
+                                i.GetTypeInfo().IsPublic &&
+                                i.GetTypeInfo().IsInterface);
 
                 foreach (var serviceInterface in interfaces)
                 {

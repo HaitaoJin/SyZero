@@ -30,5 +30,11 @@
             数据对象
             </summary>
         </member>
+        <member name="T:SyZero.SourceGenerator.Generated.SyZeroGeneratedRegistration">
+            <summary>由 SyZero.SourceGenerator 为程序集 <c>SyZero.Example1.Web</c> 生成。</summary>
+        </member>
+        <member name="T:SyZero.SourceGenerator.Generated.SyDiscoveredServices">
+            <summary>SyZero 自动收集到的 IApplicationService 列表（占位）。</summary>
+        </member>
     </members>
 </doc>

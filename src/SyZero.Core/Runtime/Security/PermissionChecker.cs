@@ -4,7 +4,12 @@ using SyZero.Util;
 namespace SyZero.Runtime.Security
 {
     /// <summary>
-    /// 权限检查
+    /// 权限检查（静态门面）。
+    /// <para>
+    /// 注：推荐通过 <see cref="IPermissionChecker"/> 注入式使用，便于单元测试与替换实现。
+    /// 此静态入口保留以兼容旧代码，内部委托到 DI 容器中的 <see cref="IPermissionChecker"/>，
+    /// 若未注册则回退到基于 <see cref="ISySession"/> 的简易检查。
+    /// </para>
     /// </summary>
     public static class PermissionChecker
     {
@@ -15,8 +20,14 @@ namespace SyZero.Runtime.Security
         /// <returns></returns>
         public static bool IsHas(string permission)
         {
-            ISySession sySession = SyZeroUtil.GetService<ISySession>();
-            if (sySession.Permission != null && sySession.Permission.Contains(permission))
+            var checker = TryResolve<IPermissionChecker>();
+            if (checker != null)
+            {
+                return checker.IsHas(permission);
+            }
+
+            ISySession? sySession = TryResolve<ISySession>();
+            if (sySession?.Permission != null && sySession.Permission.Contains(permission))
             {
                 return true;
             }
@@ -35,8 +46,16 @@ namespace SyZero.Runtime.Security
             }
         }
 
-
-
-
+        private static T? TryResolve<T>() where T : class
+        {
+            try
+            {
+                return SyZeroUtil.GetService<T>();
+            }
+            catch
+            {
+                return null;
+            }
+        }
     }
 }

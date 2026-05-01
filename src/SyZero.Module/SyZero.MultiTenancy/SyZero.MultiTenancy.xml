@@ -1,0 +1,140 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.MultiTenancy</name>
+    </assembly>
+    <members>
+        <member name="T:SyZero.MultiTenancy.CurrentTenant">
+            <summary>
+            默认 <see cref="T:SyZero.MultiTenancy.ICurrentTenant"/>：基于 AsyncLocal 持有当前租户。
+            由 <c>MultiTenancyMiddleware</c> 在每次请求开始时通过 <see cref="M:SyZero.MultiTenancy.CurrentTenant.Change(SyZero.MultiTenancy.TenantInfo)"/> 写入。
+            </summary>
+        </member>
+        <member name="T:SyZero.MultiTenancy.ICurrentTenant">
+            <summary>
+            当前请求的租户上下文。Scoped 注入。
+            </summary>
+        </member>
+        <member name="P:SyZero.MultiTenancy.ICurrentTenant.Id">
+            <summary>当前租户 Id。null 表示宿主侧（未识别到租户）。</summary>
+        </member>
+        <member name="P:SyZero.MultiTenancy.ICurrentTenant.Name">
+            <summary>当前租户名。</summary>
+        </member>
+        <member name="P:SyZero.MultiTenancy.ICurrentTenant.Tenant">
+            <summary>当前租户完整元数据（如已解析）。</summary>
+        </member>
+        <member name="P:SyZero.MultiTenancy.ICurrentTenant.IsAvailable">
+            <summary>是否处于「可用租户」上下文（解析到且 IsActive）。</summary>
+        </member>
+        <member name="M:SyZero.MultiTenancy.ICurrentTenant.Change(SyZero.MultiTenancy.TenantInfo)">
+            <summary>显式切换上下文（如后台任务里手工进入某租户作用域）。返回 IDisposable，Dispose 时还原。</summary>
+        </member>
+        <member name="T:SyZero.MultiTenancy.IMultiTenant">
+            <summary>
+            多租户实体标记接口。EF Core / SqlSugar 全局过滤器以此识别需要按 TenantId 过滤的实体。
+            </summary>
+        </member>
+        <member name="P:SyZero.MultiTenancy.IMultiTenant.TenantId">
+            <summary>所属租户 Id（null 表示宿主侧 / 共享数据）。</summary>
+        </member>
+        <member name="T:SyZero.MultiTenancy.InMemoryTenantStore">
+            <summary>
+            内存版默认 <see cref="T:SyZero.MultiTenancy.ITenantStore"/>，便于测试 / 演示。生产环境请替换为基于仓储或缓存的实现。
+            </summary>
+        </member>
+        <member name="M:SyZero.MultiTenancy.InMemoryTenantStore.AddOrUpdate(SyZero.MultiTenancy.TenantInfo)">
+            <summary>添加或更新一个租户（用于初始化 / 测试）。</summary>
+        </member>
+        <member name="T:SyZero.MultiTenancy.ITenantConnectionResolver">
+            <summary>
+            把当前租户映射到「数据连接」的解析器。默认实现返回 <see cref="P:SyZero.MultiTenancy.TenantInfo.ConnectionString"/>，
+            业务侧可替换为按 Id 路由到不同连接池 / Sharding 中心。
+            </summary>
+        </member>
+        <member name="T:SyZero.MultiTenancy.DefaultTenantConnectionResolver">
+            <summary>默认实现：直接读 <see cref="P:SyZero.MultiTenancy.TenantInfo.ConnectionString"/>，null 表示走宿主默认连接。</summary>
+        </member>
+        <member name="T:SyZero.MultiTenancy.ITenantResolver">
+            <summary>
+            租户解析器。多个解析器按顺序尝试，第一个返回非空值的胜出。
+            </summary>
+        </member>
+        <member name="M:SyZero.MultiTenancy.ITenantResolver.ResolveAsync(Microsoft.AspNetCore.Http.HttpContext,System.Threading.CancellationToken)">
+            <summary>解析当前请求所属租户名/Id（解析失败返回 null 让后续解析器尝试）。</summary>
+        </member>
+        <member name="T:SyZero.MultiTenancy.TenantResolveResult">
+            <summary>解析结果。Name / Id 至少一个非空。</summary>
+        </member>
+        <member name="T:SyZero.MultiTenancy.ITenantStore">
+            <summary>
+            租户存储抽象：业务侧实现把租户信息从数据库 / 缓存 / 远程服务取出。
+            </summary>
+        </member>
+        <member name="T:SyZero.MultiTenancy.MultiTenancyMiddleware">
+            <summary>
+            多租户中间件：依次跑全部 <see cref="T:SyZero.MultiTenancy.ITenantResolver"/>，命中后调 <see cref="T:SyZero.MultiTenancy.ITenantStore"/> 取详情，
+            写入 <see cref="T:SyZero.MultiTenancy.ICurrentTenant"/>，并保证请求结束时还原。
+            </summary>
+        </member>
+        <member name="T:SyZero.MultiTenancy.MultiTenancyOptions">
+            <summary>多租户模块配置。</summary>
+        </member>
+        <member name="P:SyZero.MultiTenancy.MultiTenancyOptions.IsEnabled">
+            <summary>是否启用多租户中间件。</summary>
+        </member>
+        <member name="P:SyZero.MultiTenancy.MultiTenancyOptions.TenantHeaderName">
+            <summary>Header 解析使用的请求头名称。</summary>
+        </member>
+        <member name="P:SyZero.MultiTenancy.MultiTenancyOptions.DomainSuffix">
+            <summary>Domain 解析使用的域名后缀（如 <c>.example.com</c>），子域作为租户名。null 关闭。</summary>
+        </member>
+        <member name="P:SyZero.MultiTenancy.MultiTenancyOptions.TenantIdClaimType">
+            <summary>Claim 解析使用的租户 Id Claim 类型。</summary>
+        </member>
+        <member name="P:SyZero.MultiTenancy.MultiTenancyOptions.TenantNameClaimType">
+            <summary>Claim 解析使用的租户名 Claim 类型。</summary>
+        </member>
+        <member name="T:SyZero.MultiTenancy.Resolvers.HeaderTenantResolver">
+            <summary>从请求头解析租户名（默认 Header：<c>__tenant</c>）。</summary>
+        </member>
+        <member name="T:SyZero.MultiTenancy.Resolvers.DomainTenantResolver">
+            <summary>从子域名解析租户名（如 <c>tenant1.example.com</c> → <c>tenant1</c>）。</summary>
+        </member>
+        <member name="T:SyZero.MultiTenancy.Resolvers.ClaimTenantResolver">
+            <summary>从已认证用户的 Claim 解析租户 Id / Name。</summary>
+        </member>
+        <member name="T:SyZero.MultiTenancy.SyZeroMultiTenancyExtension">
+            <summary>SyZero.MultiTenancy 注册与启用扩展。</summary>
+        </member>
+        <member name="M:SyZero.MultiTenancy.SyZeroMultiTenancyExtension.AddSyZeroMultiTenancy(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,System.Action{SyZero.MultiTenancy.MultiTenancyOptions})">
+            <summary>
+            注册多租户基础设施（CurrentTenant / 内置 3 种 Resolver / DefaultTenantConnectionResolver）。
+            业务侧需自行注册一个 <see cref="T:SyZero.MultiTenancy.ITenantStore"/>（如 <see cref="T:SyZero.MultiTenancy.InMemoryTenantStore"/> 或自实现）。
+            </summary>
+        </member>
+        <member name="M:SyZero.MultiTenancy.SyZeroMultiTenancyExtension.UseSyZeroMultiTenancy(Microsoft.AspNetCore.Builder.IApplicationBuilder)">
+            <summary>
+            启用 <see cref="T:SyZero.MultiTenancy.MultiTenancyMiddleware"/>。请放在 UseAuthentication 之后（Claim 解析需要已认证用户）、
+            在业务 Endpoint 之前。
+            </summary>
+        </member>
+        <member name="T:SyZero.MultiTenancy.TenantInfo">
+            <summary>
+            租户元数据。
+            </summary>
+        </member>
+        <member name="P:SyZero.MultiTenancy.TenantInfo.Name">
+            <summary>租户唯一名称（用于 Header / Domain 解析键）。</summary>
+        </member>
+        <member name="P:SyZero.MultiTenancy.TenantInfo.DisplayName">
+            <summary>显示名。</summary>
+        </member>
+        <member name="P:SyZero.MultiTenancy.TenantInfo.IsActive">
+            <summary>是否启用。禁用的租户解析后会被视为「未识别」。</summary>
+        </member>
+        <member name="P:SyZero.MultiTenancy.TenantInfo.ConnectionString">
+            <summary>可选连接字符串。配合 <see cref="T:SyZero.MultiTenancy.ITenantConnectionResolver"/> 实现分库。</summary>
+        </member>
+    </members>
+</doc>

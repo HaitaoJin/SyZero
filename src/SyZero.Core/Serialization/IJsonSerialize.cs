@@ -10,7 +10,7 @@
         /// </summary>
         /// <param name="obj">Obj</param>
         /// <returns></returns>
-        string ObjectToJSON(object obj);
+        string? ObjectToJSON(object obj);
 
         /// <summary>
         /// Json反序列化
@@ -18,6 +18,6 @@
         /// <typeparam name="T">对象类型</typeparam>
         /// <param name="jsonText">Json字符串</param>
         /// <returns></returns>
-        T JSONToObject<T>(string jsonText);
+        T? JSONToObject<T>(string jsonText);
     }
 }

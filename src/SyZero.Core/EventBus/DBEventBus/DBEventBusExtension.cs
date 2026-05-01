@@ -52,7 +52,7 @@ namespace SyZero
         /// <param name="configuration">配置，为 null 时使用 AppConfig.Configuration</param>
         /// <param name="sectionName">配置节名称，默认为 "DBEventBus"</param>
         /// <returns>服务集合</returns>
-        public static IServiceCollection AddDBEventBus(this IServiceCollection services, IConfiguration configuration = null, string sectionName = DBEventBusOptions.SectionName)
+        public static IServiceCollection AddDBEventBus(this IServiceCollection services, IConfiguration? configuration = null, string sectionName = DBEventBusOptions.SectionName)
         {
             var config = configuration ?? AppConfig.Configuration;
             var options = new DBEventBusOptions();
@@ -68,7 +68,7 @@ namespace SyZero
         /// <param name="configuration">配置，为 null 时使用 AppConfig.Configuration</param>
         /// <param name="sectionName">配置节名称，默认为 "DBEventBus"</param>
         /// <returns>服务集合</returns>
-        public static IServiceCollection AddDBEventBus(this IServiceCollection services, Action<DBEventBusOptions> optionsAction, IConfiguration configuration = null, string sectionName = DBEventBusOptions.SectionName)
+        public static IServiceCollection AddDBEventBus(this IServiceCollection services, Action<DBEventBusOptions> optionsAction, IConfiguration? configuration = null, string sectionName = DBEventBusOptions.SectionName)
         {
             var config = configuration ?? AppConfig.Configuration;
             var options = new DBEventBusOptions();
@@ -121,8 +121,8 @@ namespace SyZero
         /// <returns>服务集合</returns>
         public static IServiceCollection AddDBEventBus<TSubscriptionRepository, TEventQueueRepository, TDeadLetterRepository>(
             this IServiceCollection services,
-            Action<DBEventBusOptions> optionsAction = null,
-            IConfiguration configuration = null,
+            Action<DBEventBusOptions>? optionsAction = null,
+            IConfiguration? configuration = null,
             string sectionName = DBEventBusOptions.SectionName)
             where TSubscriptionRepository : class, IEventSubscriptionRepository
             where TEventQueueRepository : class, IEventQueueRepository
@@ -183,8 +183,8 @@ namespace SyZero
         /// <returns>服务集合</returns>
         public static IServiceCollection AddDBEventBus<TSubscriptionRepository, TEventQueueRepository, TDeadLetterRepository, TLeaderElectionRepository>(
             this IServiceCollection services,
-            Action<DBEventBusOptions> optionsAction = null,
-            IConfiguration configuration = null,
+            Action<DBEventBusOptions>? optionsAction = null,
+            IConfiguration? configuration = null,
             string sectionName = DBEventBusOptions.SectionName)
             where TSubscriptionRepository : class, IEventSubscriptionRepository
             where TEventQueueRepository : class, IEventQueueRepository

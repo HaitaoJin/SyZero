@@ -39,9 +39,9 @@ namespace SyZero.Cache
         /// <typeparam name="T"></typeparam>
         /// <param name="key"></param>
         /// <returns></returns>
-        public T Get<T>(string key)
+        public T? Get<T>(string key)
         {
-            return _memoryCache.TryGetValue(key, out T value) ? value : default;
+            return _memoryCache.TryGetValue(key, out T? value) ? value : default;
         }
 
         /// <summary>

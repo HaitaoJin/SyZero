@@ -1,4 +1,4 @@
----
+﻿---
 description: SyZero 框架模块（src/SyZero.Module/**）与内核（src/SyZero.Core/**）的编写约束
 applyTo: "src/SyZero.Core/**/*.cs,src/SyZero.Core/**/*.csproj,src/SyZero.Module/**/*.cs,src/SyZero.Module/**/*.csproj"
 ---

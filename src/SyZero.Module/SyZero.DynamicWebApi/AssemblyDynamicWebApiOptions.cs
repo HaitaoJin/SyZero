@@ -1,9 +1,11 @@
-﻿namespace SyZero.DynamicWebApi
+﻿using SyZero.Application.DynamicApi;
+
+namespace SyZero.DynamicWebApi
 {
     /// <summary>
     /// Specifies the dynamic webapi options for the assembly.
     /// </summary>
-    public class AssemblyDynamicWebApiOptions
+    public class AssemblyDynamicWebApiOptions : IAssemblyDynamicApiOptions
     {
         /// <summary>
         /// Routing prefix for all APIs

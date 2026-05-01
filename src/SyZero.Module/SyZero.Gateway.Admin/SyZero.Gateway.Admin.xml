@@ -1,0 +1,488 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.Gateway.Admin</name>
+    </assembly>
+    <members>
+        <member name="T:SyZero.Gateway.Admin.Auditing.FileGatewayAdminAuditLog">
+            <summary>
+            文件型审计日志实现：以 JSONL（每行一个 JSON 对象，append-only）写入磁盘。
+            路径由 <c>Gateway:Admin:Audit:Path</c> 控制（默认 <c>&lt;ContentRoot&gt;/logs/gateway-admin-audit.jsonl</c>），
+            启用开关为 <c>Gateway:Admin:Audit:Enabled</c>（默认 true）。
+            不实现轮转/归档，建议宿主自行处理。
+            </summary>
+        </member>
+        <member name="T:SyZero.Gateway.Admin.Auditing.GatewayAdminAuditEntry">
+            <summary>
+            一条网关管理审计记录。
+            </summary>
+        </member>
+        <member name="P:SyZero.Gateway.Admin.Auditing.GatewayAdminAuditEntry.Timestamp">
+            <summary>UTC 时间戳。</summary>
+        </member>
+        <member name="P:SyZero.Gateway.Admin.Auditing.GatewayAdminAuditEntry.User">
+            <summary>操作用户名（来自 Basic Auth）。</summary>
+        </member>
+        <member name="P:SyZero.Gateway.Admin.Auditing.GatewayAdminAuditEntry.Ip">
+            <summary>客户端 IP。</summary>
+        </member>
+        <member name="P:SyZero.Gateway.Admin.Auditing.GatewayAdminAuditEntry.Action">
+            <summary>操作动作，例如 <c>route.create</c> / <c>route.update</c> / <c>backup.restore</c>。</summary>
+        </member>
+        <member name="P:SyZero.Gateway.Admin.Auditing.GatewayAdminAuditEntry.Target">
+            <summary>操作目标，例如路由下标、Swagger Key、备份 Id 等。</summary>
+        </member>
+        <member name="P:SyZero.Gateway.Admin.Auditing.GatewayAdminAuditEntry.Summary">
+            <summary>简要摘要（人类可读）。</summary>
+        </member>
+        <member name="T:SyZero.Gateway.Admin.Auditing.IGatewayAdminAuditLog">
+            <summary>
+            网关管理面板的审计日志抽象。每次写入类操作（路由/Swagger CRUD、配置全量替换、备份还原等）应记录一条。
+            </summary>
+        </member>
+        <member name="P:SyZero.Gateway.Admin.Auditing.IGatewayAdminAuditLog.Enabled">
+            <summary>
+            当前实现是否启用并可写入。前端可据此显隐入口。
+            </summary>
+        </member>
+        <member name="M:SyZero.Gateway.Admin.Auditing.IGatewayAdminAuditLog.AppendAsync(SyZero.Gateway.Admin.Auditing.GatewayAdminAuditEntry,System.Threading.CancellationToken)">
+            <summary>
+            追加一条审计记录。
+            </summary>
+        </member>
+        <member name="M:SyZero.Gateway.Admin.Auditing.IGatewayAdminAuditLog.ReadRecentAsync(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            倒序读取最近若干条记录。
+            </summary>
+        </member>
+        <member name="T:SyZero.Gateway.Admin.Auth.AdminBasicAuthMiddleware">
+            <summary>
+            仅作用于 /admin、/admin-api 前缀的鉴权中间件。
+            凭据通过 <see cref="T:SyZero.Gateway.Admin.Auth.IUserResolver"/> 解析（合并 appsettings.Users[] 与 users.json）。
+            支持两种认证方式：
+            1. Cookie：登录页提交后由 <c>POST /admin-api/auth/login</c> 端点写入 <see cref="F:SyZero.Gateway.Admin.Auth.AdminBasicAuthMiddleware.AuthCookieName"/>；
+            2. HTTP Basic：兼容 curl / 自动化脚本。
+            通过校验后注入 <see cref="T:System.Security.Claims.ClaimsPrincipal"/>，包含 <see cref="F:System.Security.Claims.ClaimTypes.Name"/>、<see cref="F:System.Security.Claims.ClaimTypes.Role"/> 与自定义 <c>gw:builtin</c>。
+            对 <c>/admin-api/*</c> 的非 GET 请求强制要求 Admin 角色，Reader 返回 403。
+            </summary>
+        </member>
+        <member name="T:SyZero.Gateway.Admin.Auth.AdminIpFilterMiddleware">
+            <summary>
+            管理面板 IP 黑白名单中间件：在 Auth 之前执行，命中黑名单或不在白名单内直接返回 403。
+            配置参见 <see cref="T:SyZero.Gateway.Admin.Auth.GatewayAdminIpFilterOptions"/>。
+            </summary>
+        </member>
+        <member name="T:SyZero.Gateway.Admin.Auth.CachedFailedLoginTracker">
+            <summary>
+            基于 <see cref="T:SyZero.Cache.ICache"/> 抽象的登录失败追踪器实现。
+            宿主只要注册了任意 <see cref="T:SyZero.Cache.ICache"/>（例如 <c>SyZero.Redis</c> 提供的 Redis 实现），
+            即可在多实例网关之间共享失败计数与锁定状态。
+            </summary>
+            <remarks>
+            <para>
+            计数采用 Get → 修改 → Set 的乐观写入流程，对登录限流这类低频写入场景足够；
+            跨实例并发可能有极小概率丢失 1 次失败计数，但不会破坏锁定状态本身。
+            </para>
+            <para>键名格式：<c>{KeyPrefix}{client-key}</c>，默认前缀 <c>gw-admin:rate-limit:</c>。</para>
+            </remarks>
+        </member>
+        <member name="F:SyZero.Gateway.Admin.Auth.CachedFailedLoginTracker.KeyPrefix">
+            <summary>缓存键前缀，所有失败计数键共享。</summary>
+        </member>
+        <member name="P:SyZero.Gateway.Admin.Auth.CachedFailedLoginTracker.MaxFailures">
+            <inheritdoc />
+        </member>
+        <member name="M:SyZero.Gateway.Admin.Auth.CachedFailedLoginTracker.GetLockoutSeconds(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:SyZero.Gateway.Admin.Auth.CachedFailedLoginTracker.RecordFailure(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:SyZero.Gateway.Admin.Auth.CachedFailedLoginTracker.Reset(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:SyZero.Gateway.Admin.Auth.CachedFailedLoginTracker.GetFailureCount(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:SyZero.Gateway.Admin.Auth.CachedFailedLoginTracker.RateLimitEntry">
+            <summary>
+            缓存中持久化的失败计数条目（公开仅为了序列化兼容，外部不应直接构造）。
+            </summary>
+        </member>
+        <member name="T:SyZero.Gateway.Admin.Auth.ICaptchaStore">
+            <summary>
+            验证码存储抽象。颁发后保留答案；消费 (<see cref="M:SyZero.Gateway.Admin.Auth.ICaptchaStore.TryConsume(System.String,System.String)"/>) 一次后即被销毁。
+            默认实现为 <see cref="T:SyZero.Gateway.Admin.Auth.MemoryCaptchaStore"/>，宿主可替换为分布式版本。
+            </summary>
+        </member>
+        <member name="M:SyZero.Gateway.Admin.Auth.ICaptchaStore.Issue">
+            <summary>颁发新验证码。返回挑战标题（如 "7 + 4 = ?"）。</summary>
+        </member>
+        <member name="M:SyZero.Gateway.Admin.Auth.ICaptchaStore.TryConsume(System.String,System.String)">
+            <summary>校验并消费一次（成功后立即失效）。</summary>
+        </member>
+        <member name="T:SyZero.Gateway.Admin.Auth.CaptchaChallenge">
+            <summary>验证码挑战。</summary>
+        </member>
+        <member name="T:SyZero.Gateway.Admin.Auth.MemoryCaptchaStore">
+            <summary>基于 <see cref="T:System.Collections.Concurrent.ConcurrentDictionary`2"/> 的进程内验证码存储；5 分钟过期。</summary>
+        </member>
+        <member name="M:SyZero.Gateway.Admin.Auth.MemoryCaptchaStore.Issue">
+            <inheritdoc />
+        </member>
+        <member name="M:SyZero.Gateway.Admin.Auth.MemoryCaptchaStore.TryConsume(System.String,System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:SyZero.Gateway.Admin.Auth.IFailedLoginTracker">
+            <summary>
+            登录失败限流：按客户端 IP 在内存中累计失败次数，超过阈值则在窗口期内拒绝登录。
+            进程重启即清空。多实例部署需要更强一致性时可由宿主替换实现。
+            </summary>
+        </member>
+        <member name="M:SyZero.Gateway.Admin.Auth.IFailedLoginTracker.GetLockoutSeconds(System.String)">
+            <summary>
+            检查是否被锁定。锁定中返回剩余秒数（&gt; 0）；未锁定返回 0。
+            </summary>
+        </member>
+        <member name="M:SyZero.Gateway.Admin.Auth.IFailedLoginTracker.RecordFailure(System.String)">
+            <summary>记录一次失败，返回累计失败次数。达到阈值时自动开启锁定窗口。</summary>
+        </member>
+        <member name="M:SyZero.Gateway.Admin.Auth.IFailedLoginTracker.Reset(System.String)">
+            <summary>登录成功后清除该 IP 的失败计数。</summary>
+        </member>
+        <member name="P:SyZero.Gateway.Admin.Auth.IFailedLoginTracker.MaxFailures">
+            <summary>当前生效的最大失败次数（用于响应中给出 remaining 提示）。</summary>
+        </member>
+        <member name="M:SyZero.Gateway.Admin.Auth.IFailedLoginTracker.GetFailureCount(System.String)">
+            <summary>获取该 client 当前累计的失败次数（用于判断是否需要展示验证码）。</summary>
+        </member>
+        <member name="T:SyZero.Gateway.Admin.Auth.FileGatewayAdminUserStore">
+            <summary>
+            文件型管理台账号存储，路径为 <c>&lt;ContentRoot&gt;/users.json</c>，
+            可由配置项 <c>Gateway:Admin:UsersFile</c> 覆盖（绝对或相对路径）。
+            使用进程锁 + 写临时文件 + replace 实现简单的原子写入。
+            </summary>
+        </member>
+        <member name="M:SyZero.Gateway.Admin.Auth.FileGatewayAdminUserStore.#ctor(System.String)">
+            <summary>测试用构造（直接指定路径）。</summary>
+        </member>
+        <member name="P:SyZero.Gateway.Admin.Auth.FileGatewayAdminUserStore.FilePath">
+            <summary>暴露文件路径供诊断或测试使用。</summary>
+        </member>
+        <member name="T:SyZero.Gateway.Admin.Auth.GatewayAdminIpFilterOptions">
+            <summary>
+            管理面板 IP 黑白名单配置。绑定 <see cref="F:SyZero.Gateway.Admin.Auth.GatewayAdminIpFilterOptions.SectionName"/>。
+            顺序：Deny 优先 → 若 <see cref="P:SyZero.Gateway.Admin.Auth.GatewayAdminIpFilterOptions.Allow"/> 非空则必须命中。
+            条目支持单 IP（<c>1.2.3.4</c> / <c>::1</c>）或 CIDR（<c>10.0.0.0/8</c> / <c>2001:db8::/32</c>）。
+            </summary>
+        </member>
+        <member name="P:SyZero.Gateway.Admin.Auth.GatewayAdminIpFilterOptions.Allow">
+            <summary>白名单。为空表示不启用白名单（不限制来源）。命中放行。</summary>
+        </member>
+        <member name="P:SyZero.Gateway.Admin.Auth.GatewayAdminIpFilterOptions.Deny">
+            <summary>黑名单。命中即拒绝（403），优先级高于白名单。</summary>
+        </member>
+        <member name="P:SyZero.Gateway.Admin.Auth.GatewayAdminIpFilterOptions.TrustForwardedFor">
+            <summary>是否信任 <see cref="P:SyZero.Gateway.Admin.Auth.GatewayAdminIpFilterOptions.ForwardedHeaderName"/> 头取真实客户端 IP。</summary>
+        </member>
+        <member name="P:SyZero.Gateway.Admin.Auth.GatewayAdminIpFilterOptions.ForwardedHeaderName">
+            <summary>承载真实客户端 IP 的请求头名（默认 <c>X-Forwarded-For</c>）。</summary>
+        </member>
+        <member name="T:SyZero.Gateway.Admin.Auth.GatewayAdminRateLimitOptions">
+            <summary>
+            登录限流可配置项，绑定到配置节 <c>Gateway:Admin:RateLimit</c>。
+            任意值 &lt;= 0 时退回到 <see cref="T:SyZero.Gateway.Admin.Auth.GatewayAdminRateLimitOptions.Defaults"/> 中的默认值。
+            </summary>
+        </member>
+        <member name="P:SyZero.Gateway.Admin.Auth.GatewayAdminRateLimitOptions.MaxFailures">
+            <summary>触发锁定前允许的最大失败次数（默认 5）。</summary>
+        </member>
+        <member name="P:SyZero.Gateway.Admin.Auth.GatewayAdminRateLimitOptions.LockoutMinutes">
+            <summary>锁定持续分钟数（默认 5）。</summary>
+        </member>
+        <member name="P:SyZero.Gateway.Admin.Auth.GatewayAdminRateLimitOptions.WindowMinutes">
+            <summary>失败计数累计窗口分钟数；窗口结束（且未锁定）则计数清零（默认 15）。</summary>
+        </member>
+        <member name="P:SyZero.Gateway.Admin.Auth.GatewayAdminRateLimitOptions.TrustForwardedFor">
+            <summary>是否信任 <see cref="P:SyZero.Gateway.Admin.Auth.GatewayAdminRateLimitOptions.ForwardedHeaderName"/> 提供的客户端 IP（位于反向代理后才应启用，默认 false）。</summary>
+        </member>
+        <member name="P:SyZero.Gateway.Admin.Auth.GatewayAdminRateLimitOptions.ForwardedHeaderName">
+            <summary>承载真实客户端 IP 的请求头名称（默认 <c>X-Forwarded-For</c>）。仅 <see cref="P:SyZero.Gateway.Admin.Auth.GatewayAdminRateLimitOptions.TrustForwardedFor"/> 为 true 时生效。</summary>
+        </member>
+        <member name="P:SyZero.Gateway.Admin.Auth.GatewayAdminRateLimitOptions.CaptchaThreshold">
+            <summary>触发验证码的失败次数阈值（默认 3）。设为 <c>0</c> 时关闭验证码。当当前失败次数 ≥ 该值时，登录请求必须携带 <c>CaptchaId</c> + <c>CaptchaAnswer</c>。</summary>
+        </member>
+        <member name="P:SyZero.Gateway.Admin.Auth.GatewayAdminRateLimitOptions.EffectiveCaptchaThreshold">
+            <summary>有效阈值；&lt;0 视为 0（关闭）。</summary>
+        </member>
+        <member name="T:SyZero.Gateway.Admin.Auth.GatewayAdminUsersOptions">
+            <summary>
+            管理台多用户与角色配置。配置节：<see cref="F:SyZero.Gateway.Admin.Auth.GatewayAdminUsersOptions.SectionName"/>。
+            </summary>
+            <remarks>
+            支持两种 appsettings 配置形式（任选其一或并存，均视为内置账号）：
+            <list type="number">
+              <item><description>单账号（兼容旧版）：<c>Gateway:Admin:Username</c> + <c>Gateway:Admin:Password</c>，默认角色 <c>Admin</c>。</description></item>
+              <item><description>多账号：<c>Gateway:Admin:Users</c> 数组，每项含 <c>Name</c> / <c>Password</c> / <c>Role</c>。</description></item>
+            </list>
+            此外可在 <c>users.json</c> 中通过用户管理页运行时增删账号。所有内置账号 <see cref="P:SyZero.Gateway.Admin.Auth.GatewayAdminUser.IsBuiltIn"/>=true，不可在 UI 修改。
+            </remarks>
+        </member>
+        <member name="P:SyZero.Gateway.Admin.Auth.GatewayAdminUsersOptions.Users">
+            <summary>来自 appsettings 的内置账号（只读，无法在用户管理页修改）。</summary>
+        </member>
+        <member name="T:SyZero.Gateway.Admin.Auth.GatewayAdminRoles">
+            <summary>角色枚举（字符串）。</summary>
+        </member>
+        <member name="T:SyZero.Gateway.Admin.Auth.GatewayAdminUser">
+            <summary>管理台用户。</summary>
+        </member>
+        <member name="P:SyZero.Gateway.Admin.Auth.GatewayAdminUser.Role">
+            <summary>角色：<c>Admin</c> 或 <c>Reader</c>。默认 <c>Admin</c>。</summary>
+        </member>
+        <member name="P:SyZero.Gateway.Admin.Auth.GatewayAdminUser.IsBuiltIn">
+            <summary>
+            是否为内置账号（来自 appsettings）。仅在运行时由 <c>IUserResolver</c> 填充，不参与序列化。
+            </summary>
+        </member>
+        <member name="T:SyZero.Gateway.Admin.Auth.IGatewayAdminUserStore">
+            <summary>
+            管理台「文件型」账号存储（运行时 CRUD 的目标，对应 users.json）。
+            appsettings 中的 <c>Gateway:Admin:Users[]</c> 不在此接口范围内（只读，由 <see cref="T:SyZero.Gateway.Admin.Auth.IUserResolver"/> 合并）。
+            </summary>
+        </member>
+        <member name="M:SyZero.Gateway.Admin.Auth.IGatewayAdminUserStore.ListAsync(System.Threading.CancellationToken)">
+            <summary>读取全部文件账号（不含密码字段时由实现自行决定；本接口返回完整数据）。</summary>
+        </member>
+        <member name="M:SyZero.Gateway.Admin.Auth.IGatewayAdminUserStore.AddAsync(SyZero.Gateway.Admin.Auth.GatewayAdminUser,System.Threading.CancellationToken)">
+            <summary>新增账号。Name 冲突时返回 false。</summary>
+        </member>
+        <member name="M:SyZero.Gateway.Admin.Auth.IGatewayAdminUserStore.UpdateAsync(System.String,System.String,System.String,System.Threading.CancellationToken)">
+            <summary>更新账号（按 Name 定位）。可选改密码 / 角色，传 null 则不改。返回 false 表示未找到。</summary>
+        </member>
+        <member name="M:SyZero.Gateway.Admin.Auth.IGatewayAdminUserStore.RemoveAsync(System.String,System.Threading.CancellationToken)">
+            <summary>按 Name 删除。返回 false 表示未找到。</summary>
+        </member>
+        <member name="M:SyZero.Gateway.Admin.Auth.IGatewayAdminUserStore.FindAsync(System.String,System.Threading.CancellationToken)">
+            <summary>按 Name 查找单条。</summary>
+        </member>
+        <member name="T:SyZero.Gateway.Admin.Auth.IUserResolver">
+            <summary>
+            合并 appsettings.Users[] 与 <see cref="T:SyZero.Gateway.Admin.Auth.IGatewayAdminUserStore"/> 的视图。
+            当存在重名时 appsettings 优先（同名 file 项被忽略）。
+            </summary>
+        </member>
+        <member name="M:SyZero.Gateway.Admin.Auth.IUserResolver.ListAsync(System.Threading.CancellationToken)">
+            <summary>列出全部账号（带 IsBuiltIn 标记）。</summary>
+        </member>
+        <member name="M:SyZero.Gateway.Admin.Auth.IUserResolver.FindAsync(System.String,System.Threading.CancellationToken)">
+            <summary>按 Name 查找；未找到返回 null。</summary>
+        </member>
+        <member name="M:SyZero.Gateway.Admin.Auth.IUserResolver.ValidateAsync(System.String,System.String,System.Threading.CancellationToken)">
+            <summary>校验用户名 + 密码（明文比较，固定时间）。返回匹配到的用户（带 IsBuiltIn / Role），否则 null。</summary>
+        </member>
+        <member name="M:SyZero.Gateway.Admin.Auth.IUserResolver.CountAdminsAsync(System.Threading.CancellationToken)">
+            <summary>统计 Admin 角色账号数（用于 UI / 业务保护）。</summary>
+        </member>
+        <member name="T:SyZero.Gateway.Admin.Auth.IpAclMatcher">
+            <summary>
+            IP / CIDR 列表匹配器。预解析配置项以便在请求路径上零分配快速判定。
+            </summary>
+        </member>
+        <member name="T:SyZero.Gateway.Admin.Auth.UserResolver">
+            <summary>
+            默认账号解析器：合并 appsettings 中的 <see cref="P:SyZero.Gateway.Admin.Auth.GatewayAdminUsersOptions.Users"/>（IsBuiltIn=true）
+            与 <see cref="T:SyZero.Gateway.Admin.Auth.IGatewayAdminUserStore"/> 中的文件账号（IsBuiltIn=false）。
+            重名时 appsettings 优先，文件中同名项被忽略并写入告警日志。
+            </summary>
+        </member>
+        <member name="T:SyZero.Gateway.Admin.Controllers.AdminController">
+            <summary>
+            网关管理 API：对网关配置中的 Routes 与 SwaggerEndPoints 做完整 CRUD，
+            以及概览/重载/全量配置导入导出/运行时 Diff/路由 reorder/克隆/服务发现下拉/审计读取等扩展端点。
+            配套 Razor Pages UI（/admin）。
+            </summary>
+            <summary>
+            AdminController 限流 / 负载均衡管理端点（拆分为 partial 以保持主文件可读）。
+            </summary>
+        </member>
+        <member name="P:SyZero.Gateway.Admin.Controllers.AdminController.BulkTagsRequest.Op">
+            <summary>set | add | remove，默认 set。</summary>
+        </member>
+        <member name="P:SyZero.Gateway.Admin.Controllers.AdminController.ReorderRequest.Order">
+            <summary>新顺序——元素是当前 Routes 列表中的索引，长度必须与现有路由数一致。</summary>
+        </member>
+        <member name="M:SyZero.Gateway.Admin.Controllers.AdminController.Events(System.Threading.CancellationToken)">
+            <summary>
+            SSE 长连接：广播写操作事件（路由 / Swagger / 备份 / 配置 等）给所有在线管理面板。
+            客户端：<c>new EventSource('/admin-api/events')</c>。
+            心跳：每 15s 一次注释行 <c>: ping</c>，避免代理超时关闭连接。
+            </summary>
+        </member>
+        <member name="M:SyZero.Gateway.Admin.Controllers.AdminController.GetRouteRateLimit(System.Int32,System.Threading.CancellationToken)">
+            <summary>读取单路由限流配置。null 表示该路由未配置限流。</summary>
+        </member>
+        <member name="M:SyZero.Gateway.Admin.Controllers.AdminController.SetRouteRateLimit(System.Int32,SyZero.Gateway.GatewayRateLimitOptions,System.Threading.CancellationToken)">
+            <summary>设置或更新单路由限流配置。</summary>
+        </member>
+        <member name="M:SyZero.Gateway.Admin.Controllers.AdminController.ClearRouteRateLimit(System.Int32,System.Threading.CancellationToken)">
+            <summary>清除单路由限流配置。</summary>
+        </member>
+        <member name="M:SyZero.Gateway.Admin.Controllers.AdminController.GetLoadBalancerTypes">
+            <summary>返回支持的负载均衡器类型列表（前端下拉用）。</summary>
+        </member>
+        <member name="T:SyZero.Gateway.Admin.Controllers.AuthController">
+            <summary>
+            网关管理登录 / 登出端点（写入 / 清除 cookie）。
+            对外路径：<c>POST /admin-api/auth/login</c>、<c>POST /admin-api/auth/logout</c>。
+            </summary>
+        </member>
+        <member name="M:SyZero.Gateway.Admin.Controllers.AuthController.ResolveClientKey">
+            <summary>
+            解析用于限流计数的客户端标识。开启 <c>TrustForwardedFor</c> 时取转发头第一个 IP，否则用 RemoteIpAddress。
+            </summary>
+        </member>
+        <member name="P:SyZero.Gateway.Admin.Controllers.AuthController.LoginRequest.CaptchaId">
+            <summary>验证码 ID（仅在超阈值后与服务器同步使用）。</summary>
+        </member>
+        <member name="P:SyZero.Gateway.Admin.Controllers.AuthController.LoginRequest.CaptchaAnswer">
+            <summary>验证码答案。</summary>
+        </member>
+        <member name="M:SyZero.Gateway.Admin.Controllers.AuthController.Captcha">
+            <summary>
+            颁发一份验证码。返回 <c>{ id, question }</c>，客户端在下一次登录请求中携带
+            <c>CaptchaId</c> + <c>CaptchaAnswer</c>。
+            </summary>
+        </member>
+        <member name="T:SyZero.Gateway.Admin.Controllers.BackupsController">
+            <summary>
+            网关配置备份管理 API：列出 / 下载 / 还原 / 删除。
+            依赖 <see cref="T:SyZero.Gateway.IGatewayConfigurationStore"/> 中的备份扩展方法；
+            当具体实现未实现备份能力时，默认方法返回空列表或抛 <see cref="T:System.NotSupportedException"/>。
+            </summary>
+        </member>
+        <member name="T:SyZero.Gateway.Admin.Controllers.UsersController">
+            <summary>
+            管理台用户 CRUD（仅 file 用户可写；appsettings 内置账号只读）。
+            所有写操作要求 Admin 角色（中间件已强制），<c>POST /admin-api/me/password</c> 任何登录用户可调用。
+            </summary>
+        </member>
+        <member name="T:SyZero.Gateway.Admin.Events.GatewayAdminEvent">
+            <summary>
+            网关管理面板对外广播的事件（写操作之后）。
+            </summary>
+        </member>
+        <member name="P:SyZero.Gateway.Admin.Events.GatewayAdminEvent.Type">
+            <summary>事件类型，与审计 <c>Action</c> 字段一致，例如 <c>route.update</c> / <c>config.reload</c>。</summary>
+        </member>
+        <member name="P:SyZero.Gateway.Admin.Events.GatewayAdminEvent.User">
+            <summary>触发用户。</summary>
+        </member>
+        <member name="P:SyZero.Gateway.Admin.Events.GatewayAdminEvent.Target">
+            <summary>触发目标，如路由下标、Swagger Key、备份 Id。</summary>
+        </member>
+        <member name="P:SyZero.Gateway.Admin.Events.GatewayAdminEvent.Summary">
+            <summary>摘要（人类可读）。</summary>
+        </member>
+        <member name="P:SyZero.Gateway.Admin.Events.GatewayAdminEvent.Timestamp">
+            <summary>UTC 时间戳。</summary>
+        </member>
+        <member name="T:SyZero.Gateway.Admin.Events.IGatewayAdminEventBus">
+            <summary>
+            进程内的网关管理事件总线：写操作触发后向所有 SSE 订阅者广播。
+            </summary>
+        </member>
+        <member name="M:SyZero.Gateway.Admin.Events.IGatewayAdminEventBus.Publish(SyZero.Gateway.Admin.Events.GatewayAdminEvent)">
+            <summary>向所有当前订阅者广播事件（不阻塞，背压时丢弃最早项）。</summary>
+        </member>
+        <member name="M:SyZero.Gateway.Admin.Events.IGatewayAdminEventBus.Subscribe">
+            <summary>订阅事件流。返回 (订阅 Id, ChannelReader)；调用方使用完毕必须调用 <see cref="M:SyZero.Gateway.Admin.Events.IGatewayAdminEventBus.Unsubscribe(System.Guid)"/>。</summary>
+        </member>
+        <member name="M:SyZero.Gateway.Admin.Events.IGatewayAdminEventBus.Unsubscribe(System.Guid)">
+            <summary>取消订阅并释放底层 Channel。</summary>
+        </member>
+        <member name="P:SyZero.Gateway.Admin.Events.IGatewayAdminEventBus.SubscriberCount">
+            <summary>当前订阅者数量（监控用途）。</summary>
+        </member>
+        <member name="T:SyZero.Gateway.Admin.Events.GatewayAdminEventBus">
+            <summary>
+            默认实现：基于 <see cref="T:System.Threading.Channels.Channel`1"/>（每订阅者一个有界 Channel，<c>DropOldest</c> 防止慢客户端积压）。
+            </summary>
+        </member>
+        <member name="T:SyZero.Gateway.Admin.Pages.Admin.LoadBalancingModel">
+            <summary>
+            负载均衡管理页面：批量为路由设置 LoadBalancerOptions.Type。
+            </summary>
+        </member>
+        <member name="T:SyZero.Gateway.Admin.Pages.Admin.LoginModel">
+            <summary>
+            登录页 PageModel；表单提交完全由前端走 <c>/admin-api/auth/login</c>。
+            </summary>
+        </member>
+        <member name="T:SyZero.Gateway.Admin.Pages.Admin.LogoutModel">
+            <summary>
+            登出页：清除登录 cookie 后由前端跳转登录页。
+            </summary>
+        </member>
+        <member name="T:SyZero.Gateway.Admin.Pages.Admin.RateLimitingModel">
+            <summary>
+            限流管理页面：管理 GlobalConfiguration.RateLimitOptions 与每条路由的 RateLimitOptions。
+            </summary>
+        </member>
+        <member name="T:SyZero.Gateway.Admin.Pages.Admin.UsersModel">
+            <summary>
+            用户管理页面：列出 appsettings 内置账号 + users.json 文件账号；
+            Admin 角色可对 file 账号 CRUD，任何登录用户可改自己的密码。
+            </summary>
+        </member>
+        <member name="T:SyZero.Gateway.Admin.Services.FileGatewayConfigurationStore">
+            <summary>
+            默认的文件型 <see cref="T:SyZero.Gateway.IGatewayConfigurationStore"/> 实现：在 ContentRoot 下读写
+            <c>configuration.json</c>，写入时自动备份并触发 <see cref="T:SyZero.Gateway.IGatewayConfigurationApplier"/>。
+            仅作为 SyZero.Gateway.Admin 的兜底；具体网关实现包通常会提供专属 Store。
+            </summary>
+        </member>
+        <member name="M:SyZero.Gateway.Admin.Services.FileGatewayConfigurationStore.ResolveBackupPath(System.String)">
+            <summary>
+            公开的 BackupId → 路径解析；非法 id 返回 null。
+            </summary>
+        </member>
+        <member name="T:SyZero.Gateway.Admin.Services.NoOpGatewayConfigurationApplier">
+            <summary>
+            默认的空 Applier 实现：当主机未注册具体网关后端的 <see cref="T:SyZero.Gateway.IGatewayConfigurationApplier"/> 时使用。
+            配置写盘后不再触发任何运行时下发；变更通常需要重启网关进程才能生效。
+            </summary>
+        </member>
+        <member name="T:SyZero.SyZeroGatewayAdminExtension">
+            <summary>
+            SyZero.Gateway.Admin 模块的注册入口。
+            提供网关管理面板（Razor Pages + REST API），路径前缀：/admin、/admin-api。
+            依赖 <see cref="T:SyZero.Gateway.IGateway"/> / <see cref="T:SyZero.Gateway.IGatewayConfigurationStore"/> 抽象，
+            由具体网关实现包（如 SyZero.Ocelot）提供后端。
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroGatewayAdminExtension.AddSyZeroGatewayAdmin(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            注册管理面板需要的服务（Razor Pages、Controllers）。多次调用安全。
+            注意：调用方需要确保已注册 <see cref="T:SyZero.Gateway.IGatewayConfigurationStore"/>（通常通过具体网关模块的 Add* 扩展）。
+            若未注册，则在缺省情况下兜底注册 <see cref="T:SyZero.Gateway.Admin.Services.FileGatewayConfigurationStore"/>，但不会绑定 Applier。
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroGatewayAdminExtension.UseSyZeroGatewayAdminCachedRateLimit(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            切换登录失败追踪器到基于 <see cref="T:SyZero.Cache.ICache"/> 的实现，
+            让多实例网关共享失败计数与锁定状态。需在容器中已注册任意 <see cref="T:SyZero.Cache.ICache"/>
+            （例如调用 <c>services.AddSyZeroRedis(...)</c>）后使用。
+            </summary>
+            <remarks>
+            必须在 <see cref="M:SyZero.SyZeroGatewayAdminExtension.AddSyZeroGatewayAdmin(Microsoft.Extensions.DependencyInjection.IServiceCollection)"/> 之后调用——它会替换默认的内存 <see cref="T:SyZero.Gateway.Admin.Auth.FailedLoginTracker"/>。
+            </remarks>
+        </member>
+        <member name="M:SyZero.SyZeroGatewayAdminExtension.UseSyZeroGatewayAdmin(Microsoft.AspNetCore.Builder.IApplicationBuilder)">
+            <summary>
+            在 /admin、/admin-api 路径前注入 Basic Auth 中间件。必须在 <c>UseRouting</c> 之后、
+            具体网关终端中间件（如 Ocelot）之前调用。
+            </summary>
+        </member>
+    </members>
+</doc>

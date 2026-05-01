@@ -1,6 +1,6 @@
 # SyZero.Feign
 
-SyZero 框架的声明式 HTTP 客户端模块，基于 Refit 实现类似 Spring Cloud OpenFeign 的功能。
+SyZero 框架的声明式 HTTP 客户端模块，基于 Refit 实现类似 Spring Cloud OpenFeign 的功能。自 v1.2.2 起，`SyZero.Feign` 是 [`IRemoteServiceProvider`](./SyZero.Core) 抽象的一个具体实现（Provider）—— 同一份 `RemoteServiceOptions` 配置可被未来的其它 Provider（如 WebApiClient 等）复用。
 
 ## 📦 安装
 
@@ -14,6 +14,7 @@ dotnet add package SyZero.Feign
 - 💾 **服务发现** - 集成服务注册与发现
 - 🔒 **负载均衡** - 内置负载均衡支持
 - 🔄 **gRPC 支持** - 同时支持 HTTP 和 gRPC 调用
+- 🧩 **协议级 Provider 扩展** - 可通过 `IRemoteServiceProxyFactory` 注入自定义协议工厂
 
 ---
 
@@ -24,11 +25,26 @@ dotnet add package SyZero.Feign
 ```json
 {
   "Feign": {
-    "Timeout": 30000,
-    "RetryCount": 3
+    "Service": [
+      {
+        "ServiceName": "SyZero.Example2",
+        "AssemblyName": "SyZero.Example2.IApplication",
+        "Protocol": "Http",
+        "Timeout": 30,
+        "Retry": 3
+      }
+    ],
+    "Global": {
+      "Protocol": "Http",
+      "Timeout": 30,
+      "Retry": 3,
+      "EnableSsl": false
+    }
   }
 }
 ```
+
+> ⚠️ **v1.2.2 破坏性变更**：原 `FeignOptions` / `FeignService` / `FeignProtocol` / `IFeignProxyFactory` 等类型被下沉到 `SyZero.Core` 并改名为 `RemoteServiceOptions` / `RemoteServiceItem` / `RemoteServiceProtocol` / `IRemoteServiceProxyFactory`；服务条目字段 `DllName` 改名为 `AssemblyName`。`AddSyZeroFeign(...)` API 形态保持不变（参数类型由 `FeignOptions` 改为 `RemoteServiceOptions`）。
 
 ### 2. 注册服务
 
@@ -38,19 +54,32 @@ var builder = WebApplication.CreateBuilder(args);
 // 添加SyZero
 builder.AddSyZero();
 
-// 注册服务方式1 - 使用默认配置
+// 注册服务方式1 - 从配置 "Feign" 节读取
 builder.Services.AddSyZeroFeign();
 
-// 注册服务方式2 - 使用委托配置
+// 注册服务方式2 - 配置 + 委托
 builder.Services.AddSyZeroFeign(options =>
 {
-    options.Timeout = 30000;
-    options.RetryCount = 3;
+    options.Global.Timeout = 30;
+    options.Global.Retry = 3;
 });
 
-// 注册服务方式3 - 注册特定客户端
-builder.Services.AddSyZeroFeign()
-    .AddClient<IUserServiceClient>("user-service");
+// 注册服务方式3 - 直接传入 RemoteServiceOptions
+builder.Services.AddSyZeroFeign(new RemoteServiceOptions
+{
+    Service =
+    {
+        new RemoteServiceItem
+        {
+            ServiceName = "user-service",
+            AssemblyName = "User.IApplication",
+            Protocol = RemoteServiceProtocol.Http
+        }
+    }
+});
+
+// 也可直接走 Core 的 Provider 注册入口（与上面等价）：
+// builder.Services.AddRemoteService<FeignRemoteServiceProvider>();
 
 var app = builder.Build();
 // 使用SyZero

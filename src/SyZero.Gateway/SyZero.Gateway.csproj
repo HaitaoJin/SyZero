@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <Description>SyZero-Gateway</Description>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -10,7 +11,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SyZero.Module\SyZero.ApiGateway\SyZero.ApiGateway.csproj" />
+    <ProjectReference Include="..\SyZero.Module\SyZero.Gateway.Abstractions\SyZero.Gateway.Abstractions.csproj" />
+    <ProjectReference Include="..\SyZero.Module\SyZero.Gateway.Ocelot\SyZero.Gateway.Ocelot.csproj" />
+    <ProjectReference Include="..\SyZero.Module\SyZero.Gateway.Admin\SyZero.Gateway.Admin.csproj" />
     <ProjectReference Include="..\SyZero.Module\SyZero.Log4Net\SyZero.Log4Net.csproj" />
     <ProjectReference Include="..\SyZero.Module\SyZero.OpenTelemetry\SyZero.OpenTelemetry.csproj" />
     <ProjectReference Include="..\SyZero.Module\SyZero.Redis\SyZero.Redis.csproj" />

@@ -4,7 +4,7 @@ namespace SyZero.Web.Common
 {
     public class WxDailyVisitTrendResult
     {
-        public List<WxDailyVisitTrendDto> list { get; set; }
+        public List<WxDailyVisitTrendDto>? list { get; set; }
     }
 
     public class WxDailyVisitTrendDto
@@ -12,7 +12,7 @@ namespace SyZero.Web.Common
         /// <summary>
         /// 日期，格式为 yyyymmdd
         /// </summary>
-        public string ref_date { get; set; }
+        public string ref_date { get; set; } = string.Empty;
         /// <summary>
         /// 打开次数
         /// </summary>

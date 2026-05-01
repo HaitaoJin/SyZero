@@ -11,8 +11,22 @@ using SyZero.SqlSugar.DbContext;
 
 namespace SyZero.SqlSugar.Repositories
 {
-    public class SqlSugarRepository<TEntity> : IRepository<TEntity>
+    /// <summary>
+    /// 默认 long 主键的 SqlSugar 仓储（兼容历史用法）。
+    /// </summary>
+    public class SqlSugarRepository<TEntity> : SqlSugarRepository<TEntity, long>, IRepository<TEntity>
         where TEntity : class, IEntity, new()
+    {
+        public SqlSugarRepository(ISyZeroDbContext dbContext) : base(dbContext)
+        {
+        }
+    }
+
+    /// <summary>
+    /// 通用 SqlSugar 仓储（自定义主键类型）。
+    /// </summary>
+    public class SqlSugarRepository<TEntity, TKey> : IRepository<TEntity, TKey>
+        where TEntity : class, IEntity<TKey>, new()
     {
         protected ISyZeroDbContext _dbContext;
         protected SimpleClient<TEntity> _dbSet;
@@ -75,9 +89,9 @@ namespace SyZero.SqlSugar.Repositories
         #endregion
 
         #region Delete
-        public long Delete(long id)
+        public long Delete(TKey id)
         {
-            return NormalizeAffectedRows(_dbSet.DeleteById(id));
+            return NormalizeAffectedRows(_dbSet.DeleteById(id!));
         }
 
         public long Delete(Expression<Func<TEntity, bool>> where)
@@ -85,10 +99,10 @@ namespace SyZero.SqlSugar.Repositories
             return NormalizeAffectedRows(_dbSet.Delete(where));
         }
 
-        public async Task<long> DeleteAsync(long id, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<long> DeleteAsync(TKey id, CancellationToken cancellationToken = default(CancellationToken))
         {
             cancellationToken.ThrowIfCancellationRequested();
-            return NormalizeAffectedRows(await _dbSet.DeleteByIdAsync(id));
+            return NormalizeAffectedRows(await _dbSet.DeleteByIdAsync(id!));
         }
 
         public async Task<long> DeleteAsync(Expression<Func<TEntity, bool>> where, CancellationToken cancellationToken = default(CancellationToken))
@@ -121,15 +135,15 @@ namespace SyZero.SqlSugar.Repositories
             return Task.FromResult(GetList(where));
         }
 
-        public TEntity GetModel(long id)
+        public TEntity GetModel(TKey id)
         {
-            return _dbSet.GetById(id);
+            return _dbSet.GetById(id!);
         }
 
-        public async Task<TEntity> GetModelAsync(long id, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<TEntity> GetModelAsync(TKey id, CancellationToken cancellationToken = default(CancellationToken))
         {
             cancellationToken.ThrowIfCancellationRequested();
-            return await _dbSet.GetByIdAsync(id);
+            return await _dbSet.GetByIdAsync(id!);
         }
 
         public TEntity GetModel(Expression<Func<TEntity, bool>> where)

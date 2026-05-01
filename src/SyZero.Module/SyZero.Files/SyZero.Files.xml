@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.Files</name>
+    </assembly>
+    <members>
+        <member name="T:SyZero.Files.ISyFileStorage">
+            <summary>
+            SyZero 文件存储抽象。统一上传、下载、删除、判断存在的接口，
+            默认提供本地磁盘实现 <see cref="T:SyZero.Files.LocalFileStorage"/>，后续可对接 S3/OSS/COS 等。
+            </summary>
+        </member>
+        <member name="M:SyZero.Files.ISyFileStorage.SaveAsync(System.String,System.IO.Stream,System.Threading.CancellationToken)">
+            <summary>
+            保存一个流到指定路径（相对存储根），覆盖同名文件。
+            </summary>
+            <returns>保存后用于读取的相对路径（通常等于入参 path）。</returns>
+        </member>
+        <member name="M:SyZero.Files.ISyFileStorage.OpenReadAsync(System.String,System.Threading.CancellationToken)">
+            <summary>打开指定路径的只读流。</summary>
+        </member>
+        <member name="T:SyZero.Files.LocalFileStorage">
+            <summary>
+            基于本地磁盘的 <see cref="T:SyZero.Files.ISyFileStorage"/> 默认实现。所有路径相对 <see cref="P:SyZero.Files.LocalFileStorage.RootPath"/>。
+            </summary>
+        </member>
+        <member name="T:SyZero.SyZeroFilesExtension">
+            <summary>
+            SyZero.Files 模块的 DI 扩展。
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroFilesExtension.AddSyZeroLocalFiles(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.String)">
+            <summary>
+            注册基于本地磁盘的 <see cref="T:SyZero.Files.ISyFileStorage"/> 默认实现。
+            </summary>
+        </member>
+    </members>
+</doc>

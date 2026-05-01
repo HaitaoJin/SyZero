@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Security.Claims;
-using System.Threading;
 using System.Threading.Tasks;
 using SyZero.Runtime.Security;
 using SyZero.Runtime.Session;
@@ -26,7 +25,8 @@ namespace SyZero.AspNetCore.Middleware
         {
             using (SyZeroUtil.BeginScope(context.RequestServices))
             {
-                Thread.CurrentPrincipal = Anonymous;
+                // 仅使用 HttpContext.User 存储当前用户，
+                // Thread.CurrentPrincipal 在 ASP.NET Core 中已不再推荐（异步上下文切换不可靠）。
                 context.User = Anonymous;
 
                 if (context.Request.Headers.TryGetValue("Authorization", out var token)
@@ -41,7 +41,6 @@ namespace SyZero.AspNetCore.Middleware
 
                         if (claimsPrincipal != null)
                         {
-                            Thread.CurrentPrincipal = claimsPrincipal;
                             context.User = claimsPrincipal;
                             SyZeroUtil.GetScopeService<ISySession>()?.Parse(claimsPrincipal);
                         }

@@ -10,7 +10,7 @@ namespace SyZero.Runtime.Security
         /// </summary>
         /// <param name="token"></param>
         /// <returns></returns>
-        ClaimsPrincipal GetPrincipal(string token);
+        ClaimsPrincipal? GetPrincipal(string token);
 
         /// <summary>
         /// 获取Token

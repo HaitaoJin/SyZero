@@ -87,18 +87,6 @@
             <summary>
             判断指定类型是否可以作为动态 WebApi 控制器
             </summary>
-            <param name="typeInfo">类型信息</param>
-            <returns>如果类型是有效的动态 WebApi 控制器则返回 true</returns>
-        </member>
-        <member name="M:SyZero.DynamicWebApi.DynamicWebApiControllerFeatureProvider.IsValidDynamicController(System.Reflection.TypeInfo)">
-            <summary>
-            验证类型是否为有效的动态控制器
-            </summary>
-        </member>
-        <member name="M:SyZero.DynamicWebApi.DynamicWebApiControllerFeatureProvider.IsDynamicApiType(System.Reflection.TypeInfo)">
-            <summary>
-            检查类型是否符合动态 WebApi 的基本要求
-            </summary>
         </member>
         <member name="M:SyZero.DynamicWebApi.DynamicWebApiControllerFeatureProvider.ClearCache">
             <summary>
@@ -228,11 +216,6 @@
             <para>默认值: "POST"</para>
             </summary>
         </member>
-        <member name="P:SyZero.DynamicWebApi.DynamicWebApiOptions.DefaultAreaName">
-            <summary>
-            默认区域名称
-            </summary>
-        </member>
         <member name="P:SyZero.DynamicWebApi.DynamicWebApiOptions.DefaultApiPrefix">
             <summary>
             API 路由前缀
@@ -334,68 +317,6 @@
             <param name="configuration">配置，为 null 时使用 AppConfig.Configuration</param>
             <param name="sectionName">配置节名称，默认为 "DynamicWebApi"</param>
             <returns>服务集合</returns>
-        </member>
-        <member name="T:SyZero.DynamicWebApi.Helpers.ReflectionHelper">
-            <summary>
-            反射辅助类
-            </summary>
-        </member>
-        <member name="M:SyZero.DynamicWebApi.Helpers.ReflectionHelper.GetSingleAttributeOrDefaultByFullSearch``1(System.Reflection.TypeInfo)">
-            <summary>
-            通过完整搜索获取单个特性（包括接口）
-            </summary>
-            <typeparam name="TAttribute">特性类型</typeparam>
-            <param name="info">类型信息</param>
-            <returns>特性实例或 null</returns>
-        </member>
-        <member name="M:SyZero.DynamicWebApi.Helpers.ReflectionHelper.GetSingleAttributeOrDefaultByFullSearchInternal``1(System.Reflection.TypeInfo)">
-            <summary>
-            实际执行搜索的内部方法
-            </summary>
-        </member>
-        <member name="M:SyZero.DynamicWebApi.Helpers.ReflectionHelper.GetSingleAttributeOrDefault``1(System.Reflection.MemberInfo,``0,System.Boolean)">
-            <summary>
-            获取成员的单个特性
-            </summary>
-            <typeparam name="TAttribute">特性类型</typeparam>
-            <param name="memberInfo">成员信息</param>
-            <param name="defaultValue">默认值</param>
-            <param name="inherit">是否包含继承的特性</param>
-            <returns>特性实例或默认值</returns>
-        </member>
-        <member name="M:SyZero.DynamicWebApi.Helpers.ReflectionHelper.GetSingleAttributeOrNull``1(System.Reflection.MemberInfo,System.Boolean)">
-            <summary>
-            获取成员的单个特性，不存在则返回 null
-            </summary>
-            <typeparam name="TAttribute">特性类型</typeparam>
-            <param name="memberInfo">成员信息</param>
-            <param name="inherit">是否包含继承的特性</param>
-            <returns>特性实例或 null</returns>
-        </member>
-        <member name="M:SyZero.DynamicWebApi.Helpers.ReflectionHelper.GetSingleAttributeOfTypeOrBaseTypesOrNull``1(System.Type,System.Boolean)">
-            <summary>
-            获取类型或其基类型上的单个特性
-            </summary>
-            <typeparam name="TAttribute">特性类型</typeparam>
-            <param name="type">类型</param>
-            <param name="inherit">是否包含继承的特性</param>
-            <returns>特性实例或 null</returns>
-        </member>
-        <member name="M:SyZero.DynamicWebApi.Helpers.ReflectionHelper.GetAssemblies">
-            <summary>
-            获取所有动态 WebApi 相关的程序集
-            </summary>
-            <returns>程序集列表</returns>
-        </member>
-        <member name="M:SyZero.DynamicWebApi.Helpers.ReflectionHelper.IsSystemAssembly(System.Reflection.Assembly)">
-            <summary>
-            判断是否为系统程序集
-            </summary>
-        </member>
-        <member name="M:SyZero.DynamicWebApi.Helpers.ReflectionHelper.ClearCache">
-            <summary>
-            清除缓存
-            </summary>
         </member>
     </members>
 </doc>

@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.Resilience</name>
+    </assembly>
+    <members>
+        <member name="T:SyZero.Resilience.SyResiliencePipelines">
+            <summary>
+            SyZero 韧性策略快捷构建器，包装 Polly v8 的 <see cref="T:Polly.ResiliencePipelineBuilder"/>。
+            默认建议组合：超时 → 重试 → 熔断（外层超时兜底，内层重试，最外熔断阻断雪崩）。
+            </summary>
+        </member>
+        <member name="M:SyZero.Resilience.SyResiliencePipelines.Default(System.Nullable{System.TimeSpan},System.Int32,System.Nullable{System.TimeSpan},System.Int32,System.Nullable{System.TimeSpan})">
+            <summary>
+            构建一个包含超时 + 重试 + 熔断的默认管道。
+            </summary>
+        </member>
+        <member name="T:SyZero.Resilience.SyZeroResilienceExtension">
+            <summary>
+            SyZero.Resilience 模块的 DI 扩展。
+            </summary>
+        </member>
+        <member name="M:SyZero.Resilience.SyZeroResilienceExtension.AddSyZeroResilience(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            注册默认 "default" 韧性管道（30s 超时 + 3 次指数退避重试）。
+            业务通过 <see cref="T:Polly.Registry.ResiliencePipelineProvider`1"/>.GetPipeline("default") 获取。
+            自定义管道请直接调用 <c>services.AddResiliencePipeline("name", b => ...)</c>。
+            </summary>
+        </member>
+    </members>
+</doc>

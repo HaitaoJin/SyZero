@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.Diagnostics</name>
+    </assembly>
+    <members>
+        <member name="T:SyZero.Diagnostics.SyDiagnosticsMiddleware">
+            <summary>
+            统一请求诊断中间件：写入结构化日志（method / path / status / elapsed / TraceId / UserId / TenantId），
+            并将这些字段填入 <see cref="P:Microsoft.AspNetCore.Http.HttpContext.Items"/> 便于业务后续读取。
+            </summary>
+        </member>
+        <member name="T:SyZero.SyZeroDiagnosticsExtension">
+            <summary>SyZero.Diagnostics 的中间件扩展。</summary>
+        </member>
+        <member name="M:SyZero.SyZeroDiagnosticsExtension.UseSyZeroDiagnostics(Microsoft.AspNetCore.Builder.IApplicationBuilder)">
+            <summary>启用 SyZero 请求诊断中间件（建议尽量靠前）。</summary>
+        </member>
+    </members>
+</doc>

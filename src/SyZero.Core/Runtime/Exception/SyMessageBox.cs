@@ -77,7 +77,7 @@ namespace SyZero
         /// </summary>
         /// <param name="Messager"></param>
         public SyMessageException(SyMessageBoxModel model)
-            : base(model.msg.ToString())
+            : base(model.msg?.ToString())
         {
             this.Model = model;
         }

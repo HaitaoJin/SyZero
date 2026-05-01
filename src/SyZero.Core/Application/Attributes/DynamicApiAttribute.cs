@@ -10,7 +10,7 @@ namespace SyZero.Application.Attributes
         /// <summary>
         /// Equivalent to AreaName
         /// </summary>
-        public string Module { get; set; }
+        public string Module { get; set; } = string.Empty;
 
         internal static bool IsExplicitlyEnabledFor(Type type)
         {

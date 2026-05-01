@@ -41,7 +41,7 @@
         /// <summary>
         /// 错误消息
         /// </summary>
-        public object msg { set; get; }
+        public object? msg { set; get; }
 
     }
 }

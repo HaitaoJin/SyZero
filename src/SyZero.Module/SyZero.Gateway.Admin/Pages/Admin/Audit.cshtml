@@ -1,0 +1,145 @@
+@page "/admin/audit"
+@model SyZero.Gateway.Admin.Pages.Admin.AuditModel
+@{
+    ViewData["Title"] = "审计日志";
+    ViewData["Subtitle"] = "查看网关管理面板的写操作历史（JSONL 落盘）";
+}
+
+<div class="card bg-base-100 shadow mb-4">
+    <div class="card-body p-3">
+        <div class="flex items-end flex-wrap gap-2">
+            <label class="form-control">
+                <div class="label py-0"><span class="label-text-alt">用户</span></div>
+                <input id="f-user" type="text" placeholder="精确匹配" class="input input-bordered input-sm w-32" />
+            </label>
+            <label class="form-control">
+                <div class="label py-0"><span class="label-text-alt">动作前缀</span></div>
+                <input id="f-action" type="text" placeholder="如 route. / backup." class="input input-bordered input-sm w-40" />
+            </label>
+            <label class="form-control">
+                <div class="label py-0"><span class="label-text-alt">起始 (本地)</span></div>
+                <input id="f-from" type="datetime-local" class="input input-bordered input-sm" />
+            </label>
+            <label class="form-control">
+                <div class="label py-0"><span class="label-text-alt">截止 (本地)</span></div>
+                <input id="f-to" type="datetime-local" class="input input-bordered input-sm" />
+            </label>
+            <label class="form-control">
+                <div class="label py-0"><span class="label-text-alt">最近 N 条</span></div>
+                <input id="take" type="number" min="10" max="5000" value="200" class="input input-bordered input-sm w-24" />
+            </label>
+            <div class="flex gap-2 ml-auto">
+                <button class="btn btn-sm btn-primary" onclick="loadAudit()">查询</button>
+                <button class="btn btn-sm" onclick="resetFilters()">重置</button>
+                <button class="btn btn-sm btn-outline" onclick="exportCsv()">⬇ 导出 CSV</button>
+            </div>
+        </div>
+        <div id="filter-stats" class="text-xs opacity-60 mt-2"></div>
+    </div>
+</div>
+
+<div id="audit-disabled" class="alert alert-warning mb-4 hidden">
+    <span>审计已禁用。可在 <code>appsettings.json</code> 设置 <code>Gateway:Admin:Audit:Enabled = true</code> 启用。</span>
+</div>
+
+<div class="card bg-base-100 shadow">
+    <div class="card-body p-0">
+        <div class="overflow-x-auto">
+            <table class="table table-zebra table-sm">
+                <thead>
+                    <tr>
+                        <th>时间 (UTC)</th>
+                        <th>用户</th>
+                        <th>IP</th>
+                        <th>动作</th>
+                        <th>目标</th>
+                        <th>说明</th>
+                    </tr>
+                </thead>
+                <tbody id="audit-tbody"><tr><td colspan="6" class="text-center opacity-50">加载中…</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]); }
+        function badge(action) {
+            const a = action || '';
+            const cls = a.startsWith('route.delete') || a.startsWith('swagger.delete')
+                ? 'badge-error'
+                : a.startsWith('route.create') || a.startsWith('swagger.create')
+                    ? 'badge-success'
+                    : a.startsWith('config.replace') || a.startsWith('backup.restore')
+                        ? 'badge-warning' : 'badge-ghost';
+            return `<span class="badge ${cls}">${escapeHtml(a)}</span>`;
+        }
+        async function loadAudit() {
+            const take = Math.max(10, Math.min(5000, parseInt(document.getElementById('take').value, 10) || 200));
+            const tbody = document.getElementById('audit-tbody');
+            tbody.innerHTML = adminSkeletonRows(5, 6);
+            try {
+                const data = await adminFetch('/admin-api/audit?' + buildQuery(take));
+                document.getElementById('audit-disabled').classList.toggle('hidden', !!data.enabled);
+                const items = (data.items || []).slice().reverse();
+                const stats = document.getElementById('filter-stats');
+                stats.textContent = `匹配 ${data.filteredCount ?? items.length} 条`
+                    + (data.truncated ? `（已截断到 ${take}，请缩小范围或导出 CSV）` : '')
+                    + `，扫描 ${data.scannedCount ?? items.length} 行`;
+                if (items.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6">${adminEmpty('暂无匹配记录', '调整过滤条件或扩大「最近 N 条」')}</td></tr>`;
+                    return;
+                }
+                tbody.innerHTML = items.map(e => `
+                    <tr>
+                        <td class="whitespace-nowrap font-mono text-xs">${new Date(e.timestamp).toISOString().replace('T', ' ').substring(0, 19)}</td>
+                        <td>${escapeHtml(e.user)}</td>
+                        <td class="font-mono text-xs">${escapeHtml(e.ip)}</td>
+                        <td>${badge(e.action)}</td>
+                        <td><code>${escapeHtml(e.target)}</code></td>
+                        <td>${escapeHtml(e.summary)}</td>
+                    </tr>`).join('');
+            } catch (e) {
+                adminToast(e.message, 'error');
+                tbody.innerHTML = `<tr><td colspan="6">${adminEmpty('加载审计日志失败', e.message || '')}</td></tr>`;
+            }
+        }
+        function buildQuery(take) {
+            const p = new URLSearchParams();
+            if (take) p.set('take', take);
+            const u = document.getElementById('f-user').value.trim();
+            const a = document.getElementById('f-action').value.trim();
+            const f = document.getElementById('f-from').value;
+            const t = document.getElementById('f-to').value;
+            if (u) p.set('user', u);
+            if (a) p.set('action', a);
+            // datetime-local 没有时区，按浏览器本地时间提交，后端 ToUniversalTime 转换
+            if (f) p.set('from', new Date(f).toISOString());
+            if (t) p.set('to', new Date(t).toISOString());
+            return p.toString();
+        }
+        function resetFilters() {
+            document.getElementById('f-user').value = '';
+            document.getElementById('f-action').value = '';
+            document.getElementById('f-from').value = '';
+            document.getElementById('f-to').value = '';
+            document.getElementById('take').value = 200;
+            loadAudit();
+        }
+        function exportCsv() {
+            const p = new URLSearchParams();
+            const u = document.getElementById('f-user').value.trim();
+            const a = document.getElementById('f-action').value.trim();
+            const f = document.getElementById('f-from').value;
+            const t = document.getElementById('f-to').value;
+            if (u) p.set('user', u);
+            if (a) p.set('action', a);
+            if (f) p.set('from', new Date(f).toISOString());
+            if (t) p.set('to', new Date(t).toISOString());
+            // 直接用浏览器导航触发下载（带上当前 cookie）
+            window.location.href = '/admin-api/audit/export.csv?' + p.toString();
+        }
+        loadAudit();
+    </script>
+}

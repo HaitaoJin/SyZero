@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <RootNamespace>SyZero.Example3.Application</RootNamespace>
+    <AssemblyName>SyZero.Example3.Application</AssemblyName>
+    <Platforms>AnyCPU;x64</Platforms>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>SyZero.Example3.Application.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\SyZero.Module\SyZero.AutoMapper\SyZero.AutoMapper.csproj" />
+    <ProjectReference Include="..\SyZero.Example3.IApplication\SyZero.Example3.IApplication.csproj" />
+    <ProjectReference Include="..\SyZero.Example3.Core\SyZero.Example3.Core.csproj" />
+  </ItemGroup>
+
+</Project>

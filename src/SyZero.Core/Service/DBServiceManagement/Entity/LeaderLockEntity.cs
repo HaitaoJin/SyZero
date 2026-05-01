@@ -18,12 +18,12 @@ namespace SyZero.Service.DBServiceManagement.Entity
         /// <summary>
         /// 锁的键
         /// </summary>
-        public string LeaderKey { get; set; }
+        public string LeaderKey { get; set; } = string.Empty;
 
         /// <summary>
         /// 持有锁的实例ID
         /// </summary>
-        public string InstanceId { get; set; }
+        public string InstanceId { get; set; } = string.Empty;
 
         /// <summary>
         /// 获取锁的时间

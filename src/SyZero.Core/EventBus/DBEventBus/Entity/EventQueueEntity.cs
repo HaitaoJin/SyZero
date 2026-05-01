@@ -19,17 +19,17 @@ namespace SyZero.EventBus.DBEventBus.Entity
         /// <summary>
         /// 事件名称
         /// </summary>
-        public string EventName { get; set; }
+        public string EventName { get; set; } = string.Empty;
 
         /// <summary>
         /// 事件数据（JSON格式）
         /// </summary>
-        public string EventData { get; set; }
+        public string EventData { get; set; } = string.Empty;
 
         /// <summary>
         /// 事件类型全名
         /// </summary>
-        public string EventTypeName { get; set; }
+        public string EventTypeName { get; set; } = string.Empty;
 
         /// <summary>
         /// 状态：0-待处理，1-处理中，2-已完成，3-失败
@@ -49,7 +49,7 @@ namespace SyZero.EventBus.DBEventBus.Entity
         /// <summary>
         /// 错误信息
         /// </summary>
-        public string ErrorMessage { get; set; }
+        public string? ErrorMessage { get; set; }
 
         /// <summary>
         /// 创建时间

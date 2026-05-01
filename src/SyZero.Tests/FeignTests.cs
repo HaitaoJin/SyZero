@@ -6,6 +6,7 @@ using Moq;
 using Refit;
 using SyZero.Application.Routing;
 using SyZero.Application.Service;
+using SyZero.Client.RemoteService;
 using SyZero.Feign;
 using SyZero.Feign.Proxy;
 using SyZero.Runtime.Security;
@@ -135,32 +136,36 @@ public class FeignTests
     }
 
     [Fact]
-    public void FeignProxyFactoryManager_RegistersBuiltInFactories_AndAllowsOverrides()
+    public void RemoteServiceProxyFactoryManager_RegistersBuiltInFactories_AndAllowsOverrides()
     {
-        var manager = new FeignProxyFactoryManager();
+        // FeignRemoteServiceProvider 内部维护 manager 并预注册 HTTP / gRPC
+        var provider = new FeignRemoteServiceProvider();
+        var manager = (RemoteServiceProxyFactoryManager)typeof(FeignRemoteServiceProvider)
+            .GetField("_factoryManager", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .GetValue(provider)!;
 
-        Assert.True(manager.IsProtocolRegistered(FeignProtocol.Http));
-        Assert.True(manager.IsProtocolRegistered(FeignProtocol.Grpc));
-        Assert.IsType<HttpProxyFactory>(manager.GetFactory(FeignProtocol.Http));
-        Assert.IsType<GrpcProxyFactory>(manager.GetFactory(FeignProtocol.Grpc));
+        Assert.True(manager.IsProtocolRegistered(RemoteServiceProtocol.Http));
+        Assert.True(manager.IsProtocolRegistered(RemoteServiceProtocol.Grpc));
+        Assert.IsType<HttpProxyFactory>(manager.GetFactory(RemoteServiceProtocol.Http));
+        Assert.IsType<GrpcProxyFactory>(manager.GetFactory(RemoteServiceProtocol.Grpc));
 
-        var customFactory = new StubFeignProxyFactory(FeignProtocol.Http);
-        manager.RegisterFactory(customFactory);
+        var customFactory = new StubRemoteServiceProxyFactory(RemoteServiceProtocol.Http);
+        provider.RegisterProxyFactory(customFactory);
 
-        Assert.Same(customFactory, manager.GetFactory(FeignProtocol.Http));
+        Assert.Same(customFactory, manager.GetFactory(RemoteServiceProtocol.Http));
     }
 
     [Fact]
-    public void FeignServiceRegistrar_CreateEffectiveService_AppliesGlobalDefaults_WithoutMutatingOriginal()
+    public void FeignRemoteServiceProvider_CreateEffectiveService_AppliesGlobalDefaults_WithoutMutatingOriginal()
     {
-        var service = new FeignService
+        var service = new RemoteServiceItem
         {
             ServiceName = "svc",
-            DllName = "Sample.Contracts"
+            AssemblyName = "Sample.Contracts"
         };
-        var global = new ServiceSetting
+        var global = new RemoteServiceSetting
         {
-            Protocol = FeignProtocol.Grpc,
+            Protocol = RemoteServiceProtocol.Grpc,
             Strategy = "Random",
             Retry = 2,
             Timeout = 45,
@@ -168,20 +173,20 @@ public class FeignTests
             MaxMessageSize = 4096
         };
 
-        var result = (FeignService)InvokePrivateStaticMethod(
-            GetFeignRegistrarType(),
+        var result = (RemoteServiceItem)InvokePrivateStaticMethod(
+            typeof(FeignRemoteServiceProvider),
             "CreateEffectiveService",
             service,
             global)!;
 
-        Assert.Equal(FeignProtocol.Grpc, result.Protocol);
+        Assert.Equal(RemoteServiceProtocol.Grpc, result.Protocol);
         Assert.Equal("Random", result.Strategy);
         Assert.Equal(2, result.Retry);
         Assert.Equal(45, result.Timeout);
         Assert.True(result.EnableSsl);
         Assert.Equal(4096, result.MaxMessageSize);
 
-        Assert.Equal(FeignProtocol.Http, service.Protocol);
+        Assert.Equal(RemoteServiceProtocol.Http, service.Protocol);
         Assert.Null(service.Strategy);
         Assert.Equal(0, service.Retry);
         Assert.Equal(30, service.Timeout);
@@ -190,7 +195,7 @@ public class FeignTests
     }
 
     [Fact]
-    public void FeignServiceRegistrar_GetServiceEndpoint_UsesServiceInstanceAndRegistryProtocol()
+    public void FeignRemoteServiceProvider_GetServiceEndpoint_UsesServiceInstanceAndRegistryProtocol()
     {
         var serviceManagement = new Mock<IServiceManagement>(MockBehavior.Strict);
         serviceManagement
@@ -204,14 +209,14 @@ public class FeignTests
             });
 
         var endpoint = (string)InvokePrivateStaticMethod(
-            GetFeignRegistrarType(),
+            typeof(FeignRemoteServiceProvider),
             "GetServiceEndpoint",
             serviceManagement.Object,
-            new FeignService
+            new RemoteServiceItem
             {
                 ServiceName = "svc",
-                DllName = "Sample.Contracts",
-                Protocol = FeignProtocol.Http,
+                AssemblyName = "Sample.Contracts",
+                Protocol = RemoteServiceProtocol.Http,
                 EnableSsl = false
             })!;
 
@@ -257,11 +262,6 @@ public class FeignTests
         return method.Invoke(null, parameters);
     }
 
-    private static Type GetFeignRegistrarType()
-    {
-        return typeof(SyZeroFeignExtension).Assembly.GetType("SyZero.Feign.FeignServiceRegistrar", throwOnError: true)!;
-    }
-
     [Api("orders")]
     private interface OrderClient : IApplicationService
     {
@@ -296,16 +296,16 @@ public class FeignTests
         }
     }
 
-    private sealed class StubFeignProxyFactory : IFeignProxyFactory
+    private sealed class StubRemoteServiceProxyFactory : IRemoteServiceProxyFactory
     {
-        public StubFeignProxyFactory(FeignProtocol protocol)
+        public StubRemoteServiceProxyFactory(RemoteServiceProtocol protocol)
         {
             Protocol = protocol;
         }
 
-        public FeignProtocol Protocol { get; }
+        public RemoteServiceProtocol Protocol { get; }
 
-        public object CreateProxy(Type targetType, string endPoint, FeignService feignService, IJsonSerialize jsonSerialize)
+        public object CreateProxy(Type targetType, string endPoint, RemoteServiceItem service, IJsonSerialize jsonSerialize)
         {
             return new object();
         }

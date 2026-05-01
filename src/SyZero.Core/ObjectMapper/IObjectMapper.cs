@@ -13,7 +13,7 @@ namespace SyZero.ObjectMapper
         /// <typeparam name="TDestination"></typeparam>
         /// <param name="source">Obj</param>
         /// <returns></returns>
-        TDestination Map<TDestination>(object source);
+        TDestination? Map<TDestination>(object? source);
 
         /// <summary>
         /// Dto转Obj

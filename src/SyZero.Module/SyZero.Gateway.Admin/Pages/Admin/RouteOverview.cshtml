@@ -1,0 +1,174 @@
+@page "/admin/route-overview"
+@model SyZero.Gateway.Admin.Pages.Admin.RouteOverviewModel
+@{
+    ViewData["Title"] = "路由概览";
+    ViewData["Subtitle"] = "按 ServiceName / 标签 / HTTP 方法分组统计";
+}
+
+<div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+    <button class="btn btn-sm" onclick="loadOverview()">刷新</button>
+</div>
+
+<div id="summary-cards" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4"></div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+    <div class="card bg-base-100 shadow">
+        <div class="card-body">
+            <h2 class="card-title text-base">启用 vs 禁用</h2>
+            <div class="relative w-full" style="height:200px">
+                <canvas id="chart-status"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="card bg-base-100 shadow">
+        <div class="card-body">
+            <h2 class="card-title text-base">按 ServiceName（Top 10）</h2>
+            <div class="relative w-full" style="height:200px">
+                <canvas id="chart-service"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="card bg-base-100 shadow">
+        <div class="card-body">
+            <h2 class="card-title text-base">按 HTTP Method</h2>
+            <div class="relative w-full" style="height:200px">
+                <canvas id="chart-method"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card bg-base-100 shadow mb-4">
+    <div class="card-body">
+        <h2 class="card-title text-base">按 ServiceName 分组</h2>
+        <div class="overflow-x-auto">
+            <table class="table table-zebra table-sm">
+                <thead>
+                    <tr>
+                        <th>ServiceName</th>
+                        <th class="w-20 text-right">总数</th>
+                        <th class="w-20 text-right">启用</th>
+                        <th class="w-20 text-right">禁用</th>
+                        <th>方法分布</th>
+                        <th>标签</th>
+                    </tr>
+                </thead>
+                <tbody id="svc-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="card bg-base-100 shadow">
+        <div class="card-body">
+            <h2 class="card-title text-base">按标签</h2>
+            <div id="tag-list" class="flex flex-wrap gap-2"></div>
+        </div>
+    </div>
+    <div class="card bg-base-100 shadow">
+        <div class="card-body">
+            <h2 class="card-title text-base">按 HTTP Method</h2>
+            <div id="method-list" class="flex flex-wrap gap-2"></div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script>
+        function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]); }
+        const charts = {};
+        function drawChart(id, type, labels, data, color) {
+            const ctx = document.getElementById(id);
+            if (!ctx || typeof Chart === 'undefined') return;
+            if (charts[id]) charts[id].destroy();
+            charts[id] = new Chart(ctx, {
+                type,
+                data: {
+                    labels,
+                    datasets: [{
+                        data,
+                        backgroundColor: Array.isArray(color) ? color : labels.map((_, i) => `hsl(${(i * 47) % 360} 70% 60%)`),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: type !== 'bar' } },
+                    scales: type === 'bar' ? { y: { beginAtZero: true, ticks: { precision: 0 } } } : undefined
+                }
+            });
+        }
+
+        async function loadOverview() {
+            try {
+                const routes = await adminFetch('/admin-api/routes');
+                const total = routes.length;
+                const enabled = routes.filter(r => !r.disabled).length;
+                const disabled = total - enabled;
+                const distinctServices = new Set(routes.map(r => r.serviceName || '(none)')).size;
+
+                document.getElementById('summary-cards').innerHTML = `
+                    ${card('总路由', total, 'primary')}
+                    ${card('启用', enabled, 'success')}
+                    ${card('禁用', disabled, 'warning')}
+                    ${card('服务数', distinctServices, 'info')}
+                `;
+
+                // 按 ServiceName 分组
+                const svcMap = new Map();
+                for (const r of routes) {
+                    const key = r.serviceName || '(none)';
+                    if (!svcMap.has(key)) svcMap.set(key, { total: 0, enabled: 0, disabled: 0, methods: {}, tags: new Set() });
+                    const g = svcMap.get(key);
+                    g.total++;
+                    if (r.disabled) g.disabled++; else g.enabled++;
+                    for (const m of (r.upstreamHttpMethod || [])) g.methods[m] = (g.methods[m] || 0) + 1;
+                    for (const t of (r.tags || [])) g.tags.add(t);
+                }
+                const svcRows = Array.from(svcMap.entries())
+                    .sort((a, b) => b[1].total - a[1].total)
+                    .map(([name, g]) => `
+                        <tr>
+                            <td><a class="link link-primary" href="/admin/routes?service=${encodeURIComponent(name === '(none)' ? '' : name)}"><code>${escapeHtml(name)}</code></a></td>
+                            <td class="text-right"><a class="link" href="/admin/routes?service=${encodeURIComponent(name === '(none)' ? '' : name)}">${g.total}</a></td>
+                            <td class="text-right text-success"><a class="link" href="/admin/routes?service=${encodeURIComponent(name === '(none)' ? '' : name)}&status=enabled">${g.enabled}</a></td>
+                            <td class="text-right text-warning"><a class="link" href="/admin/routes?service=${encodeURIComponent(name === '(none)' ? '' : name)}&status=disabled">${g.disabled}</a></td>
+                            <td>${Object.entries(g.methods).map(([k, v]) => `<span class="badge badge-ghost badge-sm">${k} ${v}</span>`).join(' ')}</td>
+                            <td>${Array.from(g.tags).map(t => `<a class="badge badge-outline badge-sm hover:badge-primary" href="/admin/routes?tag=${encodeURIComponent(t)}">${escapeHtml(t)}</a>`).join(' ')}</td>
+                        </tr>`).join('');
+                document.getElementById('svc-tbody').innerHTML = svcRows || '<tr><td colspan="6" class="text-center opacity-50">暂无路由</td></tr>';
+
+                // 按标签
+                const tagMap = {};
+                for (const r of routes) for (const t of (r.tags || [])) tagMap[t] = (tagMap[t] || 0) + 1;
+                const tagHtml = Object.entries(tagMap).sort((a, b) => b[1] - a[1])
+                    .map(([t, n]) => `<a class="badge badge-outline hover:badge-primary" href="/admin/routes?tag=${encodeURIComponent(t)}">${escapeHtml(t)} <span class="badge badge-primary badge-sm ml-1">${n}</span></a>`).join('');
+                document.getElementById('tag-list').innerHTML = tagHtml || '<span class="opacity-50">暂无标签</span>';
+
+                // 按 method
+                const methodMap = {};
+                for (const r of routes) for (const m of (r.upstreamHttpMethod || [])) methodMap[m] = (methodMap[m] || 0) + 1;
+                const methodHtml = Object.entries(methodMap).sort((a, b) => b[1] - a[1])
+                    .map(([m, n]) => `<span class="badge badge-outline">${m} <span class="badge badge-primary badge-sm ml-1">${n}</span></span>`).join('');
+                document.getElementById('method-list').innerHTML = methodHtml || '<span class="opacity-50">暂无</span>';
+
+                // 图表
+                drawChart('chart-status', 'doughnut', ['启用', '禁用'], [enabled, disabled], ['#22c55e', '#f59e0b']);
+                const svcTop = Array.from(svcMap.entries()).sort((a, b) => b[1].total - a[1].total).slice(0, 10);
+                drawChart('chart-service', 'bar', svcTop.map(x => x[0]), svcTop.map(x => x[1].total));
+                const methodEntries = Object.entries(methodMap).sort((a, b) => b[1] - a[1]);
+                drawChart('chart-method', 'bar', methodEntries.map(x => x[0]), methodEntries.map(x => x[1]));
+            } catch (e) { adminToast(e.message, 'error'); }
+        }
+        function card(title, value, color) {
+            return `<div class="stat bg-base-100 shadow rounded-box">
+                <div class="stat-title">${title}</div>
+                <div class="stat-value text-${color}">${value}</div>
+            </div>`;
+        }
+        loadOverview();
+    </script>
+}

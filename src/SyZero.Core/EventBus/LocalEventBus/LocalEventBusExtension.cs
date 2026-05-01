@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 using SyZero.EventBus;
 using SyZero.EventBus.LocalEventBus;
@@ -24,9 +25,9 @@ namespace SyZero
                 throw new ArgumentNullException(nameof(options));
             }
 
-            var instance = new LocalEventBus(options);
-            services.AddSingleton<IEventBus>(instance);
-            services.AddSingleton(instance);
+            services.AddSingleton<LocalEventBus>(sp =>
+                new LocalEventBus(options, sp.GetService<ILogger<LocalEventBus>>()));
+            services.AddSingleton<IEventBus>(sp => sp.GetRequiredService<LocalEventBus>());
 
             return services;
         }
@@ -38,7 +39,7 @@ namespace SyZero
         /// <param name="configuration">配置，为 null 时使用 AppConfig.Configuration</param>
         /// <param name="sectionName">配置节名称，默认为 "LocalEventBus"</param>
         /// <returns>服务集合</returns>
-        public static IServiceCollection AddLocalEventBus(this IServiceCollection services, IConfiguration configuration = null, string sectionName = LocalEventBusOptions.SectionName)
+        public static IServiceCollection AddLocalEventBus(this IServiceCollection services, IConfiguration? configuration = null, string sectionName = LocalEventBusOptions.SectionName)
         {
             var config = configuration ?? AppConfig.Configuration;
             var options = new LocalEventBusOptions();
@@ -54,7 +55,7 @@ namespace SyZero
         /// <param name="configuration">配置，为 null 时使用 AppConfig.Configuration</param>
         /// <param name="sectionName">配置节名称，默认为 "LocalEventBus"</param>
         /// <returns>服务集合</returns>
-        public static IServiceCollection AddLocalEventBus(this IServiceCollection services, Action<LocalEventBusOptions> optionsAction, IConfiguration configuration = null, string sectionName = LocalEventBusOptions.SectionName)
+        public static IServiceCollection AddLocalEventBus(this IServiceCollection services, Action<LocalEventBusOptions> optionsAction, IConfiguration? configuration = null, string sectionName = LocalEventBusOptions.SectionName)
         {
             var config = configuration ?? AppConfig.Configuration;
             var options = new LocalEventBusOptions();

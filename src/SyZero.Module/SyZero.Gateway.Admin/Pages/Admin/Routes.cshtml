@@ -1,0 +1,606 @@
+@page "/admin/routes"
+@model SyZero.Gateway.Admin.Pages.Admin.RoutesModel
+@{
+    ViewData["Title"] = "路由管理";
+    ViewData["Subtitle"] = "路由 CRUD、批量启停、标签分组、拖拽排序";
+}
+
+<div class="flex justify-between items-center mb-4 gap-4 flex-wrap">
+    <div class="flex gap-2 items-center flex-1 max-w-2xl flex-wrap">
+        <input id="search-input" class="input input-bordered input-sm flex-1 min-w-[14rem]" placeholder="搜索 Upstream / Downstream / Service" oninput="renderRoutes()" />
+        <select id="tag-filter" class="select select-bordered select-sm" onchange="renderRoutes()">
+            <option value="">全部标签</option>
+        </select>
+        <select id="status-filter" class="select select-bordered select-sm" onchange="renderRoutes()">
+            <option value="">全部状态</option>
+            <option value="enabled">仅启用</option>
+            <option value="disabled">仅禁用</option>
+        </select>
+        <div class="dropdown dropdown-end">
+            <button tabindex="0" class="btn btn-sm">导入 / 导出 ▾</button>
+            <ul tabindex="0" class="dropdown-content z-10 menu p-2 shadow bg-base-100 rounded-box w-44">
+                <li><a onclick="exportRoutes('json')">导出 JSON</a></li>
+                <li><a onclick="exportRoutes('yaml')">导出 YAML</a></li>
+                <li><a onclick="openImportDialog()">导入…</a></li>
+            </ul>
+        </div>
+        <div class="dropdown dropdown-end">
+            <button tabindex="0" class="btn btn-sm" title="列显示设置">列 ▾</button>
+            <ul tabindex="0" id="cols-menu" class="dropdown-content z-10 menu p-2 shadow bg-base-100 rounded-box w-44">
+            </ul>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openEdit(-1)">新增路由</button>
+    </div>
+</div>
+
+<div id="bulk-bar" class="alert alert-info mb-3 hidden">
+    <div class="flex items-center gap-2 flex-wrap">
+        <span>已选 <strong id="bulk-count">0</strong> 条：</span>
+        <button class="btn btn-xs btn-success" onclick="bulkToggle(false)">启用</button>
+        <button class="btn btn-xs btn-warning" onclick="bulkToggle(true)">禁用</button>
+        <button class="btn btn-xs" onclick="openBulkTagsDialog()">标签…</button>
+        <button class="btn btn-xs btn-ghost" onclick="clearSel()">清除选择</button>
+    </div>
+</div>
+
+<div class="card bg-base-100 shadow">
+    <div class="card-body p-0">
+        <div class="overflow-x-auto">
+            <table class="table table-zebra">
+                <thead>
+                    <tr>
+                        <th class="w-8"><input type="checkbox" class="checkbox checkbox-sm" id="sel-all" onchange="toggleAll(this.checked)" /></th>
+                        <th class="w-6" title="拖拽排序">⋮⋮</th>
+                        <th data-col="index"><a class="link link-hover" onclick="toggleSort('index')">#<span class="sort-ind" data-key="index"></span></a></th>
+                        <th data-col="status"><a class="link link-hover" onclick="toggleSort('status')">状态<span class="sort-ind" data-key="status"></span></a></th>
+                        <th data-col="upstream"><a class="link link-hover" onclick="toggleSort('upstream')">Upstream<span class="sort-ind" data-key="upstream"></span></a></th>
+                        <th data-col="methods">Methods</th>
+                        <th data-col="downstream"><a class="link link-hover" onclick="toggleSort('downstream')">Downstream<span class="sort-ind" data-key="downstream"></span></a></th>
+                        <th data-col="service"><a class="link link-hover" onclick="toggleSort('service')">Service<span class="sort-ind" data-key="service"></span></a></th>
+                        <th data-col="tags">Tags</th>
+                        <th data-col="swagger"><a class="link link-hover" onclick="toggleSort('swagger')">SwaggerKey<span class="sort-ind" data-key="swagger"></span></a></th>
+                        <th class="w-44">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="routes-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<datalist id="service-list"></datalist>
+
+<dialog id="edit-dialog" class="modal">
+    <div class="modal-box w-11/12 max-w-3xl">
+        <h3 class="font-bold text-lg" id="edit-title">编辑路由</h3>
+        <input type="hidden" id="f-index" />
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+            <label class="form-control">
+                <span class="label-text">UpstreamPathTemplate</span>
+                <input id="f-upstream" class="input input-bordered" placeholder="/api/Foo/{url}" />
+            </label>
+            <label class="form-control">
+                <span class="label-text">DownstreamPathTemplate</span>
+                <input id="f-downstream" class="input input-bordered" placeholder="/api/Foo/{url}" />
+            </label>
+            <label class="form-control">
+                <span class="label-text">DownstreamScheme</span>
+                <select id="f-scheme" class="select select-bordered">
+                    <option>http</option><option>https</option><option>ws</option><option>wss</option>
+                </select>
+            </label>
+            <label class="form-control">
+                <span class="label-text">ServiceName <span id="f-service-hint" class="text-xs opacity-50"></span></span>
+                <input id="f-service" class="input input-bordered" list="service-list" />
+            </label>
+            <label class="form-control">
+                <span class="label-text">LoadBalancer</span>
+                <select id="f-lb" class="select select-bordered">
+                    <option>RoundRobin</option><option>LeastConnection</option><option>NoLoadBalance</option>
+                </select>
+            </label>
+            <label class="form-control">
+                <span class="label-text">SwaggerKey</span>
+                <input id="f-swagger" class="input input-bordered" />
+            </label>
+            <label class="form-control md:col-span-2">
+                <span class="label-text">Tags（逗号分隔）</span>
+                <input id="f-tags" class="input input-bordered" placeholder="public, v2, beta" />
+            </label>
+            <label class="form-control md:col-span-2">
+                <span class="label-text">描述（支持 Markdown，仅作为元数据保存）</span>
+                <textarea id="f-description" class="textarea textarea-bordered" rows="3" placeholder="例如：**订单服务** 查询接口。"></textarea>
+            </label>
+            <label class="form-control md:col-span-2">
+                <span class="label-text">UpstreamHttpMethod（多选）</span>
+                <div id="f-methods" class="flex flex-wrap gap-2 mt-1">
+                    @foreach (var m in new[] { "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS" })
+                    {
+                        <label class="label cursor-pointer gap-1">
+                            <input type="checkbox" class="checkbox checkbox-sm" value="@m" />
+                            <span>@m</span>
+                        </label>
+                    }
+                </div>
+            </label>
+            <label class="label cursor-pointer gap-2">
+                <input id="f-discovery" type="checkbox" class="checkbox" />
+                <span class="label-text">UseServiceDiscovery</span>
+            </label>
+            <label class="label cursor-pointer gap-2">
+                <input id="f-disabled" type="checkbox" class="checkbox" />
+                <span class="label-text">禁用此路由</span>
+            </label>
+        </div>
+        <div class="modal-action">
+            <button class="btn" onclick="document.getElementById('edit-dialog').close()">取消</button>
+            <button class="btn btn-primary" onclick="saveRoute()">保存</button>
+        </div>
+    </div>
+</dialog>
+
+<dialog id="bulk-tags-dialog" class="modal">
+    <div class="modal-box">
+        <h3 class="font-bold text-lg">批量标签操作</h3>
+        <label class="form-control mt-3">
+            <span class="label-text">操作</span>
+            <select id="bt-op" class="select select-bordered">
+                <option value="set">覆盖 (set)</option>
+                <option value="add">追加 (add)</option>
+                <option value="remove">移除 (remove)</option>
+            </select>
+        </label>
+        <label class="form-control mt-3">
+            <span class="label-text">标签（逗号分隔）</span>
+            <input id="bt-tags" class="input input-bordered" placeholder="public, v2" />
+        </label>
+        <div class="modal-action">
+            <button class="btn" onclick="document.getElementById('bulk-tags-dialog').close()">取消</button>
+            <button class="btn btn-primary" onclick="submitBulkTags()">提交</button>
+        </div>
+    </div>
+</dialog>
+
+<dialog id="import-dialog" class="modal">
+    <div class="modal-box w-11/12 max-w-3xl">
+        <h3 class="font-bold text-lg">导入路由</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
+            <label class="form-control">
+                <span class="label-text">格式</span>
+                <select id="im-format" class="select select-bordered">
+                    <option value="">自动识别</option>
+                    <option value="json">JSON</option>
+                    <option value="yaml">YAML</option>
+                </select>
+            </label>
+            <label class="form-control">
+                <span class="label-text">模式</span>
+                <select id="im-mode" class="select select-bordered">
+                    <option value="append">追加 (append)</option>
+                    <option value="replace">覆盖 (replace)</option>
+                </select>
+            </label>
+            <label class="form-control">
+                <span class="label-text">从文件加载</span>
+                <input id="im-file" type="file" accept=".json,.yaml,.yml" class="file-input file-input-bordered" onchange="onImportFile(event)" />
+            </label>
+        </div>
+        <label class="form-control mt-3">
+            <span class="label-text">路由列表内容</span>
+            <textarea id="im-text" class="textarea textarea-bordered font-mono" rows="14" placeholder="粘贴 JSON 或 YAML 的路由数组…"></textarea>
+        </label>
+        <div class="modal-action">
+            <button class="btn" onclick="document.getElementById('import-dialog').close()">取消</button>
+            <button class="btn btn-primary" onclick="submitImport()">导入</button>
+        </div>
+    </div>
+</dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+
+<dialog id="description-dialog" class="modal">
+    <div class="modal-box w-11/12 max-w-2xl">
+        <h3 class="font-bold text-lg" id="desc-title">路由描述</h3>
+        <article id="desc-html" class="prose prose-sm max-w-none mt-3"></article>
+        <div class="modal-action">
+            <button class="btn" onclick="document.getElementById('description-dialog').close()">关闭</button>
+        </div>
+    </div>
+</dialog>
+
+@section Scripts {
+    <script>
+        let cache = [];
+        let selected = new Set();
+        // 列显示设置 + 表头排序状态（持久化到 localStorage）
+        const COL_DEFS = [
+            { key: 'index', label: '#' },
+            { key: 'status', label: '状态' },
+            { key: 'upstream', label: 'Upstream' },
+            { key: 'methods', label: 'Methods' },
+            { key: 'downstream', label: 'Downstream' },
+            { key: 'service', label: 'Service' },
+            { key: 'tags', label: 'Tags' },
+            { key: 'swagger', label: 'SwaggerKey' }
+        ];
+        const COLS_KEY = 'gw-routes-cols-hidden';
+        const SORT_KEY = 'gw-routes-sort';
+        let hiddenCols = new Set();
+        let sortKey = '';
+        let sortAsc = true;
+        try { hiddenCols = new Set(JSON.parse(localStorage.getItem(COLS_KEY) || '[]')); } catch { }
+        try {
+            const s = JSON.parse(localStorage.getItem(SORT_KEY) || '{}');
+            if (s && typeof s === 'object') { sortKey = s.key || ''; sortAsc = s.asc !== false; }
+        } catch { }
+        function persistCols() { localStorage.setItem(COLS_KEY, JSON.stringify(Array.from(hiddenCols))); }
+        function persistSort() { localStorage.setItem(SORT_KEY, JSON.stringify({ key: sortKey, asc: sortAsc })); }
+        function applyColumnVisibility() {
+            for (const c of COL_DEFS) {
+                const hide = hiddenCols.has(c.key);
+                document.querySelectorAll(`[data-col="${c.key}"]`).forEach(el => {
+                    el.style.display = hide ? 'none' : '';
+                });
+            }
+        }
+        function toggleColumn(key, hide) {
+            if (hide) hiddenCols.add(key); else hiddenCols.delete(key);
+            persistCols(); applyColumnVisibility();
+        }
+        function renderColumnsMenu() {
+            const ul = document.getElementById('cols-menu');
+            if (!ul) return;
+            ul.innerHTML = COL_DEFS.map(c => `<li><label class="label cursor-pointer justify-start gap-2 py-1">
+                <input type="checkbox" class="checkbox checkbox-xs" ${hiddenCols.has(c.key) ? '' : 'checked'} onchange="toggleColumn('${c.key}', !this.checked)" />
+                <span class="label-text">${escapeHtml(c.label)}</span>
+            </label></li>`).join('');
+        }
+        function toggleSort(key) {
+            if (sortKey === key) {
+                if (sortAsc) { sortAsc = false; }
+                else { sortKey = ''; sortAsc = true; }
+            } else { sortKey = key; sortAsc = true; }
+            persistSort(); renderRoutes();
+        }
+        function updateSortIndicators() {
+            document.querySelectorAll('.sort-ind').forEach(el => {
+                const k = el.dataset.key;
+                el.textContent = (sortKey === k) ? (sortAsc ? ' ▲' : ' ▼') : '';
+            });
+        }
+
+        async function loadRoutes() {
+            const tbody = document.getElementById('routes-tbody');
+            tbody.innerHTML = adminSkeletonRows(5, 11);
+            try {
+                cache = await adminFetch('/admin-api/routes');
+                selected.clear();
+                refreshTagFilter();
+                applyQueryFilter();
+                renderRoutes();
+                updateBulkBar();
+            } catch (e) {
+                adminToast(e.message, 'error');
+                tbody.innerHTML = `<tr><td colspan="11">${adminEmpty('加载路由失败', e.message || '')}</td></tr>`;
+            }
+        }
+        function applyQueryFilter() {
+            const qs = new URLSearchParams(location.search);
+            const svc = qs.get('service');
+            const tag = qs.get('tag');
+            const status = qs.get('status');
+            if (svc !== null) document.getElementById('search-input').value = svc;
+            if (status && ['enabled', 'disabled', ''].includes(status)) document.getElementById('status-filter').value = status;
+            if (tag) {
+                const sel = document.getElementById('tag-filter');
+                if (Array.from(sel.options).some(o => o.value === tag)) sel.value = tag;
+            }
+        }
+        function refreshTagFilter() {
+            const all = new Set();
+            for (const r of cache) (r.tags || []).forEach(t => all.add(t));
+            const sel = document.getElementById('tag-filter');
+            const cur = sel.value;
+            sel.innerHTML = '<option value="">全部标签</option>' + Array.from(all).sort().map(t => `<option value="${escapeHtml(t)}"${t === cur ? ' selected' : ''}>${escapeHtml(t)}</option>`).join('');
+        }
+        function renderRoutes() {
+            const q = (document.getElementById('search-input').value || '').toLowerCase();
+            const tag = document.getElementById('tag-filter').value;
+            const status = document.getElementById('status-filter').value;
+            const tbody = document.getElementById('routes-tbody');
+            // 先应用过滤，得到原始下标列表
+            let view = cache.map((r, i) => ({ r, i })).filter(({ r }) => {
+                const hay = ((r.upstreamPathTemplate || '') + ' ' + (r.downstreamPathTemplate || '') + ' ' + (r.serviceName || '')).toLowerCase();
+                if (q && hay.indexOf(q) < 0) return false;
+                if (tag && !(r.tags || []).includes(tag)) return false;
+                if (status === 'enabled' && r.disabled) return false;
+                if (status === 'disabled' && !r.disabled) return false;
+                return true;
+            });
+            // 客户端排序（不影响后端实际顺序，仅显示）
+            if (sortKey) {
+                const dir = sortAsc ? 1 : -1;
+                const keyFn = (r) => {
+                    switch (sortKey) {
+                        case 'index': return 0; // 占位（按原始下标）
+                        case 'status': return r.disabled ? 1 : 0;
+                        case 'upstream': return (r.upstreamPathTemplate || '').toLowerCase();
+                        case 'downstream': return (r.downstreamPathTemplate || '').toLowerCase();
+                        case 'service': return (r.serviceName || '').toLowerCase();
+                        case 'swagger': return (r.swaggerKey || '').toLowerCase();
+                        default: return 0;
+                    }
+                };
+                if (sortKey === 'index') {
+                    view.sort((a, b) => (a.i - b.i) * dir);
+                } else {
+                    view.sort((a, b) => {
+                        const ka = keyFn(a.r), kb = keyFn(b.r);
+                        if (ka < kb) return -1 * dir;
+                        if (ka > kb) return 1 * dir;
+                        return 0;
+                    });
+                }
+            }
+            if (view.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="11">${adminEmpty(cache.length === 0 ? '还没有路由' : '没有匹配的路由', cache.length === 0 ? '点击右上「新增路由」开始，或从「备份」页还原一份配置' : '调整搜索关键字 / 标签 / 状态筛选')}</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = view.map(({ r, i }) => {
+                const checked = selected.has(i) ? 'checked' : '';
+                const statusBadge = r.disabled
+                    ? '<span class="badge badge-warning">禁用</span>'
+                    : '<span class="badge badge-success">启用</span>';
+                const rowCls = r.disabled ? 'opacity-50' : '';
+                const tagsHtml = (r.tags || []).map(t => `<span class="badge badge-outline badge-sm mr-1">${escapeHtml(t)}</span>`).join('');
+                return `
+                    <tr class="${rowCls}" data-i="${i}">
+                        <td><input type="checkbox" class="checkbox checkbox-sm row-sel" data-i="${i}" ${checked} onchange="onSel(${i}, this.checked)" /></td>
+                        <td class="drag-handle cursor-move text-base-content/40 select-none" title="拖拽排序">⋮⋮</td>
+                        <td data-col="index">${i}</td>
+                        <td data-col="status">${statusBadge}</td>
+                        <td data-col="upstream" title="${escapeHtml(r.description || '')}"><code>${escapeHtml(r.upstreamPathTemplate || '')}</code>${r.description ? ` <button class="btn btn-ghost btn-xs" title="查看 Markdown 描述" onclick="showDescription(${i})">ⓘ</button>` : ''}</td>
+                        <td data-col="methods">${(r.upstreamHttpMethod || []).map(m => `<span class='badge badge-ghost'>${m}</span>`).join(' ')}</td>
+                        <td data-col="downstream"><code>${escapeHtml(r.downstreamScheme || '')}://${escapeHtml(r.downstreamPathTemplate || '')}</code></td>
+                        <td data-col="service">${escapeHtml(r.serviceName || '')}</td>
+                        <td data-col="tags">${tagsHtml}</td>
+                        <td data-col="swagger">${escapeHtml(r.swaggerKey || '')}</td>
+                        <td class="whitespace-nowrap">
+                            <button class="btn btn-xs" title="上移" onclick="moveRoute(${i}, 'up')">↑</button>
+                            <button class="btn btn-xs" title="下移" onclick="moveRoute(${i}, 'down')">↓</button>
+                            <button class="btn btn-xs" title="克隆" onclick="cloneRoute(${i})">⧉</button>
+                            <button class="btn btn-xs" title="发送到测试器" onclick="sendToTester(${i})">▶</button>
+                            <button class="btn btn-xs" onclick="openEdit(${i})">编辑</button>
+                            <button class="btn btn-xs btn-error" onclick="deleteRoute(${i})">删除</button>
+                        </td>
+                    </tr>`;
+            }).join('');
+            applyColumnVisibility();
+            updateSortIndicators();
+            initSortable();
+        }
+        let sortableInst = null;
+        function initSortable() {
+            const tbody = document.getElementById('routes-tbody');
+            if (sortableInst) sortableInst.destroy();
+            if (typeof Sortable === 'undefined') return;
+            // 客户端排序激活时禁用拖拽，避免错乱后端真实顺序
+            if (sortKey) { sortableInst = null; return; }
+            sortableInst = Sortable.create(tbody, {
+                handle: '.drag-handle',
+                animation: 150,
+                onEnd: async () => {
+                    const order = Array.from(tbody.querySelectorAll('tr')).map(tr => parseInt(tr.dataset.i, 10));
+                    if (order.length !== cache.length || order.some(isNaN)) { await loadRoutes(); return; }
+                    try {
+                        await adminFetch('/admin-api/routes/reorder', { method: 'POST', body: JSON.stringify({ order }) });
+                        adminToast('已重排', 'success');
+                        await loadRoutes();
+                    } catch (e) { adminToast(e.message, 'error'); await loadRoutes(); }
+                }
+            });
+        }
+        function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]); }
+        function parseCsv(text) { return (text || '').split(',').map(s => s.trim()).filter(Boolean); }
+
+        function onSel(i, on) { if (on) selected.add(i); else selected.delete(i); updateBulkBar(); }
+        function toggleAll(on) {
+            document.querySelectorAll('#routes-tbody input.row-sel').forEach(cb => {
+                cb.checked = on;
+                const i = parseInt(cb.dataset.i, 10);
+                if (on) selected.add(i); else selected.delete(i);
+            });
+            updateBulkBar();
+        }
+        function clearSel() { selected.clear(); document.getElementById('sel-all').checked = false; renderRoutes(); updateBulkBar(); }
+        function updateBulkBar() {
+            const bar = document.getElementById('bulk-bar');
+            document.getElementById('bulk-count').textContent = selected.size;
+            bar.classList.toggle('hidden', selected.size === 0);
+        }
+        async function bulkToggle(disabled) {
+            if (selected.size === 0) return;
+            try {
+                const res = await adminFetch('/admin-api/routes/bulk-toggle', { method: 'POST', body: JSON.stringify({ indexes: Array.from(selected), disabled }) });
+                adminToast(`${disabled ? '已禁用' : '已启用'} ${res.changed} 条`, 'success');
+                await loadRoutes();
+            } catch (e) { adminToast(e.message, 'error'); }
+        }
+        function openBulkTagsDialog() {
+            document.getElementById('bt-op').value = 'set';
+            document.getElementById('bt-tags').value = '';
+            document.getElementById('bulk-tags-dialog').showModal();
+        }
+        async function submitBulkTags() {
+            const op = document.getElementById('bt-op').value;
+            const tags = parseCsv(document.getElementById('bt-tags').value);
+            try {
+                const res = await adminFetch('/admin-api/routes/bulk-tags', { method: 'POST', body: JSON.stringify({ indexes: Array.from(selected), tags, op }) });
+                document.getElementById('bulk-tags-dialog').close();
+                adminToast(`已更新 ${res.changed} 条标签`, 'success');
+                await loadRoutes();
+            } catch (e) { adminToast(e.message, 'error'); }
+        }
+
+        async function loadServices() {
+            try {
+                const data = await adminFetch('/admin-api/services');
+                const dl = document.getElementById('service-list');
+                dl.innerHTML = (data.items || []).map(s => `<option value="${escapeHtml(s)}"></option>`).join('');
+                document.getElementById('f-service-hint').textContent = data.available
+                    ? `（已发现 ${data.items.length} 个服务）`
+                    : '（未注册服务发现）';
+            } catch (e) { /* ignore */ }
+        }
+        function openEdit(idx) {
+            const r = idx >= 0 ? cache[idx] : { upstreamHttpMethod: [], loadBalancerOptions: { type: 'RoundRobin' }, downstreamScheme: 'http', useServiceDiscovery: true, disabled: false, tags: [], description: '' };
+            document.getElementById('edit-title').textContent = idx >= 0 ? `编辑路由 #${idx}` : '新增路由';
+            document.getElementById('f-index').value = idx;
+            document.getElementById('f-upstream').value = r.upstreamPathTemplate || '';
+            document.getElementById('f-downstream').value = r.downstreamPathTemplate || '';
+            document.getElementById('f-scheme').value = r.downstreamScheme || 'http';
+            document.getElementById('f-service').value = r.serviceName || '';
+            document.getElementById('f-lb').value = (r.loadBalancerOptions && r.loadBalancerOptions.type) || 'RoundRobin';
+            document.getElementById('f-swagger').value = r.swaggerKey || '';
+            document.getElementById('f-discovery').checked = !!r.useServiceDiscovery;
+            document.getElementById('f-disabled').checked = !!r.disabled;
+            document.getElementById('f-tags').value = (r.tags || []).join(', ');
+            document.getElementById('f-description').value = r.description || '';
+            const methods = (r.upstreamHttpMethod || []).map(x => x.toUpperCase());
+            document.querySelectorAll('#f-methods input').forEach(cb => cb.checked = methods.includes(cb.value));
+            document.getElementById('edit-dialog').showModal();
+        }
+        async function saveRoute() {
+            const idx = parseInt(document.getElementById('f-index').value, 10);
+            const methods = Array.from(document.querySelectorAll('#f-methods input:checked')).map(cb => cb.value);
+            const tags = parseCsv(document.getElementById('f-tags').value);
+            const payload = {
+                upstreamPathTemplate: document.getElementById('f-upstream').value.trim(),
+                upstreamHttpMethod: methods,
+                useServiceDiscovery: document.getElementById('f-discovery').checked,
+                downstreamPathTemplate: document.getElementById('f-downstream').value.trim(),
+                downstreamScheme: document.getElementById('f-scheme').value,
+                serviceName: document.getElementById('f-service').value.trim() || null,
+                loadBalancerOptions: { type: document.getElementById('f-lb').value },
+                swaggerKey: document.getElementById('f-swagger').value.trim() || null,
+                disabled: document.getElementById('f-disabled').checked,
+                tags: tags.length ? tags : null,
+                description: document.getElementById('f-description').value || null
+            };
+            try {
+                if (idx >= 0) {
+                    await adminFetch('/admin-api/routes/' + idx, { method: 'PUT', body: JSON.stringify(payload) });
+                } else {
+                    await adminFetch('/admin-api/routes', { method: 'POST', body: JSON.stringify(payload) });
+                }
+                document.getElementById('edit-dialog').close();
+                adminToast('保存成功', 'success');
+                await loadRoutes();
+            } catch (e) { adminToast(e.message, 'error'); }
+        }
+        async function deleteRoute(idx) {
+            if (!confirm('确认删除该路由？')) return;
+            try { await adminFetch('/admin-api/routes/' + idx, { method: 'DELETE' }); adminToast('已删除', 'success'); await loadRoutes(); }
+            catch (e) { adminToast(e.message, 'error'); }
+        }
+        async function moveRoute(idx, direction) {
+            try { await adminFetch('/admin-api/routes/' + idx + '/move', { method: 'POST', body: JSON.stringify({ direction }) }); await loadRoutes(); }
+            catch (e) { adminToast(e.message, 'error'); }
+        }
+        async function cloneRoute(idx) {
+            try {
+                const data = await adminFetch('/admin-api/routes/' + idx + '/clone', { method: 'POST', body: '{}' });
+                adminToast('已克隆为 ' + (data && data.route && data.route.upstreamPathTemplate || ''), 'success');
+                await loadRoutes();
+            } catch (e) { adminToast(e.message, 'error'); }
+        }
+        function sendToTester(idx) {
+            const r = cache[idx]; if (!r) return;
+            const methods = (r.upstreamHttpMethod || []);
+            const method = (methods.find(m => /^(GET|POST|PUT|DELETE|PATCH|OPTIONS)$/i.test(m)) || 'GET').toUpperCase();
+            const url = r.upstreamPathTemplate || '/';
+            const qs = new URLSearchParams({ method, url });
+            window.open('/admin/tester?' + qs.toString(), '_blank');
+        }
+        async function exportRoutes(format) {
+            try {
+                const url = '/admin-api/routes/export?format=' + encodeURIComponent(format);
+                const res = await fetch(url, { headers: { Accept: '*/*' }, credentials: 'same-origin' });
+                if (!res.ok) { throw new Error('导出失败 ' + res.status); }
+                const blob = await res.blob();
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = 'routes.' + (format === 'yaml' ? 'yaml' : 'json');
+                document.body.appendChild(a); a.click();
+                setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 0);
+            } catch (e) { adminToast(e.message, 'error'); }
+        }
+        function openImportDialog() {
+            document.getElementById('im-format').value = '';
+            document.getElementById('im-mode').value = 'append';
+            document.getElementById('im-text').value = '';
+            document.getElementById('im-file').value = '';
+            document.getElementById('import-dialog').showModal();
+        }
+        function onImportFile(ev) {
+            const f = ev.target.files && ev.target.files[0];
+            if (!f) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                document.getElementById('im-text').value = e.target.result || '';
+                const name = (f.name || '').toLowerCase();
+                const sel = document.getElementById('im-format');
+                if (name.endsWith('.yaml') || name.endsWith('.yml')) sel.value = 'yaml';
+                else if (name.endsWith('.json')) sel.value = 'json';
+            };
+            reader.readAsText(f);
+        }
+        async function submitImport() {
+            const format = document.getElementById('im-format').value;
+            const mode = document.getElementById('im-mode').value;
+            const text = document.getElementById('im-text').value;
+            if (!text.trim()) { adminToast('请输入或选择路由内容', 'error'); return; }
+            try {
+                const qs = new URLSearchParams();
+                if (format) qs.set('format', format);
+                if (mode) qs.set('mode', mode);
+                const res = await fetch('/admin-api/routes/import?' + qs.toString(), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: text,
+                    credentials: 'same-origin'
+                });
+                if (!res.ok) { throw new Error(await res.text() || ('HTTP ' + res.status)); }
+                const data = await res.json();
+                document.getElementById('import-dialog').close();
+                adminToast(`导入 ${data.imported} 条，当前共 ${data.total} 条`, 'success');
+                await loadRoutes();
+            } catch (e) { adminToast(e.message, 'error'); }
+        }
+        loadServices();
+        renderColumnsMenu();
+        loadRoutes();
+
+        // SSE 联动：路由 / 配置类事件触发自动重新加载（带去抖避免抖动）
+        (function () {
+            let pending = null;
+            window.addEventListener('admin:event', function (e) {
+                var t = e.detail && e.detail.type;
+                if (!t) return;
+                if (t.startsWith('route.') || t === 'config.replace' || t === 'config.reload' || t === 'backup.restore') {
+                    if (pending) clearTimeout(pending);
+                    pending = setTimeout(function () { pending = null; loadRoutes(); }, 300);
+                }
+            });
+        })();
+        function showDescription(i) {
+            const r = cache[i]; if (!r) return;
+            document.getElementById('desc-title').textContent = `#${i} ${r.upstreamPathTemplate || ''} — 描述`;
+            const md = r.description || '';
+            const html = (typeof marked !== 'undefined') ? marked.parse(md, { breaks: true }) : `<pre>${escapeHtml(md)}</pre>`;
+            document.getElementById('desc-html').innerHTML = html;
+            document.getElementById('description-dialog').showModal();
+        }
+    </script>
+}

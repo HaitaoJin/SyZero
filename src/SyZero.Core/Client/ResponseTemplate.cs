@@ -12,9 +12,9 @@ namespace SyZero.Client
         
         public SyMessageBoxStatus Code { set; get; }
 
-        public string Msg { set; get; }
+        public string? Msg { set; get; }
 
-        public T Body { set; get; }
+        public T? Body { set; get; }
 
         public IDictionary<string, string> Headers { get; set; } = new Dictionary<string, string>();
 

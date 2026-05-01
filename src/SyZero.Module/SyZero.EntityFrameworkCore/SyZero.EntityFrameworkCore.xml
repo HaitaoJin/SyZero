@@ -11,6 +11,21 @@
             <typeparam name="TDbContext"></typeparam>
             <typeparam name="TEntity"></typeparam>
         </member>
+        <member name="T:SyZero.EntityFrameworkCore.Repositories.EfRepository`1">
+            <summary>
+            默认 long 主键的 EF 仓储（兼容历史用法）。
+            </summary>
+        </member>
+        <member name="T:SyZero.EntityFrameworkCore.Repositories.EfRepository`2">
+            <summary>
+            默认使用根 DbContext 的泛型主键 EF 仓储。
+            </summary>
+        </member>
+        <member name="T:SyZero.EntityFrameworkCore.Repositories.EfRepository`3">
+            <summary>
+            通用 EF 仓储（自定义主键类型）。
+            </summary>
+        </member>
         <member name="M:SyZero.EntityFrameworkCore.SyZeroEntityFrameworkExtension.AddSyZeroEntityFramework``1(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
             <summary>
             注册 EntityFramework。

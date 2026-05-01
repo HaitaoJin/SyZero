@@ -7,6 +7,8 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace SyZero.EventBus.LocalEventBus
 {
@@ -22,24 +24,27 @@ namespace SyZero.EventBus.LocalEventBus
         private readonly ConcurrentQueue<EventWrapper> _eventQueue = new ConcurrentQueue<EventWrapper>();
         private readonly ConcurrentQueue<EventWrapper> _deadLetterQueue = new ConcurrentQueue<EventWrapper>();
         private readonly LocalEventBusOptions _options;
+        private readonly ILogger _logger;
         private readonly string _subscriptionFilePath;
         private readonly string _eventFilePath;
         private readonly string _deadLetterFilePath;
         private readonly object _subscriptionLock = new object();
         private readonly object _fileLock = new object();
-        private FileSystemWatcher _subscriptionWatcher;
-        private FileSystemWatcher _eventWatcher;
-        private Timer _cleanupTimer;
-        private Timer _processTimer;
+        private FileSystemWatcher? _subscriptionWatcher;
+        private FileSystemWatcher? _eventWatcher;
+        private Timer? _cleanupTimer;
+        private Timer? _processTimer;
         private bool _disposed = false;
 
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="options">配置选项</param>
-        public LocalEventBus(LocalEventBusOptions options = null)
+        /// <param name="logger">日志记录器，可为空（默认使用 <see cref="NullLogger{T}"/>）</param>
+        public LocalEventBus(LocalEventBusOptions? options = null, ILogger<LocalEventBus>? logger = null)
         {
             _options = options ?? new LocalEventBusOptions();
+            _logger = (ILogger?)logger ?? NullLogger<LocalEventBus>.Instance;
             _subscriptionFilePath = _options.GetSubscriptionFilePath();
             _eventFilePath = _options.GetEventFilePath();
             _deadLetterFilePath = _options.GetDeadLetterFilePath();
@@ -104,7 +109,7 @@ namespace SyZero.EventBus.LocalEventBus
 
                 if (handlers.Contains(handlerType))
                 {
-                    Console.WriteLine($"SyZero.EventBus: 事件处理器 {handlerType.Name} 已订阅事件 {eventName}");
+                    _logger.LogDebug("事件处理器 {HandlerName} 已订阅事件 {EventName}", handlerType.Name, eventName);
                     return;
                 }
 
@@ -112,7 +117,7 @@ namespace SyZero.EventBus.LocalEventBus
                 _handlerFactories[$"{eventName}_{handlerType.Name}"] = handlerFactory;
             }
 
-            Console.WriteLine($"SyZero.EventBus: 事件处理器 {handlerType.Name} 订阅事件 {eventName}");
+            _logger.LogInformation("事件处理器 {HandlerName} 订阅事件 {EventName}", handlerType.Name, eventName);
 
             if (_options.EnableFilePersistence)
             {
@@ -132,14 +137,14 @@ namespace SyZero.EventBus.LocalEventBus
 
                 if (handlers.Contains(handlerType))
                 {
-                    Console.WriteLine($"SyZero.EventBus: 动态事件处理器 {handlerType.Name} 已订阅事件 {eventName}");
+                    _logger.LogDebug("动态事件处理器 {HandlerName} 已订阅事件 {EventName}", handlerType.Name, eventName);
                     return;
                 }
 
                 handlers.Add(handlerType);
             }
 
-            Console.WriteLine($"SyZero.EventBus: 动态事件处理器 {handlerType.Name} 订阅事件 {eventName}");
+            _logger.LogInformation("动态事件处理器 {HandlerName} 订阅事件 {EventName}", handlerType.Name, eventName);
 
             if (_options.EnableFilePersistence)
             {
@@ -165,7 +170,7 @@ namespace SyZero.EventBus.LocalEventBus
                         _subscriptions.TryRemove(eventName, out _);
                     }
 
-                    Console.WriteLine($"SyZero.EventBus: 事件处理器 {handlerType.Name} 取消订阅事件 {eventName}");
+                    _logger.LogInformation("事件处理器 {HandlerName} 取消订阅事件 {EventName}", handlerType.Name, eventName);
 
                     if (_options.EnableFilePersistence)
                     {
@@ -191,7 +196,7 @@ namespace SyZero.EventBus.LocalEventBus
                         _dynamicSubscriptions.TryRemove(eventName, out _);
                     }
 
-                    Console.WriteLine($"SyZero.EventBus: 动态事件处理器 {handlerType.Name} 取消订阅事件 {eventName}");
+                    _logger.LogInformation("动态事件处理器 {HandlerName} 取消订阅事件 {EventName}", handlerType.Name, eventName);
 
                     if (_options.EnableFilePersistence)
                     {
@@ -210,7 +215,7 @@ namespace SyZero.EventBus.LocalEventBus
                 _handlerFactories.Clear();
             }
 
-            Console.WriteLine("SyZero.EventBus: 清空所有订阅");
+            _logger.LogInformation("清空所有订阅");
 
             if (_options.EnableFilePersistence)
             {
@@ -293,7 +298,7 @@ namespace SyZero.EventBus.LocalEventBus
         {
             if (!IsSubscribed(eventName))
             {
-                Console.WriteLine($"SyZero.EventBus: 事件 {eventName} 没有订阅者");
+                _logger.LogDebug("事件 {EventName} 没有订阅者", eventName);
                 return;
             }
 
@@ -325,7 +330,7 @@ namespace SyZero.EventBus.LocalEventBus
         {
             if (!IsSubscribed(eventName))
             {
-                Console.WriteLine($"SyZero.EventBus: 事件 {eventName} 没有订阅者");
+                _logger.LogDebug("事件 {EventName} 没有订阅者", eventName);
                 return;
             }
 
@@ -373,7 +378,7 @@ namespace SyZero.EventBus.LocalEventBus
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"SyZero.EventBus: 处理事件队列时发生错误: {ex.Message}");
+                    _logger.LogError(ex, "处理事件队列时发生错误");
 
                     // 重试机制
                     if (_options.EnableRetry && wrapper.RetryCount < _options.RetryCount)
@@ -423,12 +428,12 @@ namespace SyZero.EventBus.LocalEventBus
                     if (data != null)
                     {
                         // 注意：从文件加载时，处理器工厂无法恢复，需要重新订阅
-                        Console.WriteLine($"SyZero.EventBus: 从文件加载订阅信息，共 {data.Subscriptions?.Count ?? 0} 个事件");
+                        _logger.LogInformation("从文件加载订阅信息，共 {Count} 个事件", data.Subscriptions?.Count ?? 0);
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"SyZero.EventBus: 从文件加载订阅信息失败: {ex.Message}");
+                    _logger.LogError(ex, "从文件加载订阅信息失败");
                 }
             }
         }
@@ -468,7 +473,7 @@ namespace SyZero.EventBus.LocalEventBus
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"SyZero.EventBus: 保存订阅信息到文件失败: {ex.Message}");
+                    _logger.LogError(ex, "保存订阅信息到文件失败");
                 }
             }
         }
@@ -497,12 +502,12 @@ namespace SyZero.EventBus.LocalEventBus
                         {
                             _eventQueue.Enqueue(evt);
                         }
-                        Console.WriteLine($"SyZero.EventBus: 从文件加载待处理事件，共 {events.Count} 个");
+                        _logger.LogInformation("从文件加载待处理事件，共 {Count} 个", events.Count);
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"SyZero.EventBus: 从文件加载事件失败: {ex.Message}");
+                    _logger.LogError(ex, "从文件加载事件失败");
                 }
             }
         }
@@ -525,7 +530,7 @@ namespace SyZero.EventBus.LocalEventBus
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"SyZero.EventBus: 保存事件到文件失败: {ex.Message}");
+                    _logger.LogError(ex, "保存事件到文件失败");
                 }
             }
         }
@@ -554,12 +559,12 @@ namespace SyZero.EventBus.LocalEventBus
                         {
                             _deadLetterQueue.Enqueue(evt);
                         }
-                        Console.WriteLine($"SyZero.EventBus: 从文件加载死信事件，共 {events.Count} 个");
+                        _logger.LogInformation("从文件加载死信事件，共 {Count} 个", events.Count);
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"SyZero.EventBus: 从文件加载死信事件失败: {ex.Message}");
+                    _logger.LogError(ex, "从文件加载死信事件失败");
                 }
             }
         }
@@ -582,7 +587,7 @@ namespace SyZero.EventBus.LocalEventBus
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"SyZero.EventBus: 保存死信事件到文件失败: {ex.Message}");
+                    _logger.LogError(ex, "保存死信事件到文件失败");
                 }
             }
         }
@@ -633,11 +638,11 @@ namespace SyZero.EventBus.LocalEventBus
                     _eventWatcher.EnableRaisingEvents = true;
                 }
 
-                Console.WriteLine("SyZero.EventBus: 文件监听已启动");
+                _logger.LogInformation("文件监听已启动");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"SyZero.EventBus: 初始化文件监听失败: {ex.Message}");
+                _logger.LogError(ex, "初始化文件监听失败");
             }
         }
 
@@ -686,7 +691,7 @@ namespace SyZero.EventBus.LocalEventBus
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"SyZero.EventBus: 清理过期事件失败: {ex.Message}");
+                _logger.LogError(ex, "清理过期事件失败");
             }
         }
 
@@ -719,14 +724,14 @@ namespace SyZero.EventBus.LocalEventBus
             }
         }
 
-        private static Type GetHandlerEventType(Type handlerType)
+        private static Type? GetHandlerEventType(Type handlerType)
         {
             return handlerType.GetInterfaces()
                 .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEventHandler<>))
                 ?.GetGenericArguments()[0];
         }
 
-        private static object ConvertEventData(object eventData, Type eventType)
+        private static object? ConvertEventData(object eventData, Type eventType)
         {
             if (eventData == null)
             {
@@ -796,10 +801,11 @@ namespace SyZero.EventBus.LocalEventBus
 
         private static void RunSync(Func<Task> taskFactory)
         {
-            taskFactory().ConfigureAwait(false).GetAwaiter().GetResult();
+            // 使用 Task.Run 转移到线程池线程，隔离 SynchronizationContext，避免死锁。
+            Task.Run(taskFactory).GetAwaiter().GetResult();
         }
 
-        private static void RunBackgroundTask(Func<Task> taskFactory, string operationName)
+        private void RunBackgroundTask(Func<Task> taskFactory, string operationName)
         {
             _ = Task.Run(async () =>
             {
@@ -809,7 +815,7 @@ namespace SyZero.EventBus.LocalEventBus
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"SyZero.EventBus: {operationName}异常: {ex.Message}");
+                    _logger.LogError(ex, "{OperationName}异常", operationName);
                 }
             });
         }
@@ -855,8 +861,8 @@ namespace SyZero.EventBus.LocalEventBus
 
         private class EventWrapper
         {
-            public string EventName { get; set; }
-            public object EventData { get; set; }
+            public string EventName { get; set; } = string.Empty;
+            public object EventData { get; set; } = new object();
             public DateTime CreateTime { get; set; }
             public int RetryCount { get; set; }
             public DateTime? LastRetryTime { get; set; }
@@ -864,8 +870,8 @@ namespace SyZero.EventBus.LocalEventBus
 
         private class SubscriptionData
         {
-            public Dictionary<string, List<string>> Subscriptions { get; set; }
-            public Dictionary<string, List<string>> DynamicSubscriptions { get; set; }
+            public Dictionary<string, List<string>> Subscriptions { get; set; } = new Dictionary<string, List<string>>();
+            public Dictionary<string, List<string>> DynamicSubscriptions { get; set; } = new Dictionary<string, List<string>>();
         }
 
         #endregion

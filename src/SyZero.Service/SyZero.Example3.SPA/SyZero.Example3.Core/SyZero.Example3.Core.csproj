@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <AssemblyName>SyZero.Example3.Core</AssemblyName>
+    <RootNamespace>SyZero.Example3.Core</RootNamespace>
+    <Platforms>AnyCPU;x64</Platforms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\SyZero.Module\SyZero.SqlSugar\SyZero.SqlSugar.csproj" />
+  </ItemGroup>
+
+</Project>

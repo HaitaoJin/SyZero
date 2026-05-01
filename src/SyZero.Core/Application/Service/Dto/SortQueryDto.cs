@@ -2,6 +2,6 @@
 {
     public class SortQueryDto : ISortQuery
     {
-        public string Sort { get; set; }
+        public string Sort { get; set; } = string.Empty;
     }
 }

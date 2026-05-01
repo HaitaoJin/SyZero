@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.Sdk</name>
+    </assembly>
+    <members>
+        <member name="T:SyZero.Sdk.SyServiceClient">
+            <summary>
+            SyZero SDK 客户端基类：用 typed HttpClient 发起对其他 SyZero 服务的调用，
+            自动统一基址、JSON 序列化与错误抛出。业务侧继承本类组织自己的 SDK 方法。
+            </summary>
+        </member>
+        <member name="M:SyZero.Sdk.SyServiceClient.GetAsync``1(System.String,System.Threading.CancellationToken)">
+            <summary>
+            GET 调用并将 JSON 响应反序列化为 <typeparamref name="T"/>。非 2xx 直接抛出。
+            </summary>
+        </member>
+        <member name="M:SyZero.Sdk.SyServiceClient.PostAsync``2(System.String,``0,System.Threading.CancellationToken)">
+            <summary>
+            POST JSON 并将响应反序列化为 <typeparamref name="TResp"/>。
+            </summary>
+        </member>
+        <member name="T:SyZero.Sdk.SyZeroSdkExtension">
+            <summary>
+            SyZero.Sdk 模块的 DI 扩展。
+            </summary>
+        </member>
+        <member name="M:SyZero.Sdk.SyZeroSdkExtension.AddSyServiceClient``1(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.String)">
+            <summary>
+            注册一个 SyServiceClient 派生 typed client，并指定基地址。
+            </summary>
+        </member>
+    </members>
+</doc>

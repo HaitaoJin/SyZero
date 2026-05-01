@@ -18,17 +18,17 @@ namespace SyZero.EventBus.DBEventBus.Entity
         /// <summary>
         /// 事件名称
         /// </summary>
-        public string EventName { get; set; }
+        public string EventName { get; set; } = string.Empty;
 
         /// <summary>
         /// 事件数据（JSON格式）
         /// </summary>
-        public string EventData { get; set; }
+        public string EventData { get; set; } = string.Empty;
 
         /// <summary>
         /// 事件类型全名
         /// </summary>
-        public string EventTypeName { get; set; }
+        public string EventTypeName { get; set; } = string.Empty;
 
         /// <summary>
         /// 重试次数
@@ -38,7 +38,7 @@ namespace SyZero.EventBus.DBEventBus.Entity
         /// <summary>
         /// 最后错误信息
         /// </summary>
-        public string LastError { get; set; }
+        public string LastError { get; set; } = string.Empty;
 
         /// <summary>
         /// 原始创建时间

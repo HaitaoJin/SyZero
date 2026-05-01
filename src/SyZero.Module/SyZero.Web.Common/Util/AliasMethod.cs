@@ -8,9 +8,9 @@ namespace SyZero.Web.Common
 
     public class AliasMethod : IAliasMethod
     {
-        private int[] _alias;
+        private int[] _alias = Array.Empty<int>();
 
-        private double[] _probability;
+        private double[] _probability = Array.Empty<double>();
 
         /// <summary>
         /// 初始化采样

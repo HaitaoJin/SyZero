@@ -72,15 +72,31 @@ namespace SyZero.Example1.Web
             //注入Feign
             builder.Services.AddSyZeroFeign();
 
+            // ============================================================
+            // v1.5.0 集成示例（默认开启 GraphQL；其余以注释提供）
+            // ============================================================
+            // GraphQL 端点：默认提供 SyZeroPingQuery（可访问 POST /graphql 查询 { ping }）
+            builder.Services.AddSyZeroGraphQL();
+
+            // API Key 认证示例：调用方在请求头携带 X-Api-Key
+            // builder.Services.AddAuthentication(SyZero.Authentication.ApiKey.ApiKeyOptions.Scheme)
+            //     .AddSyZeroApiKey(o =>
+            //     {
+            //         o.HeaderName = "X-Api-Key";
+            //         o.Keys["sk-demo-12345"] = "demo-client";
+            //     });
+            // builder.Services.AddAuthorization();
+
+            // SourceGenerator：编译期 DI 注册（取代运行时反射扫描）
+            // 业务类型只需实现 IScopedDependency / ISingletonDependency / ITransientDependency 即可被自动收集，
+            // 编译后调用以下扩展即可一次性注册到容器：
+            // builder.Services.AddSyZeroGenerated();
+
             var app = builder.Build();
 
-            // 请求 URL 日志中间件
-            app.Use(async (context, next) =>
-            {
-                var request = context.Request;
-                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {request.Method} {request.Scheme}://{request.Host}{request.Path}{request.QueryString}");
-                await next();
-            });
+            // SyZero.Diagnostics：统一请求诊断中间件（替代手写 Console 日志）
+            // 写入结构化日志：method / path / status / 耗时 / TraceId / UserId / TenantId
+            app.UseSyZeroDiagnostics();
 
             app.UseSyZero();
             if (app.Environment.IsDevelopment())
@@ -98,6 +114,8 @@ namespace SyZero.Example1.Web
             app.UseStaticFiles();
             app.UseSyAuthMiddleware((sySeesion) => "Token:" + sySeesion.UserId);
             app.MapControllers();
+            // GraphQL 端点（默认 /graphql）
+            app.MapSyZeroGraphQL();
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {

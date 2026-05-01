@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Security.Claims;
-using System.Threading;
 using SyZero.AspNetCore;
 using SyZero.AspNetCore.Middleware;
 using SyZero.Cache;
@@ -64,9 +63,8 @@ namespace Microsoft.AspNetCore.Builder
 
         private static void ResetPrincipal(HttpContext context)
         {
-            var anonymous = new ClaimsPrincipal(new ClaimsIdentity());
-            Thread.CurrentPrincipal = anonymous;
-            context.User = anonymous;
+            // 仅重置 HttpContext.User；Thread.CurrentPrincipal 在异步场景下不可靠，不再使用。
+            context.User = new ClaimsPrincipal(new ClaimsIdentity());
         }
     }
 }

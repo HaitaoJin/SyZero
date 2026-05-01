@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <Description>SyZero 校验框架：ISyValidator&lt;T&gt; 抽象 + 基于 DataAnnotations 的默认实现 + ValidationResult 聚合，业务可适配 FluentValidation 等任意校验库。</Description>
+    <IsPackable>true</IsPackable>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\SyZero.Core\SyZero.Core.csproj" />
+  </ItemGroup>
+
+</Project>

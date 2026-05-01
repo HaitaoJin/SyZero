@@ -12,7 +12,7 @@ namespace SyZero.EntityFrameworkCore.Domain
     /// </summary>
     /// <typeparam name="TDbContext"></typeparam>
     /// <typeparam name="TEntity"></typeparam>
-    public class DomainModel<TDbContext, TEntity> : EfRepository<TDbContext, TEntity>, IDomainModel<TEntity>
+    public class DomainModel<TDbContext, TEntity> : EfRepository<TDbContext, TEntity, long>, IDomainModel<TEntity>
         where TEntity : class, IEntity
         where TDbContext : DbContext
     {

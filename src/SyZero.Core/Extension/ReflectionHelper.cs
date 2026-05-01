@@ -11,34 +11,56 @@ namespace SyZero
     public static class ReflectionHelper
     {
         /// <summary>
-        ///     ��ȡ���еĳ���
+        ///     获取所有的程序集
         /// </summary>
         public static IEnumerable<Assembly> GetAssemblies()
         {
             var assemblies = new List<Assembly>();
-            var libs = DependencyContext.Default.CompileLibraries;
-            foreach (var lib in libs)
+            var dependencyContext = DependencyContext.Default;
+            if (dependencyContext is null)
+            {
+                return AppDomain.CurrentDomain.GetAssemblies();
+            }
+
+            // 用 RuntimeLibraries.RuntimeAssemblyGroups 拿到运行时真实的程序集名（dll 文件名），
+            // 避免 lib.Name（项目名）与 AssemblyName 不一致导致 Assembly.Load 失败。
+            var loaded = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var lib in dependencyContext.RuntimeLibraries)
             {
                 if (lib.Serviceable)
-                    continue;
-                //todo CompileLibraries��ȷ�� yanzx
-                if (lib.Type == "package" )
-                    continue;
-                try
                 {
-                    var assembly = Assembly.Load(new AssemblyName(lib.Name));
-                    assemblies.Add(assembly);
+                    continue;
                 }
-                catch
+                if (lib.Type == "package")
                 {
-                   // throw;
+                    continue;
+                }
+
+                foreach (var group in lib.RuntimeAssemblyGroups)
+                {
+                    foreach (var path in group.AssetPaths)
+                    {
+                        var asmName = System.IO.Path.GetFileNameWithoutExtension(path);
+                        if (string.IsNullOrEmpty(asmName) || !loaded.Add(asmName))
+                        {
+                            continue;
+                        }
+                        try
+                        {
+                            assemblies.Add(Assembly.Load(new AssemblyName(asmName)));
+                        }
+                        catch
+                        {
+                            // 忽略加载失败的程序集
+                        }
+                    }
                 }
             }
             return assemblies;
         }
 
         /// <summary>
-        ///   ��ȡ���еĳ���
+        ///   ��ȡ���еĳ���
         /// </summary>
         public static IEnumerable<Type> GetTypes()
         {
@@ -51,7 +73,7 @@ namespace SyZero
         }
 
 
-        public static TAttribute GetSingleAttributeOrDefaultByFullSearch<TAttribute>(this TypeInfo info)
+        public static TAttribute? GetSingleAttributeOrDefaultByFullSearch<TAttribute>(this TypeInfo info)
             where TAttribute : Attribute
         {
             var attributeType = typeof(TAttribute);
@@ -75,7 +97,7 @@ namespace SyZero
             return null;
         }
 
-        public static TAttribute GetSingleAttributeOrDefault<TAttribute>(MemberInfo memberInfo, TAttribute defaultValue = default(TAttribute), bool inherit = true)
+        public static TAttribute? GetSingleAttributeOrDefault<TAttribute>(MemberInfo memberInfo, TAttribute? defaultValue = default(TAttribute), bool inherit = true)
        where TAttribute : Attribute
         {
             var attributeType = typeof(TAttribute);
@@ -95,7 +117,7 @@ namespace SyZero
         /// <param name="memberInfo">The member that will be checked for the attribute</param>
         /// <param name="inherit">Include inherited attributes</param>
         /// <returns>Returns the attribute object if found. Returns null if not found.</returns>
-        public static TAttribute GetSingleAttributeOrNull<TAttribute>(this MemberInfo memberInfo, bool inherit = true)
+        public static TAttribute? GetSingleAttributeOrNull<TAttribute>(this MemberInfo memberInfo, bool inherit = true)
             where TAttribute : Attribute
         {
             if (memberInfo == null)
@@ -113,7 +135,7 @@ namespace SyZero
         }
 
 
-        public static TAttribute GetSingleAttributeOfTypeOrBaseTypesOrNull<TAttribute>(this Type type, bool inherit = true)
+        public static TAttribute? GetSingleAttributeOfTypeOrBaseTypesOrNull<TAttribute>(this Type type, bool inherit = true)
             where TAttribute : Attribute
         {
             var attr = type.GetTypeInfo().GetSingleAttributeOrNull<TAttribute>();
@@ -127,13 +149,13 @@ namespace SyZero
                 return null;
             }
 
-            return type.GetTypeInfo().BaseType.GetSingleAttributeOfTypeOrBaseTypesOrNull<TAttribute>(inherit);
+            return type.GetTypeInfo().BaseType!.GetSingleAttributeOfTypeOrBaseTypesOrNull<TAttribute>(inherit);
         }
 
-        public static MemberInfo GetInterfaceMemberInfo(this MemberInfo member)
+        public static MemberInfo? GetInterfaceMemberInfo(this MemberInfo member)
         {
-            MemberInfo method = null;
-            foreach (var interfaces in member.DeclaringType.GetInterfaces())
+            MemberInfo? method = null;
+            foreach (var interfaces in member.DeclaringType!.GetInterfaces())
             {
                 var tempMethod = interfaces.GetMembers().FirstOrDefault(p => p.MemberType == member.MemberType && p.ToString() == member.ToString());
                 if (tempMethod != null)

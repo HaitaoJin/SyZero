@@ -27,7 +27,7 @@ namespace SyZero.Cache
         /// <param name="key"></param>
         /// <param name="isExisted">是否成功</param>
         /// <returns></returns>
-        T Get<T>(string key);
+        T? Get<T>(string key);
         /// <summary>
         /// 移除
         /// </summary>

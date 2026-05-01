@@ -196,7 +196,7 @@ namespace SyZero.Web.Common
             try
             {
                 string objectName = string.Empty;
-                FileData fileData = null;
+                FileData? fileData = null;
                 if (file != null && !string.IsNullOrEmpty(file.FileName))
                 {
                     fileData = UploadFilePonitToOSS(file, bucketName, uploadUserId);

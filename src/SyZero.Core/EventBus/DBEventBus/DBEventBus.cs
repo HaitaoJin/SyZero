@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using SyZero.Cache;
 using SyZero.EventBus.DBEventBus.Entity;
 using SyZero.EventBus.DBEventBus.Repository;
@@ -20,14 +22,15 @@ namespace SyZero.EventBus.DBEventBus
         private readonly IEventSubscriptionRepository _subscriptionRepository;
         private readonly IEventQueueRepository _eventQueueRepository;
         private readonly IDeadLetterEventRepository _deadLetterRepository;
-        private readonly ILeaderElectionRepository _leaderRepository;
+        private readonly ILeaderElectionRepository? _leaderRepository;
         private readonly ICache _cache;
         private readonly DBEventBusOptions _options;
+        private readonly ILogger _logger;
         private readonly ConcurrentDictionary<string, Func<object>> _handlerFactories = new ConcurrentDictionary<string, Func<object>>();
         private readonly string _instanceId;
-        private Timer _processTimer;
-        private Timer _cleanupTimer;
-        private Timer _leaderRenewTimer;
+        private Timer? _processTimer;
+        private Timer? _cleanupTimer;
+        private Timer? _leaderRenewTimer;
         private bool _isLeader = false;
         private bool _disposed = false;
 
@@ -47,7 +50,8 @@ namespace SyZero.EventBus.DBEventBus
             IDeadLetterEventRepository deadLetterRepository,
             ICache cache,
             DBEventBusOptions options,
-            ILeaderElectionRepository leaderRepository = null)
+            ILeaderElectionRepository? leaderRepository = null,
+            ILogger<DBEventBus>? logger = null)
         {
             _subscriptionRepository = subscriptionRepository ?? throw new ArgumentNullException(nameof(subscriptionRepository));
             _eventQueueRepository = eventQueueRepository ?? throw new ArgumentNullException(nameof(eventQueueRepository));
@@ -55,6 +59,7 @@ namespace SyZero.EventBus.DBEventBus
             _cache = cache ?? throw new ArgumentNullException(nameof(cache));
             _options = options ?? new DBEventBusOptions();
             _leaderRepository = leaderRepository;
+            _logger = (ILogger?)logger ?? NullLogger<DBEventBus>.Instance;
             _instanceId = Guid.NewGuid().ToString("N");
 
             // 如果启用 Leader 选举，先尝试获取 Leader
@@ -126,7 +131,7 @@ namespace SyZero.EventBus.DBEventBus
                     }
 
                     // 锁已过期，可以抢占
-                    Console.WriteLine($"SyZero.EventBus.DB: Leader 锁已过期 (原 Leader: {currentLock.InstanceId})，尝试获取...");
+                    _logger.LogInformation("Leader 锁已过期 (原 Leader: {InstanceId})，尝试获取...", currentLock.InstanceId);
                 }
 
                 // 尝试获取锁
@@ -135,12 +140,12 @@ namespace SyZero.EventBus.DBEventBus
 
                 if (success)
                 {
-                    Console.WriteLine($"SyZero.EventBus.DB: 当前实例 [{_instanceId}] 成为 Leader");
+                    _logger.LogInformation("当前实例 [{InstanceId}] 成为 Leader", _instanceId);
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"SyZero.EventBus.DB: 获取 Leader 权限失败: {ex.Message}");
+                _logger.LogError(ex, "获取 Leader 权限失败");
                 _isLeader = false;
             }
         }
@@ -153,11 +158,11 @@ namespace SyZero.EventBus.DBEventBus
             {
                 const string leaderKey = "EventBus";
                 await _leaderRepository.ReleaseLeaderLockAsync(leaderKey, _instanceId);
-                Console.WriteLine($"SyZero.EventBus.DB: 实例 [{_instanceId}] 释放 Leader 权限");
+                _logger.LogInformation("实例 [{InstanceId}] 释放 Leader 权限", _instanceId);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"SyZero.EventBus.DB: 释放 Leader 权限失败: {ex.Message}");
+                _logger.LogError(ex, "释放 Leader 权限失败");
             }
             finally
             {
@@ -182,13 +187,13 @@ namespace SyZero.EventBus.DBEventBus
             RunSync(() => DoSubscribe(typeof(TH), eventName, null, true));
         }
 
-        private async Task DoSubscribe(Type handlerType, string eventName, Func<object> handlerFactory, bool isDynamic)
+        private async Task DoSubscribe(Type handlerType, string eventName, Func<object>? handlerFactory, bool isDynamic)
         {
             // 检查是否已订阅
             var existing = await _subscriptionRepository.GetByEventAndHandlerAsync(eventName, handlerType.FullName);
             if (existing != null)
             {
-                Console.WriteLine($"SyZero.EventBus.DB: 事件处理器 {handlerType.Name} 已订阅事件 {eventName}");
+                _logger.LogDebug("事件处理器 {HandlerName} 已订阅事件 {EventName}", handlerType.Name, eventName);
                 return;
             }
 
@@ -212,7 +217,7 @@ namespace SyZero.EventBus.DBEventBus
             // 清除缓存
             _cache.Remove($"EventBus:Subscriptions:{eventName}");
 
-            Console.WriteLine($"SyZero.EventBus.DB: 事件处理器 {handlerType.Name} 订阅事件 {eventName}");
+            _logger.LogInformation("事件处理器 {HandlerName} 订阅事件 {EventName}", handlerType.Name, eventName);
         }
 
         public void Unsubscribe<T, TH>()
@@ -238,7 +243,7 @@ namespace SyZero.EventBus.DBEventBus
             // 清除缓存
             _cache.Remove($"EventBus:Subscriptions:{eventName}");
 
-            Console.WriteLine($"SyZero.EventBus.DB: 事件处理器 {handlerType.Name} 取消订阅事件 {eventName}");
+            _logger.LogInformation("事件处理器 {HandlerName} 取消订阅事件 {EventName}", handlerType.Name, eventName);
         }
 
         public void Clear()
@@ -253,7 +258,7 @@ namespace SyZero.EventBus.DBEventBus
                 _cache.Remove($"EventBus:Subscriptions:{eventName}");
             }
 
-            Console.WriteLine("SyZero.EventBus.DB: 清空所有订阅");
+            _logger.LogInformation("清空所有订阅");
         }
 
         public bool IsSubscribed<T>()
@@ -321,7 +326,7 @@ namespace SyZero.EventBus.DBEventBus
         {
             if (!IsSubscribed(eventName))
             {
-                Console.WriteLine($"SyZero.EventBus.DB: 事件 {eventName} 没有订阅者");
+                _logger.LogDebug("事件 {EventName} 没有订阅者", eventName);
                 return;
             }
 
@@ -398,7 +403,7 @@ namespace SyZero.EventBus.DBEventBus
 
                         // 反序列化事件数据
                         var eventType = Type.GetType(eventEntity.EventTypeName);
-                        object eventData;
+                        object? eventData;
                         if (eventType != null)
                         {
                             eventData = JsonSerializer.Deserialize(eventEntity.EventData, eventType);
@@ -409,7 +414,7 @@ namespace SyZero.EventBus.DBEventBus
                         }
 
                         // 处理事件
-                        await ExecuteWithTimeoutAsync(() => ProcessEventAsync(eventEntity.EventName, eventData));
+                        await ExecuteWithTimeoutAsync(() => ProcessEventAsync(eventEntity.EventName, eventData!));
 
                         // 更新状态为已完成
                         eventEntity.Status = 2;
@@ -421,7 +426,7 @@ namespace SyZero.EventBus.DBEventBus
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"SyZero.EventBus.DB: 处理事件 {eventEntity.EventName} 失败: {ex.Message}");
+                        _logger.LogError(ex, "处理事件 {EventName} 失败", eventEntity.EventName);
 
                         // 重试机制
                         if (_options.EnableRetry && eventEntity.RetryCount < _options.RetryCount)
@@ -460,7 +465,7 @@ namespace SyZero.EventBus.DBEventBus
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"SyZero.EventBus.DB: 处理事件队列时发生错误: {ex.Message}");
+                _logger.LogError(ex, "处理事件队列时发生错误");
             }
         }
 
@@ -482,7 +487,7 @@ namespace SyZero.EventBus.DBEventBus
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"SyZero.EventBus.DB: 清理过期事件失败: {ex.Message}");
+                _logger.LogError(ex, "清理过期事件失败");
             }
         }
 
@@ -495,14 +500,14 @@ namespace SyZero.EventBus.DBEventBus
             return typeof(T).Name;
         }
 
-        private static Type GetHandlerEventType(Type handlerType)
+        private static Type? GetHandlerEventType(Type handlerType)
         {
             return handlerType.GetInterfaces()
                 .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEventHandler<>))
                 ?.GetGenericArguments()[0];
         }
 
-        private static object ConvertEventData(object eventData, Type eventType)
+        private static object? ConvertEventData(object eventData, Type eventType)
         {
             if (eventData == null)
             {
@@ -560,7 +565,7 @@ namespace SyZero.EventBus.DBEventBus
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"SyZero.EventBus.DB: 处理事件 {eventName} 时发生错误: {ex.Message}");
+                _logger.LogError(ex, "处理事件 {EventName} 时发生错误", eventName);
                 throw;
             }
         }
@@ -586,15 +591,16 @@ namespace SyZero.EventBus.DBEventBus
 
         private static void RunSync(Func<Task> taskFactory)
         {
-            taskFactory().ConfigureAwait(false).GetAwaiter().GetResult();
+            // 使用 Task.Run 转移到线程池线程，隔离 SynchronizationContext，避免死锁。
+            Task.Run(taskFactory).GetAwaiter().GetResult();
         }
 
         private static T RunSync<T>(Func<Task<T>> taskFactory)
         {
-            return taskFactory().ConfigureAwait(false).GetAwaiter().GetResult();
+            return Task.Run(taskFactory).GetAwaiter().GetResult();
         }
 
-        private static void RunBackgroundTask(Func<Task> taskFactory, string operationName)
+        private void RunBackgroundTask(Func<Task> taskFactory, string operationName)
         {
             _ = Task.Run(async () =>
             {
@@ -604,7 +610,7 @@ namespace SyZero.EventBus.DBEventBus
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"SyZero.EventBus.DB: {operationName}异常: {ex.Message}");
+                    _logger.LogError(ex, "{OperationName}异常", operationName);
                 }
             });
         }

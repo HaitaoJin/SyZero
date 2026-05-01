@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using RestSharp;
 using System;
 using System.Security.Cryptography;
@@ -12,9 +12,9 @@ namespace SyZero.Web.Common
     /// </summary>
     public class WxService
     {
-        public string access_token { get; set; }
-        public string appId { get; set; }
-        public string appSecret { get; set; }
+        public string access_token { get; set; } = string.Empty;
+        public string appId { get; set; } = string.Empty;
+        public string appSecret { get; set; } = string.Empty;
         public WxService(string AppId, string AppSecret)
         {
             this.appId = AppId;
@@ -35,8 +35,8 @@ namespace SyZero.Web.Common
             //获取微信凭证
             var result = await RestHelper.ExecuteAsync(request);
             if (result == null) return accessToken;
-            accessToken.access_token = result["access_token"].ToString();
-            accessToken.expires_in = result["expires_in"].ToString();
+            accessToken.access_token = result["access_token"]?.ToString() ?? string.Empty;
+            accessToken.expires_in = result["expires_in"]?.ToString() ?? string.Empty;
             access_token = accessToken.access_token;
             Console.WriteLine("[获取小程序AccessToken]accessToken:" + accessToken.expires_in);
             return accessToken;
@@ -46,7 +46,7 @@ namespace SyZero.Web.Common
         /// 查询自定义菜单
         /// </summary>
         /// <returns></returns>
-        public async Task<SelfmenuInfoResult> GetCurrentSelfmenuInfo()
+        public async Task<SelfmenuInfoResult?> GetCurrentSelfmenuInfo()
         {
             string wxacodeUrl = $"https://api.weixin.qq.com/cgi-bin/get_current_selfmenu_info?access_token={access_token}";
             RestRequest request = new RestRequest(wxacodeUrl, Method.Get);
@@ -59,7 +59,7 @@ namespace SyZero.Web.Common
         /// 设置自定义菜单
         /// </summary>
         /// <returns></returns>
-        public async Task<WxOpenJsonResult> SetSelfmenuInfo(CreateSelfmenuInfo info)
+        public async Task<WxOpenJsonResult?> SetSelfmenuInfo(CreateSelfmenuInfo info)
         {
             string wxacodeUrl = $"https://api.weixin.qq.com/cgi-bin/menu/create?access_token={access_token}";
             RestRequest request = new RestRequest(wxacodeUrl, Method.Post);
@@ -75,7 +75,7 @@ namespace SyZero.Web.Common
         /// 发送模板消息
         /// </summary>
         /// <returns></returns>
-        public async Task<WxOpenJsonResult> SendTemplateMessage(WxTemplateMessage info)
+        public async Task<WxOpenJsonResult?> SendTemplateMessage(WxTemplateMessage info)
         {
             string wxacodeUrl = $"https://api.weixin.qq.com/cgi-bin/message/template/send?access_token={access_token}";
             RestRequest request = new RestRequest(wxacodeUrl, Method.Post);
@@ -91,7 +91,7 @@ namespace SyZero.Web.Common
         /// 公众号登录获取OpenId
         /// </summary>
         /// <returns></returns>
-        public async Task<WxAauthResult> Login(string code)
+        public async Task<WxAauthResult?> Login(string code)
         {
             string grant_type = "authorization_code";
             string wxacodeUrl = $"https://api.weixin.qq.com/sns/oauth2/access_token?appid={appId}&secret={appSecret}&code={code}&grant_type={grant_type}";
@@ -105,7 +105,7 @@ namespace SyZero.Web.Common
         /// 通过openId获取用户信息
         /// </summary>
         /// <returns></returns>
-        public async Task<WxUserInfoResult> GetUserInfo(string openId)
+        public async Task<WxUserInfoResult?> GetUserInfo(string openId)
         {
             string wxacodeUrl = $"https://api.weixin.qq.com/cgi-bin/user/info?access_token={access_token}&openid={openId}&lang=zh_CN";
             RestRequest request = new RestRequest(wxacodeUrl, Method.Get);
@@ -125,12 +125,12 @@ namespace SyZero.Web.Common
             RestRequest request = new RestRequest(wxacodeUrl, Method.Get);
             request.AddHeader("Content-Type", "application/json");
             var ticketResult = await RestHelper.ExecuteAsync<WxTicketResult>(request);
-            if (ticketResult.errcode != WxOpenReturnCode.RequestSuccess)
+            if (ticketResult == null || ticketResult.errcode != WxOpenReturnCode.RequestSuccess)
             {
                 return new WxJSAPIParametersResult()
                 {
-                    errcode = ticketResult.errcode,
-                    errmsg = ticketResult.errmsg
+                    errcode = ticketResult?.errcode ?? WxOpenReturnCode.SystemBusy,
+                    errmsg = ticketResult?.errmsg ?? string.Empty
                 };
             }
 

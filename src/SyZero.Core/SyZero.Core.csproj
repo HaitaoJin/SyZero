@@ -4,8 +4,6 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <Description>SyZero Core</Description>
     <IsPackable>true</IsPackable>
-    <!-- 程序集名 / 根命名空间保持原值，仅 NuGet 包名升级为 SyZero.Core -->
-    <AssemblyName>SyZero</AssemblyName>
     <RootNamespace>SyZero</RootNamespace>
   </PropertyGroup>
 
@@ -14,6 +12,7 @@
     <PackageReference Include="Dynamitey" />
     <PackageReference Include="ImpromptuInterface" />
     <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
     <PackageReference Include="Microsoft.Extensions.Configuration" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />

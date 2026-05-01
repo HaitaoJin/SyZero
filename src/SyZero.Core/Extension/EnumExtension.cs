@@ -15,13 +15,13 @@ namespace SyZero
         /// <returns></returns>
         public static string ToDescription(this Enum e)
         {
-            FieldInfo fieldInfo = e.GetType().GetField(e.ToString());
+            FieldInfo? fieldInfo = e.GetType().GetField(e.ToString());
             if (fieldInfo != null)
             {
                 DescriptionAttribute[] attributes = (DescriptionAttribute[])fieldInfo.GetCustomAttributes(typeof(DescriptionAttribute), false);
                 if (attributes != null && attributes.Any())
                 {
-                    return attributes.FirstOrDefault().Description;
+                    return attributes.FirstOrDefault()?.Description ?? string.Empty;
                 }
             }
 
@@ -33,11 +33,11 @@ namespace SyZero
         /// </summary>
         /// <param name="enumSubitem"></param>
         /// <returns></returns>
-        public static string GetEnumDescription(this Enum enumSubitem)
+        public static string? GetEnumDescription(this Enum enumSubitem)
         {
             string strValue = enumSubitem.ToString();
 
-            FieldInfo fieldinfo = enumSubitem.GetType().GetField(strValue);
+            FieldInfo? fieldinfo = enumSubitem.GetType().GetField(strValue);
             if (fieldinfo == null)
                 return null;
 
@@ -63,7 +63,7 @@ namespace SyZero
                        );
         }
 
-        public static T GetEnumFromDescription<T>(this string description)
+        public static T? GetEnumFromDescription<T>(this string description)
         {
             foreach (var field in typeof(T).GetFields())
             {
@@ -73,7 +73,7 @@ namespace SyZero
                     var desc = ((DescriptionAttribute)attributes[0]).Description;
                     if (desc.Equals(description, StringComparison.OrdinalIgnoreCase))
                     {
-                        return (T)field.GetValue(null);
+                        return (T?)field.GetValue(null);
                     }
                 }
             }

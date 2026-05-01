@@ -11,8 +11,8 @@ namespace SyZero.EventBus.DBEventBus.Entity
     public class LeaderLockEntity : IEntity
     {
         public long Id { get; set; }
-        public string LeaderKey { get; set; }
-        public string InstanceId { get; set; }
+        public string LeaderKey { get; set; } = string.Empty;
+        public string InstanceId { get; set; } = string.Empty;
         public DateTime AcquireTime { get; set; }
         public DateTime RenewTime { get; set; }
         public DateTime ExpireTime { get; set; }

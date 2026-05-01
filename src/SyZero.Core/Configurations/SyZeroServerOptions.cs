@@ -10,12 +10,12 @@ namespace SyZero.Configurations
         /// <summary>
         /// 服务名称
         /// </summary>
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         /// <summary>
         /// 服务内网Ip
         /// </summary>
-        public string Ip { get; set; }
+        public string? Ip { get; set; }
 
         /// <summary>
         /// 服务端口号
@@ -25,7 +25,7 @@ namespace SyZero.Configurations
         /// <summary>
         /// 服务广域网Ip
         /// </summary>
-        public string WanIp { get; set; }
+        public string? WanIp { get; set; }
 
         /// <summary>
         /// 协议 HTTP/HTTPS/GRPC
@@ -40,12 +40,12 @@ namespace SyZero.Configurations
         /// <summary>
         /// 开放地址
         /// </summary>
-        public string CorsOrigins { get; set; }
+        public string? CorsOrigins { get; set; }
 
         /// <summary>
         /// 动态配置
         /// </summary>
-        public string DynamicConfig
+        public string? DynamicConfig
         {
             get;
             set;

@@ -2,6 +2,8 @@
 
 SyZero.DynamicGrpc is a code-first gRPC module based on protobuf-net.Grpc.AspNetCore, designed for dynamic and fast gRPC service exposure.
 
+> Internal provider infrastructure (type filtering, name normalization, assembly scanning, attribute caching) lives in [`SyZero.Core`](./SyZero.Core)'s `SyZero.Application.DynamicApi` namespace and is shared with [`SyZero.DynamicWebApi`](./SyZero.DynamicWebApi).
+
 ## Install
 
 ```bash

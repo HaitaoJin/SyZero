@@ -2,13 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using SyZero.Application.DynamicApi;
 
 namespace SyZero.DynamicGrpc
 {
     /// <summary>
     /// Dynamic gRPC 配置选项
     /// </summary>
-    public class DynamicGrpcOptions
+    public class DynamicGrpcOptions : DynamicApiOptionsBase
     {
         /// <summary>
         /// 配置节名称
@@ -33,11 +34,6 @@ namespace SyZero.DynamicGrpc
         /// 默认服务前缀
         /// </summary>
         public string DefaultServicePrefix { get; set; }
-
-        /// <summary>
-        /// 默认区域/模块名称
-        /// </summary>
-        public string DefaultAreaName { get; set; }
 
         /// <summary>
         /// 需要移除的服务名称后缀
@@ -88,7 +84,7 @@ namespace SyZero.DynamicGrpc
         /// 验证所有配置是否有效
         /// </summary>
         /// <exception cref="ArgumentException">配置无效时抛出</exception>
-        public void Validate()
+        public override void Validate()
         {
             DefaultServicePrefix ??= string.Empty;
             DefaultAreaName ??= string.Empty;

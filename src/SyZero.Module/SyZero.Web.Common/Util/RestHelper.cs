@@ -16,7 +16,7 @@ namespace SyZero.Web.Common
         /// <param name="baseUrl"></param>
         /// <param name="request">外部设定的请求</param>
         /// <returns>返回Jobject通用对象</returns>
-        public static JObject Execute(RestRequest request)
+        public static JObject? Execute(RestRequest request)
         {
             var client = SyZeroUtil.GetService<RestClient>();
             var response = client.Execute(request);
@@ -34,7 +34,7 @@ namespace SyZero.Web.Common
         /// <param name="baseUrl"></param>
         /// <param name="request">外部设定的请求</param>
         /// <returns>返回Jobject通用对象</returns>
-        public static async Task<JObject> ExecuteAsync(RestRequest request)
+        public static async Task<JObject?> ExecuteAsync(RestRequest request)
         {
             var client = SyZeroUtil.GetService<RestClient>();
             var response = await client.ExecuteAsync(request);
@@ -53,7 +53,7 @@ namespace SyZero.Web.Common
         /// <param name="baseUrl"></param>
         /// <param name="request"></param>
         /// <returns></returns>
-        public static T Execute<T>(RestRequest request) where T : class, new()
+        public static T? Execute<T>(RestRequest request) where T : class, new()
         {
             var client = SyZeroUtil.GetService<RestClient>();
             var response = client.Execute(request);
@@ -72,7 +72,7 @@ namespace SyZero.Web.Common
         /// <param name="baseUrl"></param>
         /// <param name="request"></param>
         /// <returns></returns>
-        public static async Task<T> ExecuteAsync<T>(RestRequest request) where T : class, new()
+        public static async Task<T?> ExecuteAsync<T>(RestRequest request) where T : class, new()
         {
             var client = SyZeroUtil.GetService<RestClient>();
             var response = await client.ExecuteAsync(request);
@@ -140,7 +140,7 @@ namespace SyZero.Web.Common
                 {
                     if (typeof(T) == typeof(string))
                     {
-                        result.Entity = (T)Convert.ChangeType(content, typeof(T));
+                        result.Entity = (T?)Convert.ChangeType(content, typeof(T));
                     }
                     else
                     {
@@ -150,13 +150,13 @@ namespace SyZero.Web.Common
             }
             else
             {
-                result.Message = response.ErrorMessage ?? response.Content;
+                result.Message = response.ErrorMessage ?? response.Content ?? string.Empty;
             }
 
             return result;
         }
 
-        public static HttpResultMessage PostJsonAsUrl(string url, object body)
+        public static HttpResultMessage? PostJsonAsUrl(string url, object body)
         {
             var client = SyZeroUtil.GetService<RestClient>();
             var request = new RestRequest(url, Method.Post);
@@ -174,7 +174,7 @@ namespace SyZero.Web.Common
         }
 
 
-        public static T EasemobReqUrl<T>(string url, Method method, object body, string token = "")
+        public static T? EasemobReqUrl<T>(string url, Method method, object body, string token = "")
         {
             try
             {
@@ -204,7 +204,7 @@ namespace SyZero.Web.Common
         }
 
 
-        public static T WechatPost<T>(string url, object body, string token = "")
+        public static T? WechatPost<T>(string url, object body, string token = "")
         {
             try
             {
@@ -230,7 +230,7 @@ namespace SyZero.Web.Common
             }
         }
 
-        public static async Task<T> WechatGet<T>(string url, string token = "")
+        public static async Task<T?> WechatGet<T>(string url, string token = "")
         {
             try
             {
@@ -254,18 +254,18 @@ namespace SyZero.Web.Common
                 return default;
             }
         }
-        public async static Task<string> RestPost(string url, Dictionary<string, string> header = null, Dictionary<string, string> parameter = null, string body = "")
+        public async static Task<string?> RestPost(string url, Dictionary<string, string>? header = null, Dictionary<string, string>? parameter = null, string body = "")
         {
             return await Request(url, header, parameter, body, Method.Post);
         }
-        public async static Task<string> RestGet(string url, Dictionary<string, string> header = null, Dictionary<string, string> parameter = null)
+        public async static Task<string?> RestGet(string url, Dictionary<string, string>? header = null, Dictionary<string, string>? parameter = null)
         {
             return await Request(url, header, parameter, string.Empty, Method.Get);
         }
-        private async static Task<string> Request(string url, Dictionary<string, string> header, Dictionary<string, string> parameter, string body, Method method)
+        private async static Task<string?> Request(string url, Dictionary<string, string>? header, Dictionary<string, string>? parameter, string body, Method method)
         {
             RestClient client = new RestClient();
-            string str;
+            string? str;
             try
             {
                 RestRequest request = new RestRequest(new Uri(url), method)
@@ -304,7 +304,7 @@ namespace SyZero.Web.Common
             return str;
         }
 
-        private static JObject ParseObjectResponse(RestResponse response)
+        private static JObject? ParseObjectResponse(RestResponse response)
         {
             if (response == null || string.IsNullOrWhiteSpace(response.Content) || IsHtmlResponse(response))
             {
@@ -321,7 +321,7 @@ namespace SyZero.Web.Common
             }
         }
 
-        private static T DeserializeResponse<T>(string content) where T : class, new()
+        private static T? DeserializeResponse<T>(string? content) where T : class, new()
         {
             if (string.IsNullOrWhiteSpace(content))
             {

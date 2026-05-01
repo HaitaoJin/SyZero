@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.Example3.Application</name>
+    </assembly>
+    <members>
+        <member name="M:SyZero.Example3.Application.Examples.Example3AppService.GetServiceInfo">
+            <summary>
+            获取当前服务信息
+            </summary>
+        </member>
+    </members>
+</doc>

@@ -1,17 +1,17 @@
-﻿namespace SyZero.Web.Common
+namespace SyZero.Web.Common
 {
     public class WxJSAPIParametersResult : WxOpenJsonResult
     {
-        public string ticket { get; set; }
+        public string ticket { get; set; } = string.Empty;
 
-        public string noncestr { get; set; }
+        public string noncestr { get; set; } = string.Empty;
 
 
-        public string timestamp { get; set; }
+        public string timestamp { get; set; } = string.Empty;
 
-        public string signature { get; set; }
+        public string signature { get; set; } = string.Empty;
 
-        public string url { get; set; }
+        public string url { get; set; } = string.Empty;
 
     }
 }

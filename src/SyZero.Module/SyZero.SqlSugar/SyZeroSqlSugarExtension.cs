@@ -94,6 +94,7 @@ namespace SyZero
             // 注册仓储泛型
             services.AddClassesAsImplementedInterface(typeof(IRepository<>), ServiceLifetime.Scoped);
             services.AddScoped(typeof(IRepository<>), typeof(SqlSugarRepository<>));
+            services.AddScoped(typeof(IRepository<,>), typeof(SqlSugarRepository<,>));
 
             // 注册持久化
             services.AddScoped<IUnitOfWork, UnitOfWork>();

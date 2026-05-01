@@ -8,13 +8,16 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version Condition=" '$(BUILD_BUILDNUMBER)' == '' ">1.2.0</Version>
+    <Version Condition=" '$(BUILD_BUILDNUMBER)' == '' ">1.6.0</Version>
     <Version Condition=" '$(BUILD_BUILDNUMBER)' != '' ">$(BUILD_BUILDNUMBER)</Version>
     <DocumentationFile Condition=" '$(DocumentationFile)' == '' ">$(MSBuildProjectName).xml</DocumentationFile>
     <PackageOutputPath>$(SyZeroRootPath)nuget</PackageOutputPath>
     <NoWarn>1572;1702;1591;1570;1723;1572;1573;1711;CS0168</NoWarn>
     <SignAssembly>false</SignAssembly>
     <IsPackable>false</IsPackable>
+    <!-- Nullable 引用类型：全仓库启用，由各模块按需修复 warning（先不作为 error） -->
+    <Nullable>enable</Nullable>
+    <LangVersion Condition=" '$(LangVersion)' == '' ">latest</LangVersion>
     <!-- 包元数据 -->
     <Authors>HaitaoJin</Authors>
     <Company>SYZERO</Company>

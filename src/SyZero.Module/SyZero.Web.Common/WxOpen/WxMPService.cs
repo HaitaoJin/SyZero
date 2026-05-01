@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using RestSharp;
 using System;
 using System.Collections.Generic;
@@ -13,9 +13,9 @@ namespace SyZero.Web.Common
     /// </summary>
     public class WxMPService
     {
-        public string access_token { get; set; }
-        public string appId { get; set; }
-        public string appSecret { get; set; }
+        public string access_token { get; set; } = string.Empty;
+        public string appId { get; set; } = string.Empty;
+        public string appSecret { get; set; } = string.Empty;
 
         public WxMPService()
         {
@@ -31,7 +31,7 @@ namespace SyZero.Web.Common
         /// 使用app的client_id 和 client_secret登陆并获取授权token
         /// </summary>
         /// <returns></returns>
-        public async Task<JsCode2JsonResult> Login(string code)
+        public async Task<JsCode2JsonResult?> Login(string code)
         {
             try
             {
@@ -60,8 +60,8 @@ namespace SyZero.Web.Common
             //获取微信凭证
             var result = await RestHelper.ExecuteAsync(request);
             if (result == null) return accessToken;
-            accessToken.access_token = result["access_token"].ToString();
-            accessToken.expires_in = result["expires_in"].ToString();
+            accessToken.access_token = result["access_token"]?.ToString() ?? string.Empty;
+            accessToken.expires_in = result["expires_in"]?.ToString() ?? string.Empty;
             access_token = accessToken.access_token;
             Console.WriteLine("[获取小程序AccessToken]accessToken:" + accessToken.expires_in);
             return accessToken;
@@ -71,7 +71,7 @@ namespace SyZero.Web.Common
         /// 发送小程序模板消息（需登录）
         /// </summary>
         /// <returns></returns>
-        public async Task<WxacodeReturn> SubscribeMessage(string openid, string templateId, object data)
+        public async Task<WxacodeReturn?> SubscribeMessage(string openid, string templateId, object data)
         {
             string wxacodeUrl = $"https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token={access_token}";
 
@@ -138,7 +138,7 @@ namespace SyZero.Web.Common
                 else
                 {
                     string str = System.Text.Encoding.Default.GetString(tt);
-                    result = JsonConvert.DeserializeObject<WxacodeReturn>(str);
+                    result = JsonConvert.DeserializeObject<WxacodeReturn>(str) ?? new WxacodeReturn();
                     Console.WriteLine("[小程序生成二维码消息推送]errorcode:" + result.errcode + "errormsg:" + result.errmsg);
                 }
                 return result;
@@ -157,7 +157,7 @@ namespace SyZero.Web.Common
         /// 获取用户访问小程序数据日趋势（需登录/仅支持单天）
         /// </summary>
         /// <returns></returns>
-        public async Task<WxDailyVisitTrendResult> GetDailyVisitTrend(DateTime begin_date, DateTime end_date)
+        public async Task<WxDailyVisitTrendResult?> GetDailyVisitTrend(DateTime begin_date, DateTime end_date)
         {
             string wxacodeUrl = $"https://api.weixin.qq.com/datacube/getweanalysisappiddailyvisittrend?access_token={access_token}";
 

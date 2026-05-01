@@ -14,6 +14,7 @@ dotnet add package SyZero.DynamicWebApi
 - Convention-based HTTP verb mapping
 - Automatic controller exposure from service methods
 - Swagger-friendly metadata output
+- Provider infrastructure (type filtering, name normalization, assembly scanning, attribute caching) lives in [`SyZero.Core`](./SyZero.Core)'s `SyZero.Application.DynamicApi` namespace and is shared with [`SyZero.DynamicGrpc`](./SyZero.DynamicGrpc)
 
 ## Quick Start
 

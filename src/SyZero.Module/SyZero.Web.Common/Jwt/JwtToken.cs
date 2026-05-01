@@ -27,7 +27,7 @@ namespace SyZero.Web.Common.Jwt
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        public ClaimsPrincipal GetPrincipal(string token)
+        public ClaimsPrincipal? GetPrincipal(string token)
         {
             try
             {

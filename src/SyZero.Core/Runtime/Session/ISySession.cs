@@ -9,7 +9,7 @@ namespace SyZero.Runtime.Session
     /// </summary>
     public interface ISySession
     {
-        ClaimsPrincipal Principal { get; }
+        ClaimsPrincipal? Principal { get; }
         /// <summary>
         /// 获取当前用户ID或空。
         /// 如果没有用户登录，则为空。
@@ -20,25 +20,25 @@ namespace SyZero.Runtime.Session
         /// 获取当前用户角色或空。
         /// 如果没有用户登录，则为空。
         /// </summary>
-        string UserRole { get; }
+        string? UserRole { get; }
 
         /// <summary>
         /// 获取当前用户名称或空。
         /// 如果没有用户登录，则为空。
         /// </summary>
-        string UserName { get; }
+        string? UserName { get; }
 
         /// <summary>
         /// 获取当前用户名称或空。
         /// 如果没有用户登录，则为空。
         /// </summary>
-        List<string> Permission { get; }
+        List<string>? Permission { get; }
 
         /// <summary>
         /// 获取当前用户名称或空。
         /// 如果没有用户登录，则为空。
         /// </summary>
-        string Token { get; }
+        string? Token { get; }
 
         ISySession Parse(ClaimsPrincipal claimsPrincipal);
 

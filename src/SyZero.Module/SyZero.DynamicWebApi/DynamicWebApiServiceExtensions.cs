@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using SyZero.Application.DynamicApi;
 using System;
 using System.Linq;
 
@@ -42,7 +43,7 @@ namespace SyZero.DynamicWebApi
             }
 
             // 注册程序集
-            foreach (var assembly in ReflectionHelper.GetAssemblies())
+            foreach (var assembly in DynamicApiAssemblyScanner.GetAssemblies())
             {
                 if (partManager.ApplicationParts.OfType<AssemblyPart>().Any(part => part.Assembly == assembly))
                 {

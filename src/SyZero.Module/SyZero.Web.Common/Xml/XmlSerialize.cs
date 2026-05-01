@@ -44,7 +44,7 @@ namespace SyZero.Web.Common
                     return false;
                 }
 
-                XmlNodeList xnList = ReadNodes(filePath, xPath);
+                XmlNodeList? xnList = ReadNodes(filePath, xPath);
                 if (xnList == null || xnList.Count == 0)
                 {
                     return false;
@@ -64,7 +64,7 @@ namespace SyZero.Web.Common
             }
         }
 
-        public XmlDocument LoadXmlDoc(string filePath)
+        public XmlDocument? LoadXmlDoc(string filePath)
         {
             try
             {
@@ -78,7 +78,7 @@ namespace SyZero.Web.Common
             }
         }
 
-        public XmlNodeList ReadNodes(string filePath, string xPath)
+        public XmlNodeList? ReadNodes(string filePath, string xPath)
         {
             try
             {

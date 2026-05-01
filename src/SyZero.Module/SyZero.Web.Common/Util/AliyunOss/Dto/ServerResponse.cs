@@ -1,4 +1,4 @@
-﻿namespace SyZero.Web.Common
+namespace SyZero.Web.Common
 {
     /// <summary>
     ///     接口返回值
@@ -13,7 +13,7 @@
         /// <summary>
         ///     描述信息
         /// </summary>
-        public string Message { get; set; }
+        public string? Message { get; set; }
     }
 
     /// <summary>
@@ -25,7 +25,7 @@
         /// <summary>
         ///     业务数据对象
         /// </summary>
-        public T Data { get; set; }
+        public T? Data { get; set; }
     }
 
 

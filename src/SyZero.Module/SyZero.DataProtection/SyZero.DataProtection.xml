@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.DataProtection</name>
+    </assembly>
+    <members>
+        <member name="T:SyZero.DataProtection.DataProtectorFieldEncryptor">
+            <summary>
+            基于 ASP.NET Core <see cref="T:Microsoft.AspNetCore.DataProtection.IDataProtectionProvider"/> 的字段加密器。
+            </summary>
+        </member>
+        <member name="M:SyZero.DataProtection.DataProtectorFieldEncryptor.#ctor(Microsoft.AspNetCore.DataProtection.IDataProtectionProvider)">
+            <summary>
+            通过 DI 注入数据保护提供者。
+            </summary>
+        </member>
+        <member name="M:SyZero.DataProtection.DataProtectorFieldEncryptor.Protect(System.String,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:SyZero.DataProtection.DataProtectorFieldEncryptor.Unprotect(System.String,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="T:SyZero.DataProtection.EncryptedAttribute">
+            <summary>
+            标记一个字段/属性需要进行可逆加密。
+            通常配合 <see cref="T:SyZero.DataProtection.IFieldEncryptor"/> 在写入存储或日志前加密、读取后解密。
+            </summary>
+        </member>
+        <member name="P:SyZero.DataProtection.EncryptedAttribute.Purpose">
+            <summary>
+            加密用途（Purpose）。不同 Purpose 的密钥相互隔离。
+            </summary>
+        </member>
+        <member name="M:SyZero.DataProtection.EncryptedAttribute.#ctor(System.String)">
+            <summary>
+            创建 Encrypted 标记。
+            </summary>
+            <param name="purpose">加密用途；同一字段在不同业务上下文使用不同 Purpose 可达到密钥隔离。</param>
+        </member>
+        <member name="T:SyZero.DataProtection.IFieldEncryptor">
+            <summary>
+            字段级加解密抽象。默认实现 <see cref="T:SyZero.DataProtection.DataProtectorFieldEncryptor"/> 包装 ASP.NET Core Data Protection。
+            </summary>
+        </member>
+        <member name="M:SyZero.DataProtection.IFieldEncryptor.Protect(System.String,System.String)">
+            <summary>
+            加密明文。
+            </summary>
+            <param name="plaintext">明文（null 返回 null）。</param>
+            <param name="purpose">加密用途；不同 purpose 使用不同密钥。</param>
+        </member>
+        <member name="M:SyZero.DataProtection.IFieldEncryptor.Unprotect(System.String,System.String)">
+            <summary>
+            解密密文。
+            </summary>
+        </member>
+        <member name="T:SyZero.SyZeroDataProtectionExtension">
+            <summary>
+            SyZero.DataProtection 扩展方法。
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroDataProtectionExtension.AddSyZeroDataProtection(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Action{Microsoft.AspNetCore.DataProtection.IDataProtectionBuilder})">
+            <summary>
+            注册 SyZero 字段级加密能力。
+            默认会调用 ASP.NET Core 的 <see cref="M:Microsoft.Extensions.DependencyInjection.DataProtectionServiceCollectionExtensions.AddDataProtection(Microsoft.Extensions.DependencyInjection.IServiceCollection)"/>，
+            业务可在调用本方法前后追加 <c>.PersistKeysToFileSystem()</c> 等密钥持久化配置。
+            </summary>
+        </member>
+    </members>
+</doc>

@@ -10,7 +10,10 @@ using SyZero.Domain.Repository;
 
 namespace SyZero.EntityFrameworkCore.Repositories
 {
-    public class EfRepository<TEntity> : EfRepository<DbContext, TEntity>
+    /// <summary>
+    /// 默认 long 主键的 EF 仓储（兼容历史用法）。
+    /// </summary>
+    public class EfRepository<TEntity> : EfRepository<DbContext, TEntity, long>, IRepository<TEntity>
         where TEntity : class, IEntity
     {
         public EfRepository(DbContext dbContext) : base(dbContext)
@@ -18,8 +21,22 @@ namespace SyZero.EntityFrameworkCore.Repositories
         }
     }
 
-    public class EfRepository<TDbContext, TEntity> : IRepository<TEntity>
-        where TEntity : class, IEntity
+    /// <summary>
+    /// 默认使用根 DbContext 的泛型主键 EF 仓储。
+    /// </summary>
+    public class EfRepository<TEntity, TKey> : EfRepository<DbContext, TEntity, TKey>, IRepository<TEntity, TKey>
+        where TEntity : class, IEntity<TKey>
+    {
+        public EfRepository(DbContext dbContext) : base(dbContext)
+        {
+        }
+    }
+
+    /// <summary>
+    /// 通用 EF 仓储（自定义主键类型）。
+    /// </summary>
+    public class EfRepository<TDbContext, TEntity, TKey> : IRepository<TEntity, TKey>
+        where TEntity : class, IEntity<TKey>
         where TDbContext : DbContext
     {
         protected readonly TDbContext _dbContext;
@@ -89,7 +106,7 @@ namespace SyZero.EntityFrameworkCore.Repositories
         #endregion
 
         #region Delete
-        public long Delete(long id)
+        public long Delete(TKey id)
         {
             var entity = GetModel(id);
             if (entity == null)
@@ -115,7 +132,7 @@ namespace SyZero.EntityFrameworkCore.Repositories
             return entities.Count;
         }
 
-        public async Task<long> DeleteAsync(long id, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<long> DeleteAsync(TKey id, CancellationToken cancellationToken = default(CancellationToken))
         {
             cancellationToken.ThrowIfCancellationRequested();
             var entity = await GetModelAsync(id, cancellationToken);
@@ -167,26 +184,26 @@ namespace SyZero.EntityFrameworkCore.Repositories
             return Task.FromResult(GetList(where));
         }
 
-        public TEntity GetModel(long id)
+        public TEntity GetModel(TKey id)
         {
-            return _dbSet.Find(id);
+            return _dbSet.Find(id!)!;
         }
 
-        public async Task<TEntity> GetModelAsync(long id, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<TEntity> GetModelAsync(TKey id, CancellationToken cancellationToken = default(CancellationToken))
         {
             cancellationToken.ThrowIfCancellationRequested();
-            return await _dbSet.FindAsync(new object[] { id }, cancellationToken);
+            return (await _dbSet.FindAsync(new object[] { id! }, cancellationToken))!;
         }
 
         public TEntity GetModel(Expression<Func<TEntity, bool>> where)
         {
-            return _dbSet.FirstOrDefault(where);
+            return _dbSet.FirstOrDefault(where)!;
         }
 
         public async Task<TEntity> GetModelAsync(Expression<Func<TEntity, bool>> where, CancellationToken cancellationToken = default(CancellationToken))
         {
             cancellationToken.ThrowIfCancellationRequested();
-            return await _dbSet.FirstOrDefaultAsync(where, cancellationToken);
+            return (await _dbSet.FirstOrDefaultAsync(where, cancellationToken))!;
         }
 
         public IQueryable<TEntity> GetPaged(int pageIndex, int pageSize, Expression<Func<TEntity, object>> sortBy, bool isDesc = false)

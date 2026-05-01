@@ -91,7 +91,7 @@ namespace SyZero.Application.Routing
         /// <summary>
         /// 参数名称（可选，默认使用参数变量名）
         /// </summary>
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
     }
 
     /// <summary>

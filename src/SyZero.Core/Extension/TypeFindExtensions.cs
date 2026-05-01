@@ -8,7 +8,7 @@ namespace SyZero.Extension
 {
     public static class TypeFindExtensions
     {
-        public static Dictionary<string, List<Assembly>> DictionaryAssembly;
+        public static Dictionary<string, List<Assembly>> DictionaryAssembly = new Dictionary<string, List<Assembly>>();
 
         public static void AddAssmbly(Assembly assembly)
         {
@@ -20,7 +20,7 @@ namespace SyZero.Extension
         }
 
         private static readonly object SyncObj = new object();
-        private static Type[] _types;
+        private static Type[]? _types;
 
         public static Type[] Find(Func<Type, bool> predicate)
         {

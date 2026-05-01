@@ -18,12 +18,12 @@ namespace SyZero.EventBus.DBEventBus.Entity
         /// <summary>
         /// 事件名称
         /// </summary>
-        public string EventName { get; set; }
+        public string EventName { get; set; } = string.Empty;
 
         /// <summary>
         /// 处理器类型全名
         /// </summary>
-        public string HandlerTypeName { get; set; }
+        public string HandlerTypeName { get; set; } = string.Empty;
 
         /// <summary>
         /// 是否为动态订阅

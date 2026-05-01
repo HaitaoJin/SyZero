@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.EventBus.Kafka</name>
+    </assembly>
+    <members>
+        <member name="T:SyZero.EventBus.Kafka.SyKafkaOptions">
+            <summary>
+            Kafka 连接配置（最小集合）。
+            </summary>
+        </member>
+        <member name="P:SyZero.EventBus.Kafka.SyKafkaOptions.BootstrapServers">
+            <summary>例如 "localhost:9092,broker2:9092"。</summary>
+        </member>
+        <member name="P:SyZero.EventBus.Kafka.SyKafkaOptions.GroupId">
+            <summary>消费者组 id（消费端使用）。</summary>
+        </member>
+        <member name="P:SyZero.EventBus.Kafka.SyKafkaOptions.RetryTopicSuffix">
+            <summary>主题后缀约定：业务主题 + 重试主题 + 死信主题。</summary>
+        </member>
+        <member name="T:SyZero.EventBus.Kafka.ISyKafkaProducer">
+            <summary>
+            简单的 Kafka 生产抽象，业务调用 PublishAsync 即可发送字符串 payload；
+            失败重试 / DLQ 由消费侧 <c>SyKafkaConsumerBase</c> 触发。
+            </summary>
+        </member>
+        <member name="M:SyZero.EventBus.Kafka.ISyKafkaProducer.PublishAsync(System.String,System.String,System.String,System.Collections.Generic.IDictionary{System.String,System.Byte[]},System.Threading.CancellationToken)">
+            <summary>
+            带 Kafka headers 的发布。配合 <c>SyKafkaConsumerBase</c> 的「scheduled retry」机制使用：
+            重试消息在 header <c>sy-not-before</c> 中携带最早可处理时间（Unix ms），消费者读到后会等待至该时间再 Handle。
+            </summary>
+        </member>
+        <member name="T:SyZero.EventBus.Kafka.SyKafkaBackoff">
+            <summary>
+            计算 Kafka 重试退避时长：指数退避 base * 2^(n-1)，叠加 ±20% 抖动，并以 max 封顶。
+            抽出独立类便于单测（无需启动 Kafka）。
+            </summary>
+        </member>
+        <member name="T:SyZero.EventBus.Kafka.SyKafkaConsumerBase">
+            <summary>
+            Kafka 消费者基类：处理失败后按 <c>RetryTopic</c> + <c>DeadLetterTopic</c> 约定自动转发。
+            派生类只需实现 <see cref="M:SyZero.EventBus.Kafka.SyKafkaConsumerBase.HandleAsync(System.String,System.String,System.Threading.CancellationToken)"/> 并通过 <c>AddHostedService</c> 注册。
+            重试支持「scheduled retry」：失败时按 <see cref="P:SyZero.EventBus.Kafka.SyKafkaConsumerBase.RetryBaseDelay"/> 指数退避（带 ±20% 抖动），
+            上限为 <see cref="P:SyZero.EventBus.Kafka.SyKafkaConsumerBase.RetryMaxDelay"/>，把 <c>not-before</c> 时间戳写入 header；
+            消费 retry topic 时若未到时间会 <c>Task.Delay</c> 至时再调用 <see cref="M:SyZero.EventBus.Kafka.SyKafkaConsumerBase.HandleAsync(System.String,System.String,System.Threading.CancellationToken)"/>。
+            </summary>
+        </member>
+        <member name="P:SyZero.EventBus.Kafka.SyKafkaConsumerBase.RetryBaseDelay">
+            <summary>第一次重试的基础延迟。</summary>
+        </member>
+        <member name="P:SyZero.EventBus.Kafka.SyKafkaConsumerBase.RetryMaxDelay">
+            <summary>退避时间上限。</summary>
+        </member>
+        <member name="M:SyZero.EventBus.Kafka.SyKafkaConsumerBase.HandleAsync(System.String,System.String,System.Threading.CancellationToken)">
+            <summary>处理一条消息；抛出异常将触发重试 → 死信流程。</summary>
+        </member>
+        <member name="T:SyZero.SyZeroKafkaExtension">
+            <summary>SyZero.EventBus.Kafka 的 DI 扩展。</summary>
+        </member>
+        <member name="M:SyZero.SyZeroKafkaExtension.AddSyZeroKafka(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Action{SyZero.EventBus.Kafka.SyKafkaOptions})">
+            <summary>
+            注册 Kafka 生产者与配置。消费者请继承 <see cref="T:SyZero.EventBus.Kafka.SyKafkaConsumerBase"/> 并通过 <c>AddHostedService</c> 注册。
+            </summary>
+        </member>
+    </members>
+</doc>

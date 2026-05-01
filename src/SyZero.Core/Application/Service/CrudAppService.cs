@@ -111,7 +111,7 @@ namespace SyZero.Application.Service
             // ObjectMapper.Map<List<TEntityDto> >(entities);
             return new PageResultDto<TEntityDto>(
                 totalCount,
-                ObjectMapper.Map<List<TEntityDto>>(entities)
+                ObjectMapper.Map<List<TEntityDto>>(entities)!
             );
         }
 

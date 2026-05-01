@@ -16,7 +16,7 @@ namespace SyZero.Configurations
         /// <summary>
         /// 主数据库
         /// </summary>
-        public string Master { get; set; }
+        public string Master { get; set; } = string.Empty;
 
         /// <summary>
         /// 从数据库 连接字符串,权重
@@ -32,7 +32,7 @@ namespace SyZero.Configurations
         /// <summary>
         /// 连接字符串
         /// </summary>
-        public string ConnectionString { get; set; }
+        public string ConnectionString { get; set; } = string.Empty;
 
         /// <summary>
         /// 权重

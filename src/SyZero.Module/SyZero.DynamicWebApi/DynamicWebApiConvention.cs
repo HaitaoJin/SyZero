@@ -8,10 +8,10 @@ using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using SyZero.Application.Attributes;
+using SyZero.Application.DynamicApi;
 using SyZero.Application.Routing;
 using SyZero.Application.Service;
 using SyZero.DynamicWebApi.Attributes;
-using SyZero.DynamicWebApi.Helpers;
 using SyZero.Extension;
 
 namespace SyZero.DynamicWebApi
@@ -25,8 +25,8 @@ namespace SyZero.DynamicWebApi
         private readonly DynamicWebApiOptions _options;
 
         // 缓存属性查找结果，提升性能
-        private static readonly ConcurrentDictionary<Type, DynamicApiAttribute> _DynamicWebApiAttrCache = new();
-        private static readonly ConcurrentDictionary<MemberInfo, bool> _nonDynamicMethodCache = new();
+        private static readonly ConcurrentDictionary<Type, DynamicApiAttribute> _DynamicWebApiAttrCache = new ConcurrentDictionary<Type, DynamicApiAttribute>();
+        private static readonly ConcurrentDictionary<MemberInfo, bool> _nonDynamicMethodCache = new ConcurrentDictionary<MemberInfo, bool>();
 
         /// <summary>
         /// 使用默认选项初始化
@@ -66,8 +66,8 @@ namespace SyZero.DynamicWebApi
             // 检查是否为动态 WebApi 类型
             var isDynamicWebApi = typeof(IDynamicApi).GetTypeInfo().IsAssignableFrom(type);
 
-            if (ReflectionHelper.GetSingleAttributeOrDefaultByFullSearch<NonDynamicApiAttribute>(type.GetTypeInfo()) != null ||
-                ReflectionHelper.GetSingleAttributeOrDefaultByFullSearch<NonWebApiServiceAttribute>(type.GetTypeInfo()) != null)
+            if (DynamicApiAttributeCache.GetTypeAttributeOrNull<NonDynamicApiAttribute>(type.GetTypeInfo()) != null ||
+                DynamicApiAttributeCache.GetTypeAttributeOrNull<NonWebApiServiceAttribute>(type.GetTypeInfo()) != null)
             {
                 return;
             }
@@ -89,20 +89,7 @@ namespace SyZero.DynamicWebApi
         /// </summary>
         private string GetControllerName(string controllerName)
         {
-            if (string.IsNullOrEmpty(controllerName))
-            {
-                return controllerName;
-            }
-
-            foreach (var postfix in _options.RemoveControllerPostfixes)
-            {
-                if (controllerName.EndsWith(postfix, StringComparison.OrdinalIgnoreCase))
-                {
-                    return controllerName.Substring(0, controllerName.Length - postfix.Length);
-                }
-            }
-
-            return controllerName;
+            return DynamicApiNameNormalizer.RemovePostfix(controllerName, _options.RemoveControllerPostfixes);
         }
 
         /// <summary>
@@ -165,7 +152,7 @@ namespace SyZero.DynamicWebApi
             }
 
             // 原始类型不需要 FromBody
-            if (TypeHelper.IsPrimitiveExtendedIncludingNullable(parameter.ParameterInfo.ParameterType))
+            if (DynamicApiTypeHelper.IsPrimitiveExtendedIncludingNullable(parameter.ParameterInfo.ParameterType))
             {
                 return;
             }
@@ -254,7 +241,7 @@ namespace SyZero.DynamicWebApi
             return _nonDynamicMethodCache.GetOrAdd(memberInfo, mi =>
             {
                 // 检查 NonDynamicMethodAttribute
-                var noMapMethod = ReflectionHelper.GetSingleAttributeOrDefault<NonDynamicMethodAttribute>(mi);
+                var noMapMethod = DynamicApiAttributeCache.GetMemberAttributeOrNull<NonDynamicMethodAttribute>(mi);
                 if (noMapMethod != null)
                 {
                     action.ApiExplorer.IsVisible = false;
@@ -262,7 +249,7 @@ namespace SyZero.DynamicWebApi
                 }
 
                 // 检查 NonWebApiMethodAttribute
-                var noWebApiMethod = ReflectionHelper.GetSingleAttributeOrDefault<NonWebApiMethodAttribute>(mi);
+                var noWebApiMethod = DynamicApiAttributeCache.GetMemberAttributeOrNull<NonWebApiMethodAttribute>(mi);
                 if (noWebApiMethod != null)
                 {
                     action.ApiExplorer.IsVisible = false;
@@ -279,7 +266,7 @@ namespace SyZero.DynamicWebApi
         private static DynamicApiAttribute GetDynamicApiAttribute(TypeInfo typeInfo)
         {
             return _DynamicWebApiAttrCache.GetOrAdd(typeInfo.AsType(), _ =>
-                ReflectionHelper.GetSingleAttributeOrDefaultByFullSearch<DynamicApiAttribute>(typeInfo));
+                DynamicApiAttributeCache.GetTypeAttributeOrNull<DynamicApiAttribute>(typeInfo));
         }
 
         /// <summary>
@@ -311,7 +298,7 @@ namespace SyZero.DynamicWebApi
             }
 
             var areaName = controllerAttr?.Module ?? _options.DefaultAreaName ?? string.Empty;
-            var customApiName = controller.ControllerType.GetSingleAttributeOrDefaultByFullSearch<ApiAttribute>();
+            var customApiName = DynamicApiAttributeCache.GetTypeAttributeOrNull<ApiAttribute>(controller.ControllerType);
             var controllerName = customApiName?.Name ?? controller.ControllerName;
 
             // 设置控制器路由
@@ -344,7 +331,7 @@ namespace SyZero.DynamicWebApi
         private void ConfigureActionSelector(string areaName, string controllerName, ActionModel action)
         {
             // 检查是否有 NonDynamicApiAttribute
-            var nonAttr = ReflectionHelper.GetSingleAttributeOrDefault<NonDynamicApiAttribute>(action.ActionMethod);
+            var nonAttr = DynamicApiAttributeCache.GetMemberAttributeOrNull<NonDynamicApiAttribute>(action.ActionMethod);
             if (nonAttr != null)
             {
                 return;

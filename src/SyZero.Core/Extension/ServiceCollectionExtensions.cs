@@ -19,9 +19,9 @@ namespace SyZero
             return services.Any(d => d.ServiceType == type);
         }
 
-        public static T GetSingletonInstanceOrNull<T>(this IServiceCollection services)
+        public static T? GetSingletonInstanceOrNull<T>(this IServiceCollection services)
         {
-            return (T)services
+            return (T?)services
                 .FirstOrDefault(d => d.ServiceType == typeof(T))
                 ?.ImplementationInstance;
         }
@@ -58,13 +58,13 @@ namespace SyZero
                     .GetMethods()
                     .Single(m => m.Name == nameof(BuildServiceProviderFromFactory) && m.IsGenericMethod)
                     .MakeGenericMethod(containerBuilderType)
-                    .Invoke(null, new object[] { services, null });
+                    .Invoke(null, new object?[] { services, null })!;
             }
 
             return services.BuildServiceProvider();
         }
 
-        public static IServiceProvider BuildServiceProviderFromFactory<TContainerBuilder>(this IServiceCollection services, Action<TContainerBuilder> builderAction = null)
+        public static IServiceProvider BuildServiceProviderFromFactory<TContainerBuilder>(this IServiceCollection services, Action<TContainerBuilder>? builderAction = null) where TContainerBuilder : notnull
         {
 
             var serviceProviderFactory = services.GetSingletonInstanceOrNull<IServiceProviderFactory<TContainerBuilder>>();
@@ -99,8 +99,8 @@ namespace SyZero
                                     && !x.IsAbstract
                                     && x != compareType
                                     && SafeGetInterfaces(x)
-                                            .Any(i => i.IsGenericType
-                                                    && i.GetGenericTypeDefinition() == compareType))?.ToList() ?? new List<TypeInfo>();
+                                            .Any(i => i == compareType
+                                                    || (i.IsGenericType && i.GetGenericTypeDefinition() == compareType)))?.ToList() ?? new List<TypeInfo>();
             }
             catch
             {

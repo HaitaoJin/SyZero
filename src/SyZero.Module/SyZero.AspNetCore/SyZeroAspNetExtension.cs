@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -36,6 +37,25 @@ namespace SyZero
 
             services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             return services;
+        }
+
+        /// <summary>
+        /// 注册 <see cref="SyExceptionMiddleware"/>（全局异常 → ProblemDetails）。
+        /// </summary>
+        public static IServiceCollection AddSyZeroExceptionHandler(this IServiceCollection services)
+        {
+            ArgumentNullException.ThrowIfNull(services);
+            services.TryAddSingleton<SyExceptionMiddleware>();
+            return services;
+        }
+
+        /// <summary>
+        /// 启用 <see cref="SyExceptionMiddleware"/>，建议放在管线最前。
+        /// </summary>
+        public static IApplicationBuilder UseSyZeroExceptionHandler(this IApplicationBuilder app)
+        {
+            ArgumentNullException.ThrowIfNull(app);
+            return app.UseMiddleware<SyExceptionMiddleware>();
         }
 
         private static IEnumerable<Type> GetControllerTypes()

@@ -8,14 +8,14 @@ namespace SyZero.Client
 {
     public class RequestTemplate
     {
-        public HttpMethod HttpMethod { get; set; }
+        public HttpMethod HttpMethod { get; set; } = HttpMethod.Get;
 
-        public string Url { get; set; }
+        public string Url { get; set; } = string.Empty;
         /// <summary>
         /// 判断是否为表单的post提交
         /// </summary>
         public bool IsForm { get; set; }
-        public string Body { get; set; }
+        public string? Body { get; set; }
         public List<KeyValuePair<string, string>> QueryValue { set; get; } = new List<KeyValuePair<string, string>>();
         public List<KeyValuePair<string, string>> FormValue { set; get; } = new List<KeyValuePair<string, string>>();
         public IDictionary<string, string> Headers { get; set; } = new Dictionary<string, string>();

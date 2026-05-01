@@ -53,7 +53,7 @@ namespace SyZero
         /// <param name="configuration">配置，为 null 时使用 AppConfig.Configuration</param>
         /// <param name="sectionName">配置节名称，默认为 "DBServiceManagement"</param>
         /// <returns>服务集合</returns>
-        public static IServiceCollection AddDBServiceManagement(this IServiceCollection services, IConfiguration configuration = null, string sectionName = DBServiceManagementOptions.SectionName)
+        public static IServiceCollection AddDBServiceManagement(this IServiceCollection services, IConfiguration? configuration = null, string sectionName = DBServiceManagementOptions.SectionName)
         {
             var config = configuration ?? AppConfig.Configuration;
             var options = new DBServiceManagementOptions();
@@ -69,7 +69,7 @@ namespace SyZero
         /// <param name="configuration">配置，为 null 时使用 AppConfig.Configuration</param>
         /// <param name="sectionName">配置节名称，默认为 "DBServiceManagement"</param>
         /// <returns>服务集合</returns>
-        public static IServiceCollection AddDBServiceManagement(this IServiceCollection services, Action<DBServiceManagementOptions> optionsAction, IConfiguration configuration = null, string sectionName = DBServiceManagementOptions.SectionName)
+        public static IServiceCollection AddDBServiceManagement(this IServiceCollection services, Action<DBServiceManagementOptions> optionsAction, IConfiguration? configuration = null, string sectionName = DBServiceManagementOptions.SectionName)
         {
             var config = configuration ?? AppConfig.Configuration;
             var options = new DBServiceManagementOptions();
@@ -116,8 +116,8 @@ namespace SyZero
         /// <returns>服务集合</returns>
         public static IServiceCollection AddDBServiceManagement<TServiceRegistryRepository>(
             this IServiceCollection services, 
-            Action<DBServiceManagementOptions> optionsAction = null, 
-            IConfiguration configuration = null, 
+            Action<DBServiceManagementOptions>? optionsAction = null, 
+            IConfiguration? configuration = null, 
             string sectionName = DBServiceManagementOptions.SectionName)
             where TServiceRegistryRepository : class, IServiceRegistryRepository
         {
@@ -170,8 +170,8 @@ namespace SyZero
         /// <returns>服务集合</returns>
         public static IServiceCollection AddDBServiceManagement<TServiceRegistryRepository, TLeaderElectionRepository>(
             this IServiceCollection services, 
-            Action<DBServiceManagementOptions> optionsAction = null, 
-            IConfiguration configuration = null, 
+            Action<DBServiceManagementOptions>? optionsAction = null, 
+            IConfiguration? configuration = null, 
             string sectionName = DBServiceManagementOptions.SectionName)
             where TServiceRegistryRepository : class, IServiceRegistryRepository
             where TLeaderElectionRepository : class, ILeaderElectionRepository

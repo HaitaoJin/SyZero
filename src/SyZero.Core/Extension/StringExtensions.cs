@@ -26,7 +26,7 @@ namespace SyZero.Extension
             return false;
         }
 
-        public static string RemovePostFix(this string str, params string[] postFixes)
+        public static string? RemovePostFix(this string str, params string[] postFixes)
         {
             if (str == null)
             {
@@ -54,7 +54,7 @@ namespace SyZero.Extension
             return str;
         }
 
-        public static string RemovePreFix(this string str, params string[] preFixes)
+        public static string? RemovePreFix(this string str, params string[] preFixes)
         {
             if (str == null)
             {

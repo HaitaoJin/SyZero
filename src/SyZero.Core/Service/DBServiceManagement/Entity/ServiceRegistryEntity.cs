@@ -11,23 +11,23 @@ namespace SyZero.Service.DBServiceManagement.Entity
     public class ServiceRegistryEntity : IEntity
     {
         public long Id { get; set; }
-        public string ServiceID { get; set; }
-        public string ServiceName { get; set; }
-        public string ServiceAddress { get; set; }
+        public string ServiceID { get; set; } = string.Empty;
+        public string ServiceName { get; set; } = string.Empty;
+        public string ServiceAddress { get; set; } = string.Empty;
         public int ServicePort { get; set; }
-        public string ServiceProtocol { get; set; }
-        public string Version { get; set; }
-        public string Group { get; set; }
-        public string Tags { get; set; }
-        public string Metadata { get; set; }
+        public string ServiceProtocol { get; set; } = string.Empty;
+        public string Version { get; set; } = string.Empty;
+        public string Group { get; set; } = string.Empty;
+        public string Tags { get; set; } = string.Empty;
+        public string Metadata { get; set; } = string.Empty;
         public bool IsHealthy { get; set; }
         public bool Enabled { get; set; }
         public double Weight { get; set; }
         public DateTime RegisterTime { get; set; }
         public DateTime LastHeartbeat { get; set; }
-        public string HealthCheckUrl { get; set; }
-        public string Region { get; set; }
-        public string Zone { get; set; }
+        public string HealthCheckUrl { get; set; } = string.Empty;
+        public string Region { get; set; } = string.Empty;
+        public string Zone { get; set; } = string.Empty;
     }
 
 }

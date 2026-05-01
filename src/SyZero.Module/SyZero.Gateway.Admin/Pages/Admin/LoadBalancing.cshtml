@@ -1,0 +1,93 @@
+@page "/admin/load-balancing"
+@model SyZero.Gateway.Admin.Pages.Admin.LoadBalancingModel
+@{
+    ViewData["Title"] = "负载均衡";
+    ViewData["Subtitle"] = "为每条路由配置负载均衡策略";
+    bool isAdmin = ViewData["IsAdmin"] is bool b && b;
+}
+
+<div class="alert alert-info mb-4">
+    <span>
+        支持的负载均衡器类型：<code>RoundRobin</code>（轮询）、<code>LeastConnection</code>（最少连接）、<code>NoLoadBalance</code>（不负载均衡）。
+        通常配合 <code>UseServiceDiscovery=true</code> 与 Consul / Nacos 等服务发现使用。
+    </span>
+</div>
+
+<div class="card bg-base-100 shadow">
+    <div class="card-body p-0">
+        <div class="flex items-center p-3 border-b border-base-300">
+            <h3 class="font-semibold">路由列表</h3>
+            <button class="btn btn-sm ml-auto" onclick="loadAll()">刷新</button>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>UpstreamPath</th>
+                        <th>ServiceName</th>
+                        <th>UseServiceDiscovery</th>
+                        <th>当前 LB 类型</th>
+                        <th class="w-72">设置为</th>
+                    </tr>
+                </thead>
+                <tbody id="lb-tbody"><tr><td colspan="6" class="text-center opacity-50">加载中…</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const isAdmin = @(isAdmin ? "true" : "false");
+        let lbTypes = ['RoundRobin', 'LeastConnection', 'NoLoadBalance'];
+
+        async function loadAll() {
+            const tbody = document.getElementById('lb-tbody');
+            try {
+                lbTypes = await adminFetch('/admin-api/load-balancer/types') || lbTypes;
+                const cfg = await adminFetch('/admin-api/configuration');
+                const routes = (cfg && cfg.Routes) || (cfg && cfg.routes) || [];
+                if (routes.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="text-center opacity-50">（无路由）</td></tr>'; return; }
+                tbody.innerHTML = routes.map((r, i) => {
+                    const lb = r.LoadBalancerOptions || r.loadBalancerOptions;
+                    const cur = lb && (lb.Type || lb.type);
+                    const opts = lbTypes.map(t => `<option value="${t}" ${t === cur ? 'selected' : ''}>${t}</option>`).join('');
+                    return `<tr>
+                        <td>${i}</td>
+                        <td><code class="text-xs">${r.UpstreamPathTemplate || r.upstreamPathTemplate || ''}</code></td>
+                        <td>${r.ServiceName || r.serviceName || '-'}</td>
+                        <td>${(r.UseServiceDiscovery ?? r.useServiceDiscovery)
+                            ? '<span class="badge badge-success badge-sm">true</span>'
+                            : '<span class="badge badge-ghost badge-sm">false</span>'}</td>
+                        <td>${cur ? `<span class="badge badge-primary">${cur}</span>` : '<span class="opacity-50">-</span>'}</td>
+                        <td>
+                            <div class="join">
+                                <select id="lb-${i}" class="select select-bordered select-sm join-item">${opts}</select>
+                                ${isAdmin
+                                    ? `<button class="btn btn-sm btn-primary join-item" onclick="setLb(${i})">应用</button>`
+                                    : '<button class="btn btn-sm join-item" disabled title="需 Admin">应用</button>'}
+                            </div>
+                        </td>
+                    </tr>`;
+                }).join('');
+            } catch (e) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-error">${e.message || e}</td></tr>`;
+            }
+        }
+
+        async function setLb(i) {
+            const t = document.getElementById('lb-' + i).value;
+            try {
+                await adminFetch('/admin-api/routes/' + i + '/load-balancer', {
+                    method: 'PUT',
+                    body: JSON.stringify({ type: t })
+                });
+                adminToast(`路由 [${i}] → ${t}`, 'success');
+                loadAll();
+            } catch (e) { adminToast(e.message || '保存失败', 'error'); }
+        }
+
+        loadAll();
+    </script>
+}

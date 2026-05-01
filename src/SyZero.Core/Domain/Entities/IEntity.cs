@@ -1,15 +1,21 @@
 ﻿namespace SyZero.Domain.Entities
 {
-
     /// <summary>
-    /// 定义基本实体类型的接口。系统中的所有实体都必须实现此接口。  常用long类型主键
+    /// 定义带泛型主键的实体接口。系统中的所有实体建议实现此接口或继承自 <see cref="IEntity"/>。
     /// </summary>
-    public interface IEntity
+    /// <typeparam name="TKey">主键类型</typeparam>
+    public interface IEntity<TKey>
     {
         /// <summary>
-        /// 实体Id
+        /// 实体主键
         /// </summary>
-        long Id { get; set; }
+        TKey Id { get; set; }
+    }
 
+    /// <summary>
+    /// 定义基本实体类型的接口（默认 long 主键，兼容历史用法）。
+    /// </summary>
+    public interface IEntity : IEntity<long>
+    {
     }
 }

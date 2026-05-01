@@ -4,5 +4,26 @@
         <name>SyZero.Tests</name>
     </assembly>
     <members>
+        <member name="T:SyZero.Tests.DependencyAutoRegistrationTests">
+            <summary>
+            锁定依赖自动扫描 / 注册的关键行为，防止以下两类回归：
+            1) <see cref="M:SyZero.ReflectionHelper.GetAssemblies"/> 必须能加载真实的运行时程序集
+               （历史 bug：用 lib.Name 调 Assembly.Load 失败时静默吞异常，导致 SyZero.Core
+                程序集从未被扫描）。
+            2) <see cref="M:SyZero.ServiceCollectionExtensions.AddClassesAsImplementedInterface(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Collections.Generic.IEnumerable{System.Reflection.Assembly},System.Type,Microsoft.Extensions.DependencyInjection.ServiceLifetime)"/>
+               必须支持非泛型标记接口（IScopedDependency / ISingletonDependency /
+               ITransientDependency）。
+            </summary>
+        </member>
+        <member name="T:SyZero.Tests.GatewayAdminUsersAndRateLimitTests">
+            <summary>
+            网关管理多用户/角色/限流/负载均衡 新增功能测试（1.2.3）。
+            </summary>
+        </member>
+        <member name="T:SyZero.Tests.MapsterTests.TestRegister">
+            <summary>
+            仅供 <see cref="T:SyZero.Tests.MapsterTests"/> 使用的 IRegister，验证程序集扫描可以拾取自定义映射规则。
+            </summary>
+        </member>
     </members>
 </doc>

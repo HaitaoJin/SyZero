@@ -1,4 +1,4 @@
-﻿
+
 namespace SyZero.Web.Common
 {
     /// <summary>
@@ -21,7 +21,7 @@ namespace SyZero.Web.Common
         /// <summary>
         /// 文件在Oss上的http地址
         /// </summary>
-        public string Url { get; set; }
+        public string Url { get; set; } = string.Empty;
 
         /// <summary>
         /// 是否成功
@@ -31,12 +31,12 @@ namespace SyZero.Web.Common
         /// <summary>
         /// 上传到Oss上的相对路径
         /// </summary>
-        public string OssKey { get; set; }
+        public string OssKey { get; set; } = string.Empty;
 
         /// <summary>
         /// 本地文件存储地址
         /// </summary>
-        public string LocalFilePath { get; set; }
+        public string LocalFilePath { get; set; } = string.Empty;
 
     }
 }

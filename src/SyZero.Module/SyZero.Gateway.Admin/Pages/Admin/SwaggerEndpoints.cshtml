@@ -1,0 +1,217 @@
+@page "/admin/swagger-endpoints"
+@model SyZero.Gateway.Admin.Pages.Admin.SwaggerEndpointsModel
+@{
+    ViewData["Title"] = "Swagger 端点";
+    ViewData["Subtitle"] = "聚合到网关 Swagger 的服务端点";
+}
+
+<div class="flex justify-between items-center mb-4">
+    <div class="flex gap-2">
+        <button class="btn btn-primary" onclick="openEdit('')">新增端点</button>
+        <a class="btn btn-sm" href="/admin-api/swagger-endpoints/export?format=json" target="_blank" rel="noopener">⬇ 导出 JSON</a>
+        <a class="btn btn-sm" href="/admin-api/swagger-endpoints/export?format=yaml" target="_blank" rel="noopener">⬇ 导出 YAML</a>
+        <button class="btn btn-sm" onclick="document.getElementById('import-dialog').showModal()">⬆ 导入</button>
+    </div>
+</div>
+
+<div class="alert alert-warning mb-4">
+    <span>⚠️ Swagger 端点变更目前不支持热重载，需要重启网关才能生效。</span>
+</div>
+
+<div class="card bg-base-100 shadow">
+    <div class="card-body p-0">
+        <div class="overflow-x-auto">
+            <table class="table table-zebra">
+                <thead>
+                    <tr>
+                        <th>Key</th>
+                        <th>Configs</th>
+                        <th class="w-32">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="ep-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<dialog id="edit-dialog" class="modal">
+    <div class="modal-box w-11/12 max-w-3xl">
+        <h3 class="font-bold text-lg" id="edit-title">编辑 Swagger 端点</h3>
+        <input type="hidden" id="f-original-key" />
+        <label class="form-control mt-3">
+            <span class="label-text">Key</span>
+            <input id="f-key" class="input input-bordered" />
+        </label>
+        <div class="mt-3">
+            <div class="flex justify-between items-center mb-2">
+                <span class="label-text">Config 列表</span>
+                <button class="btn btn-xs" type="button" onclick="addConfigRow()">+ 添加 Config</button>
+            </div>
+            <div id="config-rows" class="space-y-2"></div>
+        </div>
+        <div class="modal-action">
+            <button class="btn" onclick="document.getElementById('edit-dialog').close()">取消</button>
+            <button class="btn btn-primary" onclick="saveEndpoint()">保存</button>
+        </div>
+    </div>
+</dialog>
+
+<dialog id="import-dialog" class="modal">
+    <div class="modal-box w-11/12 max-w-3xl">
+        <h3 class="font-bold text-lg">导入 Swagger 端点</h3>
+        <div class="grid grid-cols-2 gap-3 mt-3">
+            <label class="form-control">
+                <span class="label-text">格式</span>
+                <select id="imp-format" class="select select-bordered select-sm">
+                    <option value="">自动检测</option>
+                    <option value="json">JSON</option>
+                    <option value="yaml">YAML</option>
+                </select>
+            </label>
+            <label class="form-control">
+                <span class="label-text">模式</span>
+                <select id="imp-mode" class="select select-bordered select-sm">
+                    <option value="append">append（拒绝 Key 冲突）</option>
+                    <option value="merge">merge（按 Key 覆盖/新增）</option>
+                    <option value="replace">replace（全量替换）</option>
+                </select>
+            </label>
+        </div>
+        <div class="form-control mt-2">
+            <span class="label-text">文件（可选）</span>
+            <input id="imp-file" type="file" accept=".json,.yaml,.yml,application/json,application/yaml" class="file-input file-input-bordered file-input-sm" onchange="onImpFile(event)" />
+        </div>
+        <div class="form-control mt-2">
+            <span class="label-text">内容</span>
+            <textarea id="imp-text" class="textarea textarea-bordered font-mono text-xs" rows="12" placeholder="粘贴 JSON / YAML 内容..."></textarea>
+        </div>
+        <div class="modal-action">
+            <button class="btn" onclick="document.getElementById('import-dialog').close()">取消</button>
+            <button class="btn btn-primary" onclick="doImport()">导入</button>
+        </div>
+    </div>
+</dialog>
+
+@section Scripts {
+    <script>
+        let cache = [];
+        async function loadEndpoints() {
+            const tbody = document.getElementById('ep-tbody');
+            tbody.innerHTML = adminSkeletonRows(3, 3);
+            try {
+                cache = await adminFetch('/admin-api/swagger-endpoints');
+                if (!cache || cache.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="3">${adminEmpty('暂无 Swagger 端点', '点击右上「新增」或「从路由导入」开始')}</td></tr>`;
+                    return;
+                }
+                tbody.innerHTML = cache.map(e => `
+                    <tr>
+                        <td><code>${escapeHtml(e.key)}</code></td>
+                        <td>${(e.config || []).map(c => `${escapeHtml(c.name)}(${escapeHtml(c.version)})`).join('，')}</td>
+                        <td>
+                            <button class="btn btn-xs" onclick="openEdit('${encodeURIComponent(e.key)}')">编辑</button>
+                            <button class="btn btn-xs btn-error" onclick="deleteEndpoint('${encodeURIComponent(e.key)}')">删除</button>
+                        </td>
+                    </tr>`).join('');
+            } catch (e) {
+                adminToast(e.message, 'error');
+                tbody.innerHTML = `<tr><td colspan="3">${adminEmpty('加载端点失败', e.message || '')}</td></tr>`;
+            }
+        }
+        function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]); }
+        function addConfigRow(c) {
+            c = c || { name: '', version: 'v1', service: { name: '', path: '/swagger/v1/swagger.json' } };
+            const div = document.createElement('div');
+            div.className = 'grid grid-cols-12 gap-2 items-center';
+            div.innerHTML = `
+                <input class="input input-bordered input-sm col-span-3" placeholder="Name" value="${escapeHtml(c.name)}" data-field="name" />
+                <input class="input input-bordered input-sm col-span-2" placeholder="Version" value="${escapeHtml(c.version)}" data-field="version" />
+                <input class="input input-bordered input-sm col-span-3" placeholder="Service.Name" value="${escapeHtml(c.service && c.service.name)}" data-field="serviceName" />
+                <input class="input input-bordered input-sm col-span-3" placeholder="Service.Path" value="${escapeHtml(c.service && c.service.path)}" data-field="servicePath" />
+                <button class="btn btn-xs btn-error col-span-1" type="button" onclick="this.parentElement.remove()">×</button>`;
+            document.getElementById('config-rows').appendChild(div);
+        }
+        function openEdit(encodedKey) {
+            const key = encodedKey ? decodeURIComponent(encodedKey) : '';
+            const ep = key ? cache.find(x => x.key === key) : { key: '', config: [] };
+            document.getElementById('edit-title').textContent = key ? `编辑 ${key}` : '新增端点';
+            document.getElementById('f-original-key').value = key;
+            document.getElementById('f-key').value = ep.key || '';
+            document.getElementById('config-rows').innerHTML = '';
+            (ep.config || []).forEach(addConfigRow);
+            if ((ep.config || []).length === 0) addConfigRow();
+            document.getElementById('edit-dialog').showModal();
+        }
+        async function saveEndpoint() {
+            const original = document.getElementById('f-original-key').value;
+            const newKey = document.getElementById('f-key').value.trim();
+            if (!newKey) { adminToast('Key 不能为空', 'error'); return; }
+            const configs = Array.from(document.querySelectorAll('#config-rows > div')).map(row => {
+                const get = f => row.querySelector(`[data-field="${f}"]`).value.trim();
+                return { name: get('name'), version: get('version') || 'v1', service: { name: get('serviceName'), path: get('servicePath') || '/swagger/v1/swagger.json' } };
+            });
+            const payload = { key: newKey, config: configs };
+            try {
+                if (original) {
+                    await adminFetch('/admin-api/swagger-endpoints/' + encodeURIComponent(original), { method: 'PUT', body: JSON.stringify(payload) });
+                } else {
+                    await adminFetch('/admin-api/swagger-endpoints', { method: 'POST', body: JSON.stringify(payload) });
+                }
+                document.getElementById('edit-dialog').close();
+                adminToast('保存成功（重启后生效）', 'success');
+                await loadEndpoints();
+            } catch (e) { adminToast(e.message, 'error'); }
+        }
+        async function deleteEndpoint(encodedKey) {
+            if (!confirm('确认删除该端点？')) return;
+            try { await adminFetch('/admin-api/swagger-endpoints/' + encodedKey, { method: 'DELETE' }); adminToast('已删除', 'success'); await loadEndpoints(); }
+            catch (e) { adminToast(e.message, 'error'); }
+        }
+        function onImpFile(ev) {
+            const f = ev.target.files && ev.target.files[0];
+            if (!f) return;
+            const r = new FileReader();
+            r.onload = () => {
+                document.getElementById('imp-text').value = r.result || '';
+                const name = (f.name || '').toLowerCase();
+                const sel = document.getElementById('imp-format');
+                if (name.endsWith('.yaml') || name.endsWith('.yml')) sel.value = 'yaml';
+                else if (name.endsWith('.json')) sel.value = 'json';
+            };
+            r.readAsText(f);
+        }
+        async function doImport() {
+            const text = document.getElementById('imp-text').value;
+            if (!text || !text.trim()) { adminToast('请粘贴或选择内容', 'error'); return; }
+            const fmt = document.getElementById('imp-format').value;
+            const mode = document.getElementById('imp-mode').value;
+            const qs = new URLSearchParams();
+            if (fmt) qs.set('format', fmt);
+            if (mode) qs.set('mode', mode);
+            try {
+                const result = await adminFetch('/admin-api/swagger-endpoints/import?' + qs.toString(), {
+                    method: 'POST',
+                    headers: { 'Content-Type': fmt === 'yaml' ? 'application/yaml' : 'application/json' },
+                    body: text,
+                });
+                document.getElementById('import-dialog').close();
+                adminToast(`导入成功：新增 ${result.added} / 替换 ${result.replaced}`, 'success');
+                await loadEndpoints();
+            } catch (e) { adminToast(e.message, 'error'); }
+        }
+        loadEndpoints();
+        // SSE 联动
+        (function () {
+            let pending = null;
+            window.addEventListener('admin:event', function (e) {
+                var t = e.detail && e.detail.type;
+                if (!t) return;
+                if (t.startsWith('swagger.') || t === 'config.replace' || t === 'config.reload' || t === 'backup.restore') {
+                    if (pending) clearTimeout(pending);
+                    pending = setTimeout(function () { pending = null; loadEndpoints(); }, 300);
+                }
+            });
+        })();
+    </script>
+}

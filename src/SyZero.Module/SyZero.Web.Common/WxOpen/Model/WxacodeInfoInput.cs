@@ -1,16 +1,16 @@
-﻿namespace SyZero.Web.Common
+namespace SyZero.Web.Common
 {
     public class WxacodeInfoInput
     {
         /// <summary>
         /// 自定义参数
         /// </summary>
-        public string scene { get; set; }
+        public string scene { get; set; } = string.Empty;
 
         /// <summary>
         /// 页面地址
         /// </summary>
-        public string page { get; set; }
+        public string page { get; set; } = string.Empty;
 
         /// <summary>
         /// 图片宽度

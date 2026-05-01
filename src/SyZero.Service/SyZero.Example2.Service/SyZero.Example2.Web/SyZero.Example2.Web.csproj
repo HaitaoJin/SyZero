@@ -31,6 +31,11 @@
     <ProjectReference Include="..\..\..\SyZero.Module\SyZero.Log4Net\SyZero.Log4Net.csproj" />
     <ProjectReference Include="..\..\..\SyZero.Module\SyZero.OpenTelemetry\SyZero.OpenTelemetry.csproj" />
     <ProjectReference Include="..\..\..\SyZero.Module\SyZero.Swagger\SyZero.Swagger.csproj" />
+    <!-- v1.5.0 集成示例：默认开启 Diagnostics + AI Echo；Kafka / DistributedTransaction 在 Program.cs 以注释提供 -->
+    <ProjectReference Include="..\..\..\SyZero.Module\SyZero.Diagnostics\SyZero.Diagnostics.csproj" />
+    <ProjectReference Include="..\..\..\SyZero.Module\SyZero.AI\SyZero.AI.csproj" />
+    <ProjectReference Include="..\..\..\SyZero.Module\SyZero.EventBus.Kafka\SyZero.EventBus.Kafka.csproj" />
+    <ProjectReference Include="..\..\..\SyZero.Module\SyZero.DistributedTransaction\SyZero.DistributedTransaction.csproj" />
     <ProjectReference Include="..\SyZero.Example2.Application\SyZero.Example2.Application.csproj" />
   </ItemGroup>
 

@@ -41,7 +41,7 @@ namespace SyZero.Web.Common
         /// </summary>
         /// <param name="filePath">XML文件绝对路径</param>
         /// <returns></returns>
-        XmlDocument LoadXmlDoc(string filePath);
+        XmlDocument? LoadXmlDoc(string filePath);
 
         /// <summary>
         /// 读取XML的所有子节点
@@ -49,6 +49,6 @@ namespace SyZero.Web.Common
         /// <param name="filePath">XML文件绝对路径</param>
         /// <param name="xPath">范例: @"Skill/First/SkillItem"</param>
         /// <returns></returns>
-        XmlNodeList ReadNodes(string filePath, string xPath);
+        XmlNodeList? ReadNodes(string filePath, string xPath);
     }
 }
