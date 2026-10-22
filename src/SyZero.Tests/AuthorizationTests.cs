@@ -5,14 +5,12 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using SyZero;
 using SyZero.Authorization.Entities;
 using SyZero.Authorization.Jwt;
 using SyZero.Authorization.Permissions;
-using SyZero.Configurations;
 using SyZero.Domain.Entities;
 using SyZero.Domain.Repository;
 using SyZero.EntityFrameworkCore;
@@ -202,17 +200,9 @@ public class AuthorizationTests
 
     private static ServiceProvider BuildAuthProviderWithRefresh(string connectionString)
     {
-        AppConfig.Configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["ConnectionString:Type"] = DbType.Sqlite.ToString(),
-                ["ConnectionString:Master"] = connectionString
-            })
-            .Build();
-
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddSyZeroEntityFramework<AuthTestDbContext>();
+        services.AddSyZeroEntityFramework<AuthTestDbContext>(options => options.UseSqlite(connectionString));
         services.AddScoped<ISySession>(_ => new FakeSession(null));
         services.Configure<JwtOptions>(o =>
         {
@@ -234,17 +224,9 @@ public class AuthorizationTests
 
     private static ServiceProvider BuildAuthProvider(string connectionString, long? userId)
     {
-        AppConfig.Configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["ConnectionString:Type"] = DbType.Sqlite.ToString(),
-                ["ConnectionString:Master"] = connectionString
-            })
-            .Build();
-
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddSyZeroEntityFramework<AuthTestDbContext>();
+        services.AddSyZeroEntityFramework<AuthTestDbContext>(options => options.UseSqlite(connectionString));
         services.AddScoped<ISySession>(_ => new FakeSession(userId));
         services.AddScoped<IPermissionChecker, RbacPermissionChecker>();
 
