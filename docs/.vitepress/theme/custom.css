@@ -41,6 +41,10 @@
   font-family: "Space Grotesk", "Noto Sans SC", sans-serif;
 }
 
+.VPFooter.has-sidebar {
+  display: block !important;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .VPFeature {
     transition: transform 0.24s ease, border-color 0.24s ease;

@@ -186,6 +186,9 @@ export default defineConfig({
     search: {
       provider: "local"
     },
+    footer: {
+      copyright: '© Copyright 2026 SyZero&nbsp;&nbsp;<strong><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">陕ICP备19004355号-1</a></strong>',
+    },
   },
   locales: {
     root: {
