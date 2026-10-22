@@ -4,31 +4,95 @@
     <_SyZeroFrontendBuildAfterTargets Condition="'$(GenerateSwaggerJsonOnBuild)' == 'true'">SyZeroGenerateSwaggerJson</_SyZeroFrontendBuildAfterTargets>
   </PropertyGroup>
 
+  <!-- WriteLinesToFile 会在 Linux 上把 ITaskItem 中的反斜杠规范化为斜杠，需直接写入 JSON。 -->
+  <UsingTask TaskName="SyZeroWriteSpaProxyConfigurationTask"
+             TaskFactory="RoslynCodeTaskFactory"
+             AssemblyFile="$(MSBuildToolsPath)/Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <OutputPath ParameterType="System.String" Required="true" />
+      <ServerUrl ParameterType="System.String" Required="true" />
+      <RedirectUrl ParameterType="System.String" Required="true" />
+      <LaunchCommand ParameterType="System.String" Required="true" />
+      <WorkingDirectory ParameterType="System.String" Required="true" />
+      <MaxTimeoutInSeconds ParameterType="System.Int32" Required="true" />
+      <KeepRunning ParameterType="System.Boolean" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System" />
+      <Using Namespace="System.IO" />
+      <Using Namespace="System.Text" />
+      <Code Type="Fragment" Language="cs"><![CDATA[
+        Func<string, string> escapeJson = value =>
+        {
+            var escaped = new StringBuilder(value.Length + 16);
+            foreach (var character in value)
+            {
+                switch (character)
+                {
+                    case '"': escaped.Append("\\\""); break;
+                    case '\\': escaped.Append("\\\\"); break;
+                    case '\b': escaped.Append("\\b"); break;
+                    case '\f': escaped.Append("\\f"); break;
+                    case '\n': escaped.Append("\\n"); break;
+                    case '\r': escaped.Append("\\r"); break;
+                    case '\t': escaped.Append("\\t"); break;
+                    default:
+                        if (character < 0x20)
+                        {
+                            escaped.Append("\\u").Append(((int)character).ToString("x4"));
+                        }
+                        else
+                        {
+                            escaped.Append(character);
+                        }
+                        break;
+                }
+            }
+
+            return escaped.ToString();
+        };
+
+        var json = new StringBuilder()
+            .AppendLine("{")
+            .AppendLine("  \"SpaProxyServer\": {")
+            .Append("    \"ServerUrl\": \"").Append(escapeJson(ServerUrl)).AppendLine("\",")
+            .Append("    \"RedirectUrl\": \"").Append(escapeJson(RedirectUrl)).AppendLine("\",")
+            .Append("    \"LaunchCommand\": \"").Append(escapeJson(LaunchCommand)).AppendLine("\",")
+            .Append("    \"WorkingDirectory\": \"").Append(escapeJson(WorkingDirectory)).AppendLine("\",")
+            .Append("    \"MaxTimeoutInSeconds\": ").Append(MaxTimeoutInSeconds).AppendLine(",")
+            .Append("    \"KeepRunning\": ").AppendLine(KeepRunning ? "true" : "false")
+            .AppendLine("  }")
+            .AppendLine("}")
+            .ToString();
+        var outputDirectory = Path.GetDirectoryName(OutputPath);
+        if (!string.IsNullOrEmpty(outputDirectory))
+        {
+            Directory.CreateDirectory(outputDirectory);
+        }
+
+        if (!File.Exists(OutputPath) ||
+            !string.Equals(File.ReadAllText(OutputPath), json, StringComparison.Ordinal))
+        {
+            File.WriteAllText(OutputPath, json, new UTF8Encoding(false));
+        }
+      ]]></Code>
+    </Task>
+  </UsingTask>
+
   <Target Name="SyZeroWriteSpaConfigurationToDisk" BeforeTargets="AssignTargetPaths"
           Condition="'$(DesignTimeBuild)' != 'true' and '$(SpaProxyServerUrl)' != '' and '$(SpaProxyLaunchCommand)' != ''">
     <PropertyGroup>
       <_SpaProxyServerLaunchConfig>$(IntermediateOutputPath)spa.proxy.json</_SpaProxyServerLaunchConfig>
       <_SpaRootFullPath>$([System.IO.Path]::GetFullPath($([System.IO.Path]::Combine('$(MSBuildProjectDirectory)', '$(SpaRoot)'))))</_SpaRootFullPath>
-      <_SpaProxyServerUrlJson>$([System.String]::Copy('$(SpaProxyServerUrl)').Replace('\', '\\').Replace('&quot;', '\&quot;'))</_SpaProxyServerUrlJson>
-      <_SpaProxyRedirectUrlJson>$([System.String]::Copy('$(SpaProxyRedirectUrl)').Replace('\', '\\').Replace('&quot;', '\&quot;'))</_SpaProxyRedirectUrlJson>
-      <_SpaProxyLaunchCommandJson>$([System.String]::Copy('$(SpaProxyLaunchCommand)').Replace('\', '\\').Replace('&quot;', '\&quot;'))</_SpaProxyLaunchCommandJson>
-      <_SpaRootFullPathJson>$([System.String]::Copy('$(_SpaRootFullPath)').Replace('\', '\\').Replace('&quot;', '\&quot;'))</_SpaRootFullPathJson>
-      <_SpaProxyKeepRunningJson>$([System.String]::Copy('$(SpaProxyKeepRunning)').ToLowerInvariant())</_SpaProxyKeepRunningJson>
     </PropertyGroup>
-    <ItemGroup>
-      <_SpaProxyServerLaunchConfigLines Include="{" />
-      <_SpaProxyServerLaunchConfigLines Include="  &quot;SpaProxyServer&quot;: {" />
-      <_SpaProxyServerLaunchConfigLines Include="    &quot;ServerUrl&quot;: &quot;$(_SpaProxyServerUrlJson)&quot;," />
-      <_SpaProxyServerLaunchConfigLines Include="    &quot;RedirectUrl&quot;: &quot;$(_SpaProxyRedirectUrlJson)&quot;," Condition="'$(SpaProxyRedirectUrl)' != ''" />
-      <_SpaProxyServerLaunchConfigLines Include="    &quot;RedirectUrl&quot;: &quot;$(_SpaProxyServerUrlJson)&quot;," Condition="'$(SpaProxyRedirectUrl)' == ''" />
-      <_SpaProxyServerLaunchConfigLines Include="    &quot;LaunchCommand&quot;: &quot;$(_SpaProxyLaunchCommandJson)&quot;," />
-      <_SpaProxyServerLaunchConfigLines Include="    &quot;WorkingDirectory&quot;: &quot;$(_SpaRootFullPathJson)&quot;," />
-      <_SpaProxyServerLaunchConfigLines Include="    &quot;MaxTimeoutInSeconds&quot;: $(SpaProxyTimeoutInSeconds)," />
-      <_SpaProxyServerLaunchConfigLines Include="    &quot;KeepRunning&quot;: $(_SpaProxyKeepRunningJson)" />
-      <_SpaProxyServerLaunchConfigLines Include="  }" />
-      <_SpaProxyServerLaunchConfigLines Include="}" />
-    </ItemGroup>
-    <WriteLinesToFile File="$(_SpaProxyServerLaunchConfig)" Lines="@(_SpaProxyServerLaunchConfigLines)" WriteOnlyWhenDifferent="true" Overwrite="true" />
+    <SyZeroWriteSpaProxyConfigurationTask
+        OutputPath="$(_SpaProxyServerLaunchConfig)"
+        ServerUrl="$(SpaProxyServerUrl)"
+        RedirectUrl="$(SpaProxyRedirectUrl)"
+        LaunchCommand="$(SpaProxyLaunchCommand)"
+        WorkingDirectory="$(_SpaRootFullPath)"
+        MaxTimeoutInSeconds="$(SpaProxyTimeoutInSeconds)"
+        KeepRunning="$(SpaProxyKeepRunning)" />
     <ItemGroup>
       <ContentWithTargetPath Include="$(_SpaProxyServerLaunchConfig)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Never" TargetPath="spa.proxy.json" />
       <FileWrites Include="$(_SpaProxyServerLaunchConfig)" />
