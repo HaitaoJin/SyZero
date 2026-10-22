@@ -65,7 +65,7 @@ namespace SyZero.Gateway.Admin.Controllers
             var dto = await _store.ReadAsync(ct);
             return Ok(new
             {
-                Version = Assembly.GetExecutingAssembly().GetName().Version?.ToString(),
+                Version = Assembly.GetExecutingAssembly().GetName().Version?.ToString(3),
                 ConfigPath = _store.ConfigPath,
                 LastBackupTime = _store.LastBackupTime,
                 RouteCount = dto.Routes.Count,

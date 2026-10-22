@@ -13,6 +13,8 @@
     var isBuiltIn = string.Equals(
         Context.User?.FindFirst("gw:builtin")?.Value,
         "true", System.StringComparison.OrdinalIgnoreCase);
+    var gatewayAdminVersion = typeof(SyZero.Gateway.Admin.Controllers.AdminController)
+        .Assembly.GetName().Version?.ToString(3) ?? "-";
     ViewData["IsAdmin"] = isAdmin;
     ViewData["Role"] = role;
     ViewData["IsBuiltIn"] = isBuiltIn;
@@ -285,7 +287,7 @@
 
             <footer class="footer footer-center p-4 text-base-content/60 text-xs border-t border-base-300/50">
                 <aside>
-                    <span>SyZero · Gateway Admin <span class="badge badge-ghost badge-sm ml-1">v1.2.3</span></span>
+                    <span>SyZero · Gateway Admin <span class="badge badge-ghost badge-sm ml-1">v@(gatewayAdminVersion)</span></span>
                     <span class="opacity-50">·</span>
                     <a class="link link-hover" href="https://github.com/SyZeroToInfinity/SyZero" target="_blank" rel="noopener">GitHub</a>
                 </aside>
@@ -385,7 +387,7 @@
                     </li>
                 </ul>
                 <div class="mt-auto pt-3 flex items-center justify-center gw-side-foot">
-                    <span class="text-[11px] text-base-content/40 gw-side-label">SyZero v1.2.3</span>
+                    <span class="text-[11px] text-base-content/40 gw-side-label">SyZero v@(gatewayAdminVersion)</span>
                 </div>
             </div>
         </aside>

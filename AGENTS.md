@@ -28,25 +28,31 @@ SyZero 是一个 **.NET 9** 模块化微服务框架，发布为一组 NuGet 包
 
 ## 关键约定（违反会破坏一致性）
 
-### 1. 集中式包版本管理
+### 1. 框架版本管理（单一来源）
+- 所有 `SyZero.*` 包的正式版本**只在** [Directory.Build.props](Directory.Build.props) 的默认 `<Version>` 中维护；升级版本时只修改这一处，禁止在 csproj、工作流或其他版本文件中重复定义。
+- 仓库不使用 `.github/workflows/.version`；不得重新引入该文件。CI 的 [set-buildnumber.ps1](.github/workflows/script/set-buildnumber.ps1) 直接读取 `Directory.Build.props`，使用其中的 `major.minor` 作为发布线，并以 `patch` 作为自动递增的最低值。
+- CI 稳定版号取“`Directory.Build.props` 中的 patch”与“远端同发布线最高稳定标签 patch + 1”中的较大值；`dev` 分支在该版本后追加 `-dev.N`。
+- 修改 `<Version>` 时，必须同步更新 [README.md](README.md)、[README.en.md](README.en.md)、[docs/release-notes.md](docs/release-notes.md) 与 [docs/en/release-notes.md](docs/en/release-notes.md) 中的当前版本和发布说明；不要改写仅用于描述历史变更的旧版本号。
+
+### 2. 集中式依赖版本管理
 - 所有 `PackageReference` **不要写 `Version`**——版本统一在 [Directory.Packages.props](Directory.Packages.props)（`ManagePackageVersionsCentrally=true`）。
 - 新增依赖：先在 `Directory.Packages.props` 添加 `<PackageVersion .../>`，再在 csproj 中 `<PackageReference Include="..." />`。
 
-### 2. 包元数据由 `Directory.Build.props` 统一注入
+### 3. 包元数据由 `Directory.Build.props` 统一注入
 - [Directory.Build.props](Directory.Build.props) 自动注入 `Version`、`Authors`、`PackageIcon`、`LICENSE`、SourceLink、`PackageReadmeFile`（指向 `docs/modules/$(MSBuildProjectName).md`）。
 - **新建框架模块**：在 `src/SyZero.Module/SyZero.<Name>/` 创建项目；同时在 `docs/modules/SyZero.<Name>.md` 创建 README——否则 `PackageReadmeFile` 引用会缺失（条件已使用 `Exists()` 保护，但发布时需要它）。
 - 项目 csproj 设置 `<IsPackable>true</IsPackable>` 才会打包（默认 false）。
 
-### 3. 依赖注入约定
+### 4. 依赖注入约定
 - 实现 [IScopedDependency](src/SyZero.Core/Dependency/IScopedDependency.cs) / [ISingletonDependency](src/SyZero.Core/Dependency/ISingletonDependency.cs) / [ITransientDependency](src/SyZero.Core/Dependency/ITransientDependency.cs) 的类**自动注册**——**无需**手动 `AddScoped`。
 - 业务服务继承 `SyZeroServiceBase`，业务接口继承 `IApplicationService`。
 
-### 4. 模块扩展方法命名模式
+### 5. 模块扩展方法命名模式
 - 注册：`builder.Services.AddSyZero<Module>(...)` 或 `builder.Add<Module>()`
 - 中间件：`app.UseSyZero()` 由 [src/SyZero.Core/SyZeroExtension.cs](src/SyZero.Core/SyZeroExtension.cs) 提供，触发服务自动注册到 `IServiceManagement` 并在应用关闭时注销。
 - 新模块应提供同样的 `Add*` / `Use*` 扩展，模式参考其他模块的 `*Extension.cs`。
 
-### 5. 多后端抽象
+### 6. 多后端抽象
 许多核心能力提供**多后端实现**，统一 接口/工厂 模式（详见 [README.md](README.md) 中的对照表）：
 - `IServiceManagement`：Local / DB / Redis / Consul / Nacos
 - `IEventBus`：LocalEventBus / DBEventBus / RedisEventBus / RabbitMQEventBus
@@ -54,12 +60,12 @@ SyZero 是一个 **.NET 9** 模块化微服务框架，发布为一组 NuGet 包
 
 新增同类能力时**保持接口位于核心 `SyZero.Core` 包**，实现下沉到独立模块包。
 
-### 6. 示例服务的分层（业务侧默认结构）
+### 7. 示例服务的分层（业务侧默认结构）
 [src/SyZero.Service/SyZero.Example1.Service/](src/SyZero.Service/SyZero.Example1.Service) 演示推荐分层：
 `SyZero.Example1.Web` → `SyZero.Example1.Application` → `SyZero.Example1.IApplication` → `SyZero.Example1.Core`
 新业务服务请遵循此命名与依赖方向。
 
-### 7. 测试
+### 8. 测试
 - 仅 **一个** xUnit 项目 [src/SyZero.Tests/](src/SyZero.Tests/)，按模块一个文件（`<Module>Tests.cs`）。
 - 共享 fixture 通过 `[Collection]`（如 [Log4NetCollection.cs](src/SyZero.Tests/Log4NetCollection.cs)、[AppConfigCollection.cs](src/SyZero.Tests/AppConfigCollection.cs)）。新模块测试请沿用此模式而非新建项目。
 
