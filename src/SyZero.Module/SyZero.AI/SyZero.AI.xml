@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.AI</name>
+    </assembly>
+    <members>
+        <member name="T:SyZero.AI.ISyChatClient">
+            <summary>SyZero AI 抽象的最小聊天接口。</summary>
+        </member>
+        <member name="T:SyZero.AI.EchoChatClient">
+            <summary>占位实现：将 prompt 原样回显，用于测试与本地开发。</summary>
+        </member>
+        <member name="T:SyZero.AI.MeaiChatClientAdapter">
+            <summary>
+            把任意 <see cref="T:Microsoft.Extensions.AI.IChatClient"/>（OpenAI / Azure OpenAI / Ollama / 自建网关 等）
+            适配为 SyZero 的 <see cref="T:SyZero.AI.ISyChatClient"/>。业务代码继续依赖 <c>ISyChatClient</c>，便于替换与单测。
+            </summary>
+        </member>
+        <member name="T:SyZero.SyZeroAIExtension">
+            <summary>SyZero.AI 的 DI 扩展。</summary>
+        </member>
+        <member name="M:SyZero.SyZeroAIExtension.AddSyZeroAIEcho(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>注册占位 EchoChatClient（适用于本地、测试或离线场景）。</summary>
+        </member>
+        <member name="M:SyZero.SyZeroAIExtension.AddSyZeroAIChatClient(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.AI.IChatClient)">
+            <summary>
+            通过实例注入一个 <see cref="T:Microsoft.Extensions.AI.IChatClient"/> 实现（来自 OpenAI / Azure OpenAI / Ollama 等 SDK），
+            自动用 <see cref="T:SyZero.AI.MeaiChatClientAdapter"/> 适配为 <see cref="T:SyZero.AI.ISyChatClient"/>。
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroAIExtension.AddSyZeroAIChatClient(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Func{System.IServiceProvider,Microsoft.Extensions.AI.IChatClient})">
+            <summary>
+            通过工厂注入 <see cref="T:Microsoft.Extensions.AI.IChatClient"/>（便于在 DI 中读取配置 / IHttpClientFactory），
+            自动用 <see cref="T:SyZero.AI.MeaiChatClientAdapter"/> 适配为 <see cref="T:SyZero.AI.ISyChatClient"/>。
+            </summary>
+        </member>
+    </members>
+</doc>

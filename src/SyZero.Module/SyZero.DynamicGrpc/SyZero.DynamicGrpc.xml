@@ -1,0 +1,258 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.DynamicGrpc</name>
+    </assembly>
+    <members>
+        <member name="T:SyZero.DynamicGrpc.AssemblyDynamicGrpcOptions">
+            <summary>
+            程序集级别的 Dynamic gRPC 选项
+            </summary>
+        </member>
+        <member name="P:SyZero.DynamicGrpc.AssemblyDynamicGrpcOptions.ServicePrefix">
+            <summary>
+            服务前缀
+            <para>默认值: null</para>
+            </summary>
+        </member>
+        <member name="M:SyZero.DynamicGrpc.AssemblyDynamicGrpcOptions.#ctor(System.String)">
+            <summary>
+            初始化程序集级别选项
+            </summary>
+            <param name="servicePrefix">服务前缀</param>
+        </member>
+        <member name="T:SyZero.DynamicGrpc.Attributes.NonGrpcMethodAttribute">
+            <summary>
+            标记方法不作为 gRPC 方法公开
+            </summary>
+        </member>
+        <member name="T:SyZero.DynamicGrpc.Attributes.NonGrpcServiceAttribute">
+            <summary>
+            标记类型不作为 gRPC 服务公开
+            使用此特性可以排除某个 DynamicApi 服务不注册为 gRPC 服务
+            </summary>
+        </member>
+        <member name="T:SyZero.DynamicGrpc.DynamicGrpcOptions">
+            <summary>
+            Dynamic gRPC 配置选项
+            </summary>
+        </member>
+        <member name="F:SyZero.DynamicGrpc.DynamicGrpcOptions.SectionName">
+            <summary>
+            配置节名称
+            </summary>
+        </member>
+        <member name="M:SyZero.DynamicGrpc.DynamicGrpcOptions.#ctor">
+            <summary>
+            初始化默认配置
+            </summary>
+        </member>
+        <member name="P:SyZero.DynamicGrpc.DynamicGrpcOptions.DefaultServicePrefix">
+            <summary>
+            默认服务前缀
+            </summary>
+        </member>
+        <member name="P:SyZero.DynamicGrpc.DynamicGrpcOptions.RemoveServicePostfixes">
+            <summary>
+            需要移除的服务名称后缀
+            <para>默认值: {"AppService", "ApplicationService", "Service", "GrpcService"}</para>
+            </summary>
+        </member>
+        <member name="P:SyZero.DynamicGrpc.DynamicGrpcOptions.RemoveMethodPostfixes">
+            <summary>
+            需要移除的方法名称后缀
+            <para>默认值: {"Async"}</para>
+            </summary>
+        </member>
+        <member name="P:SyZero.DynamicGrpc.DynamicGrpcOptions.MaxReceiveMessageSize">
+            <summary>
+            最大接收消息大小（字节）
+            <para>默认值: 4MB</para>
+            </summary>
+        </member>
+        <member name="P:SyZero.DynamicGrpc.DynamicGrpcOptions.MaxSendMessageSize">
+            <summary>
+            最大发送消息大小（字节）
+            <para>默认值: 4MB</para>
+            </summary>
+        </member>
+        <member name="P:SyZero.DynamicGrpc.DynamicGrpcOptions.EnableDetailedErrors">
+            <summary>
+            是否启用详细错误信息
+            <para>默认值: false（生产环境建议关闭）</para>
+            </summary>
+        </member>
+        <member name="P:SyZero.DynamicGrpc.DynamicGrpcOptions.AssemblyOptions">
+            <summary>
+            程序集级别的 Dynamic gRPC 选项
+            </summary>
+        </member>
+        <member name="P:SyZero.DynamicGrpc.DynamicGrpcOptions.GetServiceName">
+            <summary>
+            自定义服务名称处理函数
+            </summary>
+        </member>
+        <member name="P:SyZero.DynamicGrpc.DynamicGrpcOptions.GetMethodName">
+            <summary>
+            自定义方法名称处理函数
+            </summary>
+        </member>
+        <member name="M:SyZero.DynamicGrpc.DynamicGrpcOptions.Validate">
+            <summary>
+            验证所有配置是否有效
+            </summary>
+            <exception cref="T:System.ArgumentException">配置无效时抛出</exception>
+        </member>
+        <member name="M:SyZero.DynamicGrpc.DynamicGrpcOptions.AddAssemblyOptions(System.Reflection.Assembly,System.String)">
+            <summary>
+            添加程序集级别的 Dynamic gRPC 选项
+            </summary>
+            <param name="assembly">程序集</param>
+            <param name="servicePrefix">服务前缀</param>
+            <exception cref="T:System.ArgumentNullException">assembly 为 null 时抛出</exception>
+        </member>
+        <member name="T:SyZero.DynamicGrpc.DynamicGrpcServiceDiscovery">
+            <summary>
+            Dynamic gRPC 服务发现辅助类
+            </summary>
+        </member>
+        <member name="M:SyZero.DynamicGrpc.DynamicGrpcServiceDiscovery.GetServiceTypes(SyZero.DynamicGrpc.DynamicGrpcOptions,SyZero.DynamicGrpc.DynamicGrpcServiceTypeProvider)">
+            <summary>
+            获取所有可注册的 Dynamic gRPC 服务类型
+            </summary>
+        </member>
+        <member name="T:SyZero.DynamicGrpc.DynamicGrpcServiceExtensions">
+            <summary>
+            Dynamic gRPC 服务扩展方法
+            </summary>
+        </member>
+        <member name="F:SyZero.DynamicGrpc.DynamicGrpcServiceExtensions._mapGrpcServiceMethod">
+            <summary>
+            缓存 MapGrpcService 方法
+            </summary>
+        </member>
+        <member name="M:SyZero.DynamicGrpc.DynamicGrpcServiceExtensions.AddDynamicGrpc(Microsoft.Extensions.DependencyInjection.IServiceCollection,SyZero.DynamicGrpc.DynamicGrpcOptions)">
+            <summary>
+            添加 Dynamic gRPC 服务到依赖注入容器
+            </summary>
+            <param name="services">服务集合</param>
+            <param name="options">配置选项</param>
+            <returns>服务集合</returns>
+            <exception cref="T:System.ArgumentNullException">options 为 null 时抛出</exception>
+        </member>
+        <member name="M:SyZero.DynamicGrpc.DynamicGrpcServiceExtensions.AddDynamicGrpc(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Reflection.Assembly,System.Reflection.Assembly[])">
+            <summary>
+            添加指定程序集中的 Dynamic gRPC 服务到依赖注入容器
+            </summary>
+            <param name="services">服务集合</param>
+            <param name="assembly">主程序集</param>
+            <param name="additionalAssemblies">额外程序集</param>
+            <returns>服务集合</returns>
+        </member>
+        <member name="M:SyZero.DynamicGrpc.DynamicGrpcServiceExtensions.AddDynamicGrpc(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,System.String)">
+            <summary>
+            添加 Dynamic gRPC 服务到依赖注入容器（从配置读取）
+            </summary>
+            <param name="services">服务集合</param>
+            <param name="configuration">配置，为 null 时使用 AppConfig.GetSection</param>
+            <param name="sectionName">配置节名称，默认为 "DynamicGrpc"</param>
+            <returns>服务集合</returns>
+        </member>
+        <member name="M:SyZero.DynamicGrpc.DynamicGrpcServiceExtensions.AddDynamicGrpc(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Action{SyZero.DynamicGrpc.DynamicGrpcOptions},Microsoft.Extensions.Configuration.IConfiguration,System.String)">
+            <summary>
+            添加 Dynamic gRPC 服务到依赖注入容器（从配置读取，并支持额外配置）
+            </summary>
+            <param name="services">服务集合</param>
+            <param name="optionsAction">额外配置委托（在配置文件配置之后执行）</param>
+            <param name="configuration">配置，为 null 时使用 AppConfig.Configuration</param>
+            <param name="sectionName">配置节名称，默认为 "DynamicGrpc"</param>
+            <returns>服务集合</returns>
+        </member>
+        <member name="M:SyZero.DynamicGrpc.DynamicGrpcServiceExtensions.MapDynamicGrpcServices(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)">
+            <summary>
+            映射所有动态 gRPC 服务端点
+            </summary>
+            <param name="endpoints">端点路由构建器</param>
+            <returns>端点路由构建器</returns>
+        </member>
+        <member name="M:SyZero.DynamicGrpc.DynamicGrpcServiceExtensions.MapDynamicGrpcServices(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder,System.Action{System.Object})">
+            <summary>
+            映射所有动态 gRPC 服务端点（带配置）
+            </summary>
+            <param name="endpoints">端点路由构建器</param>
+            <param name="configureOptions">gRPC 服务端点配置</param>
+            <returns>端点路由构建器</returns>
+        </member>
+        <member name="M:SyZero.DynamicGrpc.DynamicGrpcServiceExtensions.MapGrpcServiceByType(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder,System.Type)">
+            <summary>
+            通过反射映射 gRPC 服务 (使用 protobuf-net.Grpc)
+            </summary>
+        </member>
+        <member name="M:SyZero.DynamicGrpc.DynamicGrpcServiceExtensions.RegisterDynamicGrpcServices(Microsoft.Extensions.DependencyInjection.IServiceCollection,SyZero.DynamicGrpc.DynamicGrpcOptions)">
+            <summary>
+            注册所有动态 gRPC 服务到 DI 容器
+            </summary>
+        </member>
+        <member name="T:SyZero.DynamicGrpc.DynamicGrpcServiceTypeProvider">
+            <summary>
+            动态 gRPC 服务类型提供程序
+            用于识别和过滤可作为动态 gRPC 服务的类型
+            </summary>
+        </member>
+        <member name="M:SyZero.DynamicGrpc.DynamicGrpcServiceTypeProvider.#ctor(SyZero.DynamicGrpc.DynamicGrpcOptions)">
+            <summary>
+            使用指定选项初始化
+            </summary>
+        </member>
+        <member name="M:SyZero.DynamicGrpc.DynamicGrpcServiceTypeProvider.IsGrpcService(System.Reflection.TypeInfo)">
+            <summary>
+            判断指定类型是否可以作为动态 gRPC 服务
+            </summary>
+        </member>
+        <member name="M:SyZero.DynamicGrpc.DynamicGrpcServiceTypeProvider.GetServiceName(System.String)">
+            <summary>
+            获取服务名称（移除后缀）
+            </summary>
+        </member>
+        <member name="M:SyZero.DynamicGrpc.DynamicGrpcServiceTypeProvider.GetMethodName(System.String)">
+            <summary>
+            获取方法名称（移除后缀）
+            </summary>
+        </member>
+        <member name="M:SyZero.DynamicGrpc.DynamicGrpcServiceTypeProvider.ClearCache">
+            <summary>
+            清除类型缓存（用于测试或动态加载程序集场景）
+            </summary>
+        </member>
+        <member name="T:SyZero.DynamicGrpc.GrpcConsts">
+            <summary>
+            Dynamic gRPC 常量和默认配置
+            </summary>
+        </member>
+        <member name="F:SyZero.DynamicGrpc.GrpcConsts.DefaultServicePostfixes">
+            <summary>
+            默认服务后缀（将被移除）
+            </summary>
+        </member>
+        <member name="F:SyZero.DynamicGrpc.GrpcConsts.DefaultMethodPostfixes">
+            <summary>
+            默认方法后缀（将被移除）
+            </summary>
+        </member>
+        <member name="F:SyZero.DynamicGrpc.GrpcConsts.DefaultServicePrefix">
+            <summary>
+            默认 gRPC 服务前缀
+            </summary>
+        </member>
+        <member name="F:SyZero.DynamicGrpc.GrpcConsts.DefaultMaxMessageSize">
+            <summary>
+            默认最大消息大小（4MB）
+            </summary>
+        </member>
+        <member name="F:SyZero.DynamicGrpc.GrpcConsts.DefaultTimeoutSeconds">
+            <summary>
+            默认超时时间（秒）
+            </summary>
+        </member>
+    </members>
+</doc>

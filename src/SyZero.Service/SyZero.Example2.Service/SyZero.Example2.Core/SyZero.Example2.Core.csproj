@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\SyZero.Core\SyZero.SqlSugar\SyZero.SqlSugar.csproj" />
+    <ProjectReference Include="..\..\..\SyZero.Module\SyZero.SqlSugar\SyZero.SqlSugar.csproj" />
   </ItemGroup>
 
 </Project>

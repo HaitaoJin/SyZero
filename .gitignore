@@ -37,3 +37,7 @@ ReleaseNote.md
 docs/node_modules/
 docs/.vitepress/dist/
 docs/.vitepress/cache/
+
+tmp*.log
+.codex-temp/
+.temp

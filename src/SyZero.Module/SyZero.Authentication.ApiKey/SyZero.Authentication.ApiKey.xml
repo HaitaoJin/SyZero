@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.Authentication.ApiKey</name>
+    </assembly>
+    <members>
+        <member name="T:SyZero.Authentication.ApiKey.ApiKeyOptions">
+            <summary>API Key 认证 scheme 配置。</summary>
+        </member>
+        <member name="P:SyZero.Authentication.ApiKey.ApiKeyOptions.HeaderName">
+            <summary>请求头名，默认 "X-Api-Key"。</summary>
+        </member>
+        <member name="P:SyZero.Authentication.ApiKey.ApiKeyOptions.Keys">
+            <summary>合法 ApiKey → 主体名称（用于生成 ClaimsIdentity.Name）。</summary>
+        </member>
+        <member name="T:SyZero.SyZeroApiKeyAuthenticationExtension">
+            <summary>SyZero.Authentication.ApiKey 的扩展。</summary>
+        </member>
+    </members>
+</doc>

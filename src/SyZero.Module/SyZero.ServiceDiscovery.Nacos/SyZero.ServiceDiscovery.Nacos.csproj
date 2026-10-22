@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Description>SyZero-Nacos</Description>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="nacos-sdk-csharp" />
+    <PackageReference Include="nacos-sdk-csharp.AspNetCore" />
+    <PackageReference Include="nacos-sdk-csharp.Extensions.Configuration" />
+    <PackageReference Include="nacos-sdk-csharp.IniParser" />
+    <PackageReference Include="nacos-sdk-csharp.YamlParser" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\SyZero.Core\SyZero.Core.csproj" />
+  </ItemGroup>
+
+</Project>

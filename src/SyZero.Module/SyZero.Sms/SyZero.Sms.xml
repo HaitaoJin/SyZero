@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.Sms</name>
+    </assembly>
+    <members>
+        <member name="T:SyZero.Sms.ISySmsSender">
+            <summary>SyZero 短信发送抽象。业务侧依赖此接口，避免直接耦合具体短信通道。</summary>
+        </member>
+        <member name="T:SyZero.Sms.ConsoleSmsSender">
+            <summary>仅写日志的占位实现，便于开发环境与单测使用。</summary>
+        </member>
+        <member name="T:SyZero.SyZeroSmsExtension">
+            <summary>SyZero.Sms 模块的 DI 扩展。</summary>
+        </member>
+    </members>
+</doc>

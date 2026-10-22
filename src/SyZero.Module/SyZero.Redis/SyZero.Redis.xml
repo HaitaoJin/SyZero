@@ -1,0 +1,274 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.Redis</name>
+    </assembly>
+    <members>
+        <member name="M:SyZero.Redis.LockUtil.CurrentTimeStamp">
+            <summary>
+            获取时间戳
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:SyZero.Redis.RedisDistributedCache">
+            <summary>
+            基于 <see cref="T:FreeRedis.RedisClient"/> 的 <see cref="T:Microsoft.Extensions.Caching.Distributed.IDistributedCache"/> 实现。
+            引入 SyZero.Redis 后，<see cref="T:SyZero.Cache.IMultiLevelCache"/> 的 L2 自动切换为 Redis。
+            </summary>
+        </member>
+        <member name="T:SyZero.Redis.RedisDistributedLockProvider">
+            <summary>
+            基于 Redis <c>SET NX PX</c> + Lua 释放脚本的 <see cref="T:SyZero.IDistributedLockProvider"/> 实现。
+            多实例部署的推荐选择。
+            </summary>
+        </member>
+        <member name="T:SyZero.Redis.RedisEventBus">
+            <summary>
+            基于 Redis Pub/Sub 的事件总线实现
+            </summary>
+        </member>
+        <member name="T:SyZero.Redis.RedisEventBusOptions">
+            <summary>
+            Redis 事件总线配置选项
+            </summary>
+        </member>
+        <member name="F:SyZero.Redis.RedisEventBusOptions.SectionName">
+            <summary>
+            配置节名称
+            </summary>
+        </member>
+        <member name="P:SyZero.Redis.RedisEventBusOptions.ChannelPrefix">
+            <summary>
+            Redis 发布/订阅频道前缀
+            </summary>
+        </member>
+        <member name="M:SyZero.Redis.RedisEventBusOptions.Validate">
+            <summary>
+            验证配置
+            </summary>
+        </member>
+        <member name="T:SyZero.Redis.RedisServiceManagement">
+            <summary>
+            Redis 服务管理实现
+            适用于分布式部署场景，基于 Redis 实现服务注册、发现和健康检查
+            </summary>
+        </member>
+        <member name="P:SyZero.Redis.RedisServiceManagement.IsLeader">
+            <summary>
+            当前实例是否为 Leader
+            </summary>
+        </member>
+        <member name="P:SyZero.Redis.RedisServiceManagement.InstanceId">
+            <summary>
+            当前实例ID
+            </summary>
+        </member>
+        <member name="M:SyZero.Redis.RedisServiceManagement.#ctor(FreeRedis.RedisClient,SyZero.Redis.RedisServiceManagementOptions)">
+            <summary>
+            构造函数
+            </summary>
+            <param name="redis">Redis 客户端</param>
+            <param name="options">配置选项</param>
+        </member>
+        <member name="M:SyZero.Redis.RedisServiceManagement.TryAcquireLeadershipAsync">
+            <summary>
+            尝试获取 Leader 权限
+            </summary>
+        </member>
+        <member name="M:SyZero.Redis.RedisServiceManagement.ReleaseLeadership">
+            <summary>
+            释放 Leader 权限
+            </summary>
+        </member>
+        <member name="M:SyZero.Redis.RedisServiceManagement.HeartbeatAsync(System.String)">
+            <summary>
+            更新服务心跳
+            </summary>
+        </member>
+        <member name="M:SyZero.Redis.RedisServiceManagement.PerformHealthCheckAsync">
+            <summary>
+            执行健康检查
+            </summary>
+        </member>
+        <member name="M:SyZero.Redis.RedisServiceManagement.CheckServiceHealthAsync(SyZero.Service.ServiceInfo)">
+            <summary>
+            检查单个服务实例的健康状态
+            </summary>
+        </member>
+        <member name="M:SyZero.Redis.RedisServiceManagement.CleanExpiredServicesAsync">
+            <summary>
+            清理过期服务
+            </summary>
+        </member>
+        <member name="M:SyZero.Redis.RedisServiceManagement.PublishServiceChange(System.String)">
+            <summary>
+            发布服务变更通知
+            </summary>
+        </member>
+        <member name="M:SyZero.Redis.RedisServiceManagement.GetServiceKey(System.String)">
+            <summary>
+            获取服务 Key
+            </summary>
+        </member>
+        <member name="M:SyZero.Redis.RedisServiceManagement.GetPubSubChannel(System.String)">
+            <summary>
+            获取发布/订阅频道
+            </summary>
+        </member>
+        <member name="M:SyZero.Redis.RedisServiceManagement.ClearAsync">
+            <summary>
+            清除所有服务数据
+            </summary>
+        </member>
+        <member name="M:SyZero.Redis.RedisServiceManagement.Dispose">
+            <summary>
+            释放资源
+            </summary>
+        </member>
+        <member name="T:SyZero.Redis.RedisServiceManagementOptions">
+            <summary>
+            Redis 服务管理配置选项
+            </summary>
+        </member>
+        <member name="F:SyZero.Redis.RedisServiceManagementOptions.SectionName">
+            <summary>
+            配置节名称
+            </summary>
+        </member>
+        <member name="P:SyZero.Redis.RedisServiceManagementOptions.KeyPrefix">
+            <summary>
+            服务注册 Key 前缀
+            <para>默认值: syzero:services:</para>
+            </summary>
+        </member>
+        <member name="P:SyZero.Redis.RedisServiceManagementOptions.LeaderKeyPrefix">
+            <summary>
+            Leader 选举 Key 前缀
+            <para>默认值: syzero:leader:</para>
+            </summary>
+        </member>
+        <member name="P:SyZero.Redis.RedisServiceManagementOptions.ServiceNamesKey">
+            <summary>
+            服务列表 Key
+            <para>默认值: syzero:service:names</para>
+            </summary>
+        </member>
+        <member name="P:SyZero.Redis.RedisServiceManagementOptions.EnableHealthCheck">
+            <summary>
+            是否启用健康检查
+            <para>默认值: true</para>
+            </summary>
+        </member>
+        <member name="P:SyZero.Redis.RedisServiceManagementOptions.HealthCheckIntervalSeconds">
+            <summary>
+            健康检查间隔（秒）
+            <para>默认值: 10</para>
+            </summary>
+        </member>
+        <member name="P:SyZero.Redis.RedisServiceManagementOptions.HealthCheckTimeoutSeconds">
+            <summary>
+            健康检查超时时间（秒）
+            <para>默认值: 5</para>
+            </summary>
+        </member>
+        <member name="P:SyZero.Redis.RedisServiceManagementOptions.ServiceExpireSeconds">
+            <summary>
+            服务实例过期时间（秒），超过此时间未心跳的实例将被标记为不健康
+            <para>默认值: 30</para>
+            </summary>
+        </member>
+        <member name="P:SyZero.Redis.RedisServiceManagementOptions.AutoCleanExpiredServices">
+            <summary>
+            是否自动清理过期服务
+            <para>默认值: true</para>
+            </summary>
+        </member>
+        <member name="P:SyZero.Redis.RedisServiceManagementOptions.AutoCleanIntervalSeconds">
+            <summary>
+            自动清理间隔（秒）
+            <para>默认值: 300（5分钟）</para>
+            </summary>
+        </member>
+        <member name="P:SyZero.Redis.RedisServiceManagementOptions.ServiceCleanSeconds">
+            <summary>
+            服务实例清理时间（秒），超过此时间未心跳的实例将被自动移除
+            <para>默认值: 600（10分钟），应大于 ServiceExpireSeconds</para>
+            </summary>
+        </member>
+        <member name="P:SyZero.Redis.RedisServiceManagementOptions.EnableLeaderElection">
+            <summary>
+            是否启用 Leader 选举（多实例时只有 Leader 执行健康检查和清理）
+            <para>默认值: true</para>
+            </summary>
+        </member>
+        <member name="P:SyZero.Redis.RedisServiceManagementOptions.LeaderLockExpireSeconds">
+            <summary>
+            Leader 锁过期时间（秒）
+            <para>默认值: 30</para>
+            </summary>
+        </member>
+        <member name="P:SyZero.Redis.RedisServiceManagementOptions.LeaderLockRenewIntervalSeconds">
+            <summary>
+            Leader 锁续期间隔（秒）
+            <para>默认值: 10，应小于 LeaderLockExpireSeconds</para>
+            </summary>
+        </member>
+        <member name="P:SyZero.Redis.RedisServiceManagementOptions.EnablePubSub">
+            <summary>
+            是否启用发布/订阅通知
+            <para>默认值: true</para>
+            </summary>
+        </member>
+        <member name="P:SyZero.Redis.RedisServiceManagementOptions.PubSubChannelPrefix">
+            <summary>
+            发布/订阅频道前缀
+            <para>默认值: syzero:pubsub:service:</para>
+            </summary>
+        </member>
+        <member name="M:SyZero.Redis.RedisServiceManagementOptions.Validate">
+            <summary>
+            验证配置
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroRedisExtension.AddSyZeroRedis(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            注册RedisModule
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroRedisExtension.AddSyZeroRedis(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,System.String)">
+            <summary>
+            使用指定配置注册 Redis
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroRedisExtension.AddSyZeroRedis(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Action{SyZero.Redis.RedisOptions})">
+            <summary>
+            使用默认配置并允许额外覆盖注册 Redis
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroRedisExtension.AddRedisServiceManagement(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Action{SyZero.Redis.RedisServiceManagementOptions})">
+            <summary>
+            注册 Redis 服务管理
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroRedisExtension.AddRedisServiceManagement(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.String)">
+            <summary>
+            注册 Redis 服务管理（使用配置节）
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroRedisExtension.AddRedisEventBus(Microsoft.Extensions.DependencyInjection.IServiceCollection,SyZero.Redis.RedisEventBusOptions)">
+            <summary>
+            注册 Redis 事件总线
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroRedisExtension.AddRedisEventBus(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,System.String)">
+            <summary>
+            注册 Redis 事件总线（从配置读取）
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroRedisExtension.AddRedisEventBus(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Action{SyZero.Redis.RedisEventBusOptions},Microsoft.Extensions.Configuration.IConfiguration,System.String)">
+            <summary>
+            注册 Redis 事件总线（从配置读取并支持额外配置）
+            </summary>
+        </member>
+    </members>
+</doc>

@@ -42,7 +42,7 @@ echo      Done
 echo.
 
 echo [4/4] Generating NuGet packages...
-dotnet pack "%SolutionPath%" --configuration %Configuration% --no-build"
+dotnet pack "%SolutionPath%" --configuration %Configuration% --no-build
 if %errorlevel% neq 0 (
     echo [Error] Pack failed
     goto :error

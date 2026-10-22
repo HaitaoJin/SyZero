@@ -123,8 +123,8 @@ public class SpaProxyTests
         Directory.CreateDirectory(Path.Combine(tempDirectory.Path, "client"));
 
         var srcDirectory = GetRepositorySrcDirectory();
-        var propsPath = Path.Combine(srcDirectory, "SyZero.Core", "SyZero.AspNetCore.SpaProxy", "buildTransitive", "SyZero.AspNetCore.SpaProxy.props");
-        var targetsPath = Path.Combine(srcDirectory, "SyZero.Core", "SyZero.AspNetCore.SpaProxy", "buildTransitive", "SyZero.AspNetCore.SpaProxy.targets");
+        var propsPath = Path.Combine(srcDirectory, "SyZero.Module", "SyZero.AspNetCore.SpaProxy", "buildTransitive", "SyZero.AspNetCore.SpaProxy.props");
+        var targetsPath = Path.Combine(srcDirectory, "SyZero.Module", "SyZero.AspNetCore.SpaProxy", "buildTransitive", "SyZero.AspNetCore.SpaProxy.targets");
         var projectPath = Path.Combine(tempDirectory.Path, "SpaProxyTargetTests.csproj");
 
         File.WriteAllText(projectPath, $$"""

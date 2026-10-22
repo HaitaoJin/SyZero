@@ -1,0 +1,14 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+  </Configurations>
+  <Project Path="SyZero.Example2.Core/SyZero.Example2.Core.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="SyZero.Example2.IApplication/SyZero.Example2.IApplication.csproj" />
+  <Project Path="SyZero.Example2.Application/SyZero.Example2.Application.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="SyZero.Example2.Web/SyZero.Example2.Web.csproj" />
+</Solution>

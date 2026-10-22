@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <AssemblyName>SyZero.Example4.IApplication</AssemblyName>
+    <RootNamespace>SyZero.Example4.IApplication</RootNamespace>
+    <DocumentationFile></DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\SyZero.Core\SyZero.Core.csproj" />
+  </ItemGroup>
+
+  <Target Name="AppServiceCopy" AfterTargets="AfterBuild">
+    <ItemGroup>
+      <AppServiceDll Include="$(OutputPath)\$(MSBuildProjectName).dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(AppServiceDll)" DestinationFolder="..\app" />
+  </Target>
+
+</Project>

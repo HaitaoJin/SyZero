@@ -1,0 +1,239 @@
+@page "/admin/rate-limiting"
+@model SyZero.Gateway.Admin.Pages.Admin.RateLimitingModel
+@{
+    ViewData["Title"] = "限流管理";
+    ViewData["Subtitle"] = "管理全局限流策略与单路由限流配置";
+    bool isAdmin = ViewData["IsAdmin"] is bool b && b;
+}
+
+<div class="alert alert-info mb-4">
+    <span>
+        Period 格式：<code>1s</code> / <code>5m</code> / <code>1h</code> / <code>1d</code>。
+        <code>Limit</code> 为窗口内的最大请求数。
+        <code>PeriodTimespan</code> 为客户端达到 Limit 后需等待的秒数。
+    </span>
+</div>
+
+<!-- 全局限流 -->
+<div class="card bg-base-100 shadow mb-6">
+    <div class="card-body">
+        <h2 class="card-title">全局限流（GlobalConfiguration.RateLimitOptions）</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+            <label class="form-control">
+                <div class="label"><span class="label-text">DisableRateLimitHeaders</span></div>
+                <select id="g-disable" class="select select-bordered">
+                    <option value="">（未设置）</option>
+                    <option value="false">false（返回 X-Rate-Limit-* 响应头）</option>
+                    <option value="true">true（不返回响应头）</option>
+                </select>
+            </label>
+            <label class="form-control">
+                <div class="label"><span class="label-text">HttpStatusCode</span></div>
+                <input id="g-status" type="number" class="input input-bordered" placeholder="429" />
+            </label>
+            <label class="form-control md:col-span-2">
+                <div class="label"><span class="label-text">QuotaExceededMessage</span></div>
+                <input id="g-msg" class="input input-bordered" placeholder="API calls quota exceeded" />
+            </label>
+            <label class="form-control">
+                <div class="label"><span class="label-text">ClientIdHeader</span></div>
+                <input id="g-header" class="input input-bordered" placeholder="ClientId" />
+            </label>
+        </div>
+        <div class="card-actions justify-end mt-3">
+            @if (isAdmin)
+            {
+                <button class="btn btn-sm btn-error btn-outline" onclick="clearGlobal()">清空</button>
+                <button class="btn btn-sm btn-primary" onclick="saveGlobal()">保存全局</button>
+            }
+            else
+            {
+                <span class="text-xs opacity-50">需 Admin 权限</span>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- 单路由限流列表 -->
+<div class="card bg-base-100 shadow">
+    <div class="card-body p-0">
+        <div class="flex items-center p-3 border-b border-base-300">
+            <h3 class="font-semibold">路由级限流</h3>
+            <button class="btn btn-sm ml-auto" onclick="loadRoutes()">刷新</button>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>UpstreamPath</th>
+                        <th>Enable</th>
+                        <th>Limit</th>
+                        <th>Period</th>
+                        <th>PeriodTimespan</th>
+                        <th class="w-44">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="r-tbody"><tr><td colspan="7" class="text-center opacity-50">加载中…</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- 路由编辑对话框 -->
+<dialog id="dlg-route" class="modal">
+    <div class="modal-box max-w-lg">
+        <h3 class="font-bold text-lg mb-4">路由 [<span id="rdlg-idx"></span>] <span id="rdlg-path" class="font-mono text-sm"></span></h3>
+        <input id="rdlg-i" type="hidden" />
+        <label class="form-control mb-2">
+            <div class="label cursor-pointer"><span class="label-text">EnableRateLimiting</span>
+                <input id="rdlg-enable" type="checkbox" class="toggle toggle-primary" /></div>
+        </label>
+        <div class="grid grid-cols-2 gap-3">
+            <label class="form-control">
+                <div class="label"><span class="label-text">Limit</span></div>
+                <input id="rdlg-limit" type="number" class="input input-bordered" placeholder="100" />
+            </label>
+            <label class="form-control">
+                <div class="label"><span class="label-text">Period</span></div>
+                <input id="rdlg-period" class="input input-bordered" placeholder="1s / 5m / 1h" />
+            </label>
+            <label class="form-control col-span-2">
+                <div class="label"><span class="label-text">PeriodTimespan（秒）</span></div>
+                <input id="rdlg-pt" type="number" step="0.1" class="input input-bordered" placeholder="1" />
+            </label>
+            <label class="form-control col-span-2">
+                <div class="label"><span class="label-text">ClientWhitelist（按行分隔）</span></div>
+                <textarea id="rdlg-wl" class="textarea textarea-bordered" rows="3" placeholder="trusted-app-1&#10;trusted-app-2"></textarea>
+            </label>
+        </div>
+        <div class="modal-action">
+            <button class="btn" onclick="document.getElementById('dlg-route').close()">取消</button>
+            <button class="btn btn-error btn-outline" onclick="clearRoute()">清空</button>
+            <button class="btn btn-primary" onclick="saveRoute()">保存</button>
+        </div>
+    </div>
+</dialog>
+
+@section Scripts {
+    <script>
+        const isAdmin = @(isAdmin ? "true" : "false");
+
+        async function loadGlobal() {
+            try {
+                const g = await adminFetch('/admin-api/rate-limit/global') || {};
+                document.getElementById('g-disable').value = g.disableRateLimitHeaders === undefined || g.disableRateLimitHeaders === null
+                    ? '' : (g.disableRateLimitHeaders ? 'true' : 'false');
+                document.getElementById('g-status').value = g.httpStatusCode ?? '';
+                document.getElementById('g-msg').value = g.quotaExceededMessage ?? '';
+                document.getElementById('g-header').value = g.clientIdHeader ?? '';
+            } catch (e) { adminToast('读取全局限流失败：' + (e.message || e), 'error'); }
+        }
+
+        async function saveGlobal() {
+            const body = {};
+            const dv = document.getElementById('g-disable').value;
+            if (dv) body.disableRateLimitHeaders = dv === 'true';
+            const sv = document.getElementById('g-status').value;
+            if (sv) body.httpStatusCode = Number(sv);
+            const mv = document.getElementById('g-msg').value;
+            if (mv) body.quotaExceededMessage = mv;
+            const hv = document.getElementById('g-header').value;
+            if (hv) body.clientIdHeader = hv;
+            try {
+                await adminFetch('/admin-api/rate-limit/global', { method: 'PUT', body: JSON.stringify(body) });
+                adminToast('已保存', 'success');
+            } catch (e) { adminToast(e.message || '保存失败', 'error'); }
+        }
+
+        async function clearGlobal() {
+            if (!confirm('确认清空全局限流配置？')) return;
+            try {
+                await adminFetch('/admin-api/rate-limit/global', { method: 'DELETE' });
+                adminToast('已清空', 'success');
+                loadGlobal();
+            } catch (e) { adminToast(e.message || '清空失败', 'error'); }
+        }
+
+        async function loadRoutes() {
+            const tbody = document.getElementById('r-tbody');
+            try {
+                const cfg = await adminFetch('/admin-api/configuration');
+                const routes = (cfg && cfg.Routes) || (cfg && cfg.routes) || [];
+                if (routes.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="text-center opacity-50">（无路由）</td></tr>'; return; }
+                tbody.innerHTML = routes.map((r, i) => {
+                    const rl = r.RateLimitOptions || r.rateLimitOptions;
+                    const enable = rl && (rl.EnableRateLimiting ?? rl.enableRateLimiting);
+                    const limit = rl && (rl.Limit ?? rl.limit);
+                    const period = rl && (rl.Period ?? rl.period);
+                    const pt = rl && (rl.PeriodTimespan ?? rl.periodTimespan);
+                    return `<tr>
+                        <td>${i}</td>
+                        <td><code class="text-xs">${r.UpstreamPathTemplate || r.upstreamPathTemplate || ''}</code></td>
+                        <td>${enable ? '<span class="badge badge-success">on</span>' : '<span class="badge badge-ghost">off</span>'}</td>
+                        <td>${limit ?? '-'}</td>
+                        <td>${period ?? '-'}</td>
+                        <td>${pt ?? '-'}</td>
+                        <td>${isAdmin
+                            ? `<button class="btn btn-xs" onclick="editRoute(${i})">编辑</button>`
+                            : '<span class="opacity-50 text-xs">需 Admin</span>'}</td>
+                    </tr>`;
+                }).join('');
+            } catch (e) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-error">${e.message || e}</td></tr>`;
+            }
+        }
+
+        async function editRoute(i) {
+            const dlg = document.getElementById('dlg-route');
+            document.getElementById('rdlg-idx').textContent = i;
+            document.getElementById('rdlg-i').value = i;
+            try {
+                const cfg = await adminFetch('/admin-api/configuration');
+                const routes = (cfg && cfg.Routes) || (cfg && cfg.routes) || [];
+                const r = routes[i] || {};
+                document.getElementById('rdlg-path').textContent = r.UpstreamPathTemplate || r.upstreamPathTemplate || '';
+                const rl = (await adminFetch('/admin-api/routes/' + i + '/rate-limit')) || {};
+                document.getElementById('rdlg-enable').checked = !!rl.enableRateLimiting;
+                document.getElementById('rdlg-limit').value = rl.limit ?? '';
+                document.getElementById('rdlg-period').value = rl.period ?? '';
+                document.getElementById('rdlg-pt').value = rl.periodTimespan ?? '';
+                document.getElementById('rdlg-wl').value = (rl.clientWhitelist || []).join('\n');
+            } catch (e) { adminToast(e.message || '读取失败', 'error'); return; }
+            dlg.showModal();
+        }
+
+        async function saveRoute() {
+            const i = document.getElementById('rdlg-i').value;
+            const wl = document.getElementById('rdlg-wl').value
+                .split('\n').map(s => s.trim()).filter(Boolean);
+            const body = {
+                enableRateLimiting: document.getElementById('rdlg-enable').checked,
+                limit: Number(document.getElementById('rdlg-limit').value) || null,
+                period: document.getElementById('rdlg-period').value.trim() || null,
+                periodTimespan: Number(document.getElementById('rdlg-pt').value) || null,
+                clientWhitelist: wl.length ? wl : null,
+            };
+            try {
+                await adminFetch('/admin-api/routes/' + i + '/rate-limit', { method: 'PUT', body: JSON.stringify(body) });
+                document.getElementById('dlg-route').close();
+                adminToast('已保存', 'success');
+                loadRoutes();
+            } catch (e) { adminToast(e.message || '保存失败', 'error'); }
+        }
+
+        async function clearRoute() {
+            const i = document.getElementById('rdlg-i').value;
+            if (!confirm('确认清空该路由的限流配置？')) return;
+            try {
+                await adminFetch('/admin-api/routes/' + i + '/rate-limit', { method: 'DELETE' });
+                document.getElementById('dlg-route').close();
+                adminToast('已清空', 'success');
+                loadRoutes();
+            } catch (e) { adminToast(e.message || '清空失败', 'error'); }
+        }
+
+        loadGlobal();
+        loadRoutes();
+    </script>
+}

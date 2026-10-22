@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.DistributedTransaction</name>
+    </assembly>
+    <members>
+        <member name="T:SyZero.DistributedTransaction.MemoryOutboxStore">
+            <summary>
+            默认进程内 <see cref="T:SyZero.DistributedTransaction.IOutboxStore"/> 实现，仅适合演示与单元测试。
+            生产请改用 EF Core / SqlSugar / MongoDB 实现，并把 EnqueueAsync 加入业务事务。
+            </summary>
+        </member>
+        <member name="T:SyZero.DistributedTransaction.OutboxBackgroundService">
+            <summary>
+            Outbox 后台投递服务：定时从 <see cref="T:SyZero.DistributedTransaction.IOutboxStore"/> 拉待发送消息，发布到 <see cref="T:SyZero.EventBus.IEventBus"/>。
+            </summary>
+        </member>
+        <member name="T:SyZero.DistributedTransaction.OutboxMessage">
+            <summary>
+            Outbox 消息：业务事务完成时与业务数据**同库同事务**写入；后台投递器再异步发布到事件总线。
+            </summary>
+        </member>
+        <member name="T:SyZero.DistributedTransaction.IOutboxStore">
+            <summary>
+            Outbox 存储抽象。业务可基于 EF / SqlSugar / MongoDB 实现真正的事务一致性。
+            </summary>
+        </member>
+        <member name="T:SyZero.DistributedTransaction.OutboxOptions">
+            <summary>
+            Outbox 后台投递配置。
+            </summary>
+        </member>
+        <member name="P:SyZero.DistributedTransaction.OutboxOptions.PollIntervalSeconds">
+            <summary>
+            轮询间隔（秒），默认 2 秒。
+            </summary>
+        </member>
+        <member name="P:SyZero.DistributedTransaction.OutboxOptions.BatchSize">
+            <summary>
+            单批处理消息数量，默认 100。
+            </summary>
+        </member>
+        <member name="P:SyZero.DistributedTransaction.OutboxOptions.MaxRetryCount">
+            <summary>
+            最大重试次数（达到后保留错误状态等待人工处理），默认 5。
+            </summary>
+        </member>
+        <member name="T:SyZero.DistributedTransaction.Saga.ISagaStep`1">
+            <summary>
+            Saga 步骤：包含正向动作 <see cref="M:SyZero.DistributedTransaction.Saga.ISagaStep`1.ExecuteAsync(`0,System.Threading.CancellationToken)"/> 与补偿动作 <see cref="M:SyZero.DistributedTransaction.Saga.ISagaStep`1.CompensateAsync(`0,System.Threading.CancellationToken)"/>。
+            </summary>
+        </member>
+        <member name="T:SyZero.DistributedTransaction.Saga.SagaCoordinator`1">
+            <summary>
+            简易 Saga 编排器：顺序执行步骤，任一步失败则按已执行步骤的反向顺序补偿。
+            </summary>
+        </member>
+        <member name="T:SyZero.DistributedTransaction.Saga.SagaResult">
+            <summary>
+            Saga 执行结果。
+            </summary>
+        </member>
+        <member name="T:SyZero.SyZeroDistributedTransactionExtension">
+            <summary>
+            SyZero.DistributedTransaction 注册扩展。
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroDistributedTransactionExtension.AddSyZeroOutbox(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,System.Action{SyZero.DistributedTransaction.OutboxOptions},System.String)">
+            <summary>
+            注册 Outbox 投递（默认内存存储 + 后台 BackgroundService 投递到 IEventBus）。
+            业务可注册自己的 IOutboxStore 替换默认实现。
+            </summary>
+        </member>
+    </members>
+</doc>

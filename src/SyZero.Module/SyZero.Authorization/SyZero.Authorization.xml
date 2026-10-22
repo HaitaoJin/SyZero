@@ -1,0 +1,476 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.Authorization</name>
+    </assembly>
+    <members>
+        <member name="T:SyZero.Authorization.Entities.Permission">
+            <summary>
+            权限实体。
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.Permission.Name">
+            <summary>
+            权限名称（编程使用，全局唯一，建议形如 "MyApp.Users.Create"）
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.Permission.DisplayName">
+            <summary>
+            显示名
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.Permission.Description">
+            <summary>
+            描述
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.Permission.GroupId">
+            <summary>
+            所属权限组 Id（可空：未分组的散权限）
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.Permission.ParentId">
+            <summary>
+            父权限 Id（用于权限的层级关系，可空）
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.Permission.IsEnabled">
+            <summary>
+            是否启用
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.Permission.Sort">
+            <summary>
+            排序
+            </summary>
+        </member>
+        <member name="T:SyZero.Authorization.Entities.PermissionGroup">
+            <summary>
+            权限组实体（用于树形组织权限定义，类似 ABP PermissionGroup）。
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.PermissionGroup.Name">
+            <summary>
+            名称（编程使用，唯一）
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.PermissionGroup.DisplayName">
+            <summary>
+            显示名
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.PermissionGroup.ParentId">
+            <summary>
+            父级权限组 Id（顶层为 null）
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.PermissionGroup.Description">
+            <summary>
+            描述
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.PermissionGroup.Sort">
+            <summary>
+            排序（同级内升序）
+            </summary>
+        </member>
+        <member name="T:SyZero.Authorization.Entities.RefreshToken">
+            <summary>
+            刷新令牌持久化记录。Token 字段存储 SHA-256 哈希，不存原始值。
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.RefreshToken.TokenHash">
+            <summary>
+            原始 token 的 SHA-256 哈希（Base64Url 编码）。
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.RefreshToken.ReplacedByTokenHash">
+            <summary>
+            轮转后被替换为哪个新 token（哈希）。用于检测旧 token 复用。
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.RefreshToken.CreatedByIp">
+            <summary>
+            创建时的客户端 IP（可选）。
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.RefreshToken.IsActive">
+            <summary>
+            是否仍可用：未撤销且未过期。
+            </summary>
+        </member>
+        <member name="T:SyZero.Authorization.Entities.Role">
+            <summary>
+            角色实体。
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.Role.Name">
+            <summary>
+            角色名称（唯一）
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.Role.NormalizedName">
+            <summary>
+            规范化角色名（大写）
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.Role.DisplayName">
+            <summary>
+            显示名
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.Role.Description">
+            <summary>
+            描述
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.Role.ConcurrencyStamp">
+            <summary>
+            并发标识
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.Role.IsStatic">
+            <summary>
+            是否系统内置（不可删除）
+            </summary>
+        </member>
+        <member name="T:SyZero.Authorization.Entities.RolePermission">
+            <summary>
+            角色权限授权关联实体。
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.RolePermission.RoleId">
+            <summary>
+            角色 Id
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.RolePermission.PermissionName">
+            <summary>
+            权限名称（与 <see cref="P:SyZero.Authorization.Entities.Permission.Name"/> 对应）
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.RolePermission.IsGranted">
+            <summary>
+            是否授予；false 表示显式拒绝（高于角色继承）
+            </summary>
+        </member>
+        <member name="T:SyZero.Authorization.Entities.User">
+            <summary>
+            用户实体。
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.User.UserName">
+            <summary>
+            登录名（唯一）
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.User.NormalizedUserName">
+            <summary>
+            规范化登录名（大写，用于唯一性查询）
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.User.Email">
+            <summary>
+            邮箱
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.User.NormalizedEmail">
+            <summary>
+            规范化邮箱
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.User.EmailConfirmed">
+            <summary>
+            邮箱是否已确认
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.User.PasswordHash">
+            <summary>
+            密码哈希
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.User.SecurityStamp">
+            <summary>
+            安全戳（修改密码/重置时变更）
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.User.ConcurrencyStamp">
+            <summary>
+            并发标识
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.User.PhoneNumber">
+            <summary>
+            手机号
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.User.PhoneNumberConfirmed">
+            <summary>
+            手机号是否已确认
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.User.TwoFactorEnabled">
+            <summary>
+            是否启用双因素认证
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.User.LockoutEnd">
+            <summary>
+            锁定到期时间
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.User.LockoutEnabled">
+            <summary>
+            是否允许被锁定
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.User.AccessFailedCount">
+            <summary>
+            失败登录尝试次数
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.User.IsActive">
+            <summary>
+            是否激活
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.User.DisplayName">
+            <summary>
+            显示名
+            </summary>
+        </member>
+        <member name="T:SyZero.Authorization.Entities.UserPermission">
+            <summary>
+            直接授予用户的权限关联（覆盖角色权限）。
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.UserPermission.UserId">
+            <summary>
+            用户 Id
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.UserPermission.PermissionName">
+            <summary>
+            权限名称
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.UserPermission.IsGranted">
+            <summary>
+            是否授予；false 表示显式拒绝（高于角色继承）
+            </summary>
+        </member>
+        <member name="T:SyZero.Authorization.Entities.UserRole">
+            <summary>
+            用户与角色的关联实体。
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.UserRole.UserId">
+            <summary>
+            用户 Id
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Entities.UserRole.RoleId">
+            <summary>
+            角色 Id
+            </summary>
+        </member>
+        <member name="T:SyZero.Authorization.Jwt.IRefreshTokenManager">
+            <summary>
+            刷新令牌（Refresh Token）管理。
+            安全约定：
+            - 原始 token 仅在签发/轮转时返回给调用方，DB 仅存 SHA-256 哈希；
+            - 轮转链通过 <see cref="P:SyZero.Authorization.Entities.RefreshToken.ReplacedByTokenHash"/> 串联；
+            - 已撤销 token 再次使用 → 视为泄漏，自动级联撤销该用户全部活跃 token。
+            </summary>
+        </member>
+        <member name="M:SyZero.Authorization.Jwt.IRefreshTokenManager.IssueAsync(System.Int64,System.Collections.Generic.IEnumerable{System.Security.Claims.Claim},System.String,System.Threading.CancellationToken)">
+            <summary>
+            为用户签发新的 RefreshToken（同时返回 access_token + refresh_token）。
+            </summary>
+        </member>
+        <member name="M:SyZero.Authorization.Jwt.IRefreshTokenManager.RotateAsync(System.String,System.Collections.Generic.IEnumerable{System.Security.Claims.Claim},System.String,System.Threading.CancellationToken)">
+            <summary>
+            用 RefreshToken 兑换新一对 token（旧 token 失效，写入轮转链）。
+            </summary>
+        </member>
+        <member name="M:SyZero.Authorization.Jwt.IRefreshTokenManager.RevokeAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            撤销单个 RefreshToken。
+            </summary>
+        </member>
+        <member name="M:SyZero.Authorization.Jwt.IRefreshTokenManager.RevokeAllAsync(System.Int64,System.Threading.CancellationToken)">
+            <summary>
+            撤销指定用户的全部活跃 RefreshToken（如修改密码后）。
+            </summary>
+        </member>
+        <member name="T:SyZero.Authorization.Jwt.JwtOptions">
+            <summary>
+            JWT 配置选项。
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Jwt.JwtOptions.Issuer">
+            <summary>
+            签发者
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Jwt.JwtOptions.Audience">
+            <summary>
+            受众
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Jwt.JwtOptions.SecretKey">
+            <summary>
+            对称密钥（HMAC SHA256）。生产环境务必使用强随机长字符串。
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Jwt.JwtOptions.AccessTokenExpirationMinutes">
+            <summary>
+            访问令牌过期时间（分钟）
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Jwt.JwtOptions.RefreshTokenExpirationDays">
+            <summary>
+            刷新令牌过期时间（天）
+            </summary>
+        </member>
+        <member name="T:SyZero.Authorization.Jwt.JwtTokenManager">
+            <summary>
+            默认基于 HMAC-SHA256 的 JWT 实现。
+            </summary>
+        </member>
+        <member name="T:SyZero.Authorization.Jwt.RefreshTokenManager">
+            <summary>
+            默认 RefreshToken 实现：32 字节加密随机 + Base64Url；DB 仅存 SHA-256 哈希。
+            </summary>
+        </member>
+        <member name="T:SyZero.Authorization.Permissions.PermissionDefinitionContext">
+            <summary>
+            权限定义上下文，由 <see cref="T:SyZero.Authorization.Permissions.IPermissionDefinitionProvider"/> 实现类填充。
+            </summary>
+        </member>
+        <member name="M:SyZero.Authorization.Permissions.PermissionDefinitionContext.AddGroup(System.String,System.String)">
+            <summary>
+            新增一个顶层权限组。
+            </summary>
+        </member>
+        <member name="T:SyZero.Authorization.Permissions.IPermissionDefinitionProvider">
+            <summary>
+            权限定义提供者。模块通过实现此接口注入权限。
+            </summary>
+        </member>
+        <member name="M:SyZero.Authorization.Permissions.IPermissionDefinitionProvider.Define(SyZero.Authorization.Permissions.PermissionDefinitionContext)">
+            <summary>
+            定义权限。
+            </summary>
+        </member>
+        <member name="T:SyZero.Authorization.Permissions.PermissionDefinition">
+            <summary>
+            权限定义（运行期内存对象）。
+            </summary>
+        </member>
+        <member name="M:SyZero.Authorization.Permissions.PermissionDefinition.AddChild(System.String,System.String)">
+            <summary>
+            添加子权限。
+            </summary>
+        </member>
+        <member name="T:SyZero.Authorization.Permissions.PermissionDefinitionManager">
+            <summary>
+            权限定义管理器，负责在启动时聚合所有 <see cref="T:SyZero.Authorization.Permissions.IPermissionDefinitionProvider"/> 的定义。
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Permissions.PermissionDefinitionManager.Permissions">
+            <summary>
+            全部权限定义（扁平）。
+            </summary>
+        </member>
+        <member name="P:SyZero.Authorization.Permissions.PermissionDefinitionManager.Groups">
+            <summary>
+            顶层权限组。
+            </summary>
+        </member>
+        <member name="M:SyZero.Authorization.Permissions.PermissionDefinitionManager.Get(System.String)">
+            <summary>
+            按名称获取权限定义。
+            </summary>
+        </member>
+        <member name="T:SyZero.Authorization.Permissions.PermissionGroupDefinition">
+            <summary>
+            权限组定义（运行期内存对象）。
+            </summary>
+        </member>
+        <member name="M:SyZero.Authorization.Permissions.PermissionGroupDefinition.AddGroup(System.String,System.String)">
+            <summary>
+            添加子权限组。
+            </summary>
+        </member>
+        <member name="M:SyZero.Authorization.Permissions.PermissionGroupDefinition.AddPermission(System.String,System.String)">
+            <summary>
+            在当前组下添加权限。
+            </summary>
+        </member>
+        <member name="T:SyZero.Authorization.Permissions.PermissionSyncHostedService">
+            <summary>
+            启动时把 <see cref="T:SyZero.Authorization.Permissions.IPermissionDefinitionProvider"/> 提供的权限定义同步到数据库。
+            </summary>
+        </member>
+        <member name="T:SyZero.Authorization.Permissions.RbacPermissionChecker">
+            <summary>
+            基于 RBAC 数据库的权限检查器（替换 SyZero 默认 PermissionChecker）。
+            优先级：UserPermission（拒绝/授予）覆盖 RolePermission；其次按 ISySession.Permission 兜底。
+            </summary>
+        </member>
+        <member name="T:SyZero.Authorization.Stores.SyZeroRoleStore">
+            <summary>
+            基于 SyZero <see cref="T:SyZero.Domain.Repository.IRepository`1"/> 的 IdentityRole 存储实现。
+            </summary>
+        </member>
+        <member name="T:SyZero.Authorization.Stores.SyZeroUserStore">
+            <summary>
+            基于 SyZero <see cref="T:SyZero.Domain.Repository.IRepository`1"/> 的 IdentityUser 存储实现，
+            实现 IUserPasswordStore + IUserEmailStore + IUserSecurityStampStore + IUserPhoneNumberStore + IUserLockoutStore。
+            </summary>
+        </member>
+        <member name="T:SyZero.Authorization.SyZeroAccountManager">
+            <summary>
+            账户便捷操作粘合层：登出 / 全终端登出 / 改密（自动撤销全部刷新令牌）。
+            业务侧推荐注入此类而非直接组合 <see cref="T:Microsoft.AspNetCore.Identity.UserManager`1"/> + <see cref="T:SyZero.Authorization.Jwt.IRefreshTokenManager"/>。
+            </summary>
+        </member>
+        <member name="M:SyZero.Authorization.SyZeroAccountManager.LogoutAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            单终端登出：仅撤销当前 RefreshToken。
+            </summary>
+        </member>
+        <member name="M:SyZero.Authorization.SyZeroAccountManager.LogoutAllAsync(System.Int64,System.Threading.CancellationToken)">
+            <summary>
+            全终端登出：撤销该用户全部活跃 RefreshToken。
+            </summary>
+        </member>
+        <member name="M:SyZero.Authorization.SyZeroAccountManager.ChangePasswordAsync(System.Int64,System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            改密：通过旧密码校验，成功后强制全终端登出。
+            </summary>
+        </member>
+        <member name="M:SyZero.Authorization.SyZeroAccountManager.ResetPasswordAsync(System.Int64,System.String,System.Threading.CancellationToken)">
+            <summary>
+            重置密码（管理员场景，无需旧密码）：重置后强制全终端登出。
+            </summary>
+        </member>
+        <member name="T:SyZero.Authorization.SyZeroAuthorizationExtension">
+            <summary>
+            SyZero.Authorization 注册与启用扩展。
+            </summary>
+        </member>
+        <member name="M:SyZero.Authorization.SyZeroAuthorizationExtension.AddSyZeroAuthorization(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,System.Action{SyZero.Authorization.Jwt.JwtOptions})">
+            <summary>
+            注册 SyZero RBAC + JWT + ASP.NET Core Identity Manager（基于 SyZero 仓储）。
+            使用前请确保已注册 IRepository&lt;User/Role/UserRole/RolePermission/UserPermission/Permission/PermissionGroup&gt; Provider。
+            </summary>
+        </member>
+        <member name="M:SyZero.Authorization.SyZeroAuthorizationExtension.UseSyZeroAuthorization(Microsoft.AspNetCore.Builder.IApplicationBuilder)">
+            <summary>
+            启用 SyZero 鉴权管线（必须在 UseRouting 之后、UseEndpoints 之前调用）。
+            </summary>
+        </member>
+    </members>
+</doc>

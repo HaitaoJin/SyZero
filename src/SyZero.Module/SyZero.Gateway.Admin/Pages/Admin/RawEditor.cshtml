@@ -1,0 +1,67 @@
+@page "/admin/raw-editor"
+@model SyZero.Gateway.Admin.Pages.Admin.RawEditorModel
+@{
+    ViewData["Title"] = "原生 JSON 编辑器";
+    ViewData["Subtitle"] = "直接查看 / 替换整份网关配置 JSON";
+}
+
+<div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+    <div class="flex gap-2 flex-wrap">
+        <button class="btn btn-sm" onclick="loadRaw()">从服务器载入</button>
+        <a class="btn btn-sm" href="/admin-api/configuration?download=1" target="_blank">下载 configuration.json</a>
+        <label class="btn btn-sm" for="upload-input">上传文件</label>
+        <input type="file" id="upload-input" class="hidden" accept="application/json,.json" onchange="onUpload(event)" />
+        <button class="btn btn-sm" onclick="validateOnly()">校验</button>
+        <button class="btn btn-sm btn-primary" onclick="saveRaw()">保存（全量替换）</button>
+    </div>
+</div>
+
+<div class="alert alert-warning mb-4">
+    <span>⚠ 「保存」会全量替换 <code>configuration.json</code>（自动备份当前版本），随后触发热下发。请仔细校验后再提交。</span>
+</div>
+
+<textarea id="raw-area" class="textarea textarea-bordered w-full font-mono text-sm" rows="28" placeholder='{ "Routes": [], "SwaggerEndPoints": [] }'></textarea>
+<div id="raw-status" class="mt-2 text-sm opacity-70">未加载</div>
+
+@section Scripts {
+    <script>
+        const area = () => document.getElementById('raw-area');
+        const status = (msg, ok) => {
+            const el = document.getElementById('raw-status');
+            el.textContent = msg;
+            el.className = 'mt-2 text-sm ' + (ok ? 'text-success' : 'text-warning');
+        };
+        async function loadRaw() {
+            try {
+                const resp = await fetch('/admin-api/configuration');
+                const text = await resp.text();
+                area().value = pretty(text);
+                status('已载入服务器版本（' + text.length + ' 字节）', true);
+            } catch (e) { adminToast(e.message, 'error'); }
+        }
+        function pretty(text) {
+            try { return JSON.stringify(JSON.parse(text), null, 2); } catch { return text; }
+        }
+        function validateOnly() {
+            try { JSON.parse(area().value); status('JSON 校验通过', true); }
+            catch (e) { status('JSON 校验失败：' + e.message, false); }
+        }
+        function onUpload(ev) {
+            const f = ev.target.files && ev.target.files[0];
+            if (!f) return;
+            const reader = new FileReader();
+            reader.onload = () => { area().value = pretty(String(reader.result)); status('已读入本地文件 ' + f.name, true); };
+            reader.readAsText(f, 'utf-8');
+        }
+        async function saveRaw() {
+            try {
+                const obj = JSON.parse(area().value);
+                if (!confirm('确认全量替换当前网关配置？')) return;
+                await adminFetch('/admin-api/configuration', { method: 'PUT', body: JSON.stringify(obj) });
+                status('保存成功', true);
+                adminToast('保存成功', 'success');
+            } catch (e) { adminToast(e.message, 'error'); status(e.message, false); }
+        }
+        loadRaw();
+    </script>
+}

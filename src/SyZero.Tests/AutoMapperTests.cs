@@ -1,4 +1,4 @@
-using AutoMapper;
+﻿using AutoMapper;
 using Microsoft.Extensions.DependencyInjection;
 using SyZero.ObjectMapper;
 using Xunit;
@@ -23,7 +23,7 @@ public class AutoMapperTests
             Values = ["a", "b"]
         });
 
-        Assert.IsType<SyZero.AutoMapper.ObjectMapper>(objectMapper);
+        Assert.IsType<SyZero.ObjectMapping.AutoMapper.ObjectMapper>(objectMapper);
         Assert.Equal(7, destination.Id);
         Assert.Equal("alice", destination.Name);
         Assert.Equal(["a", "b"], destination.Values);
@@ -61,10 +61,10 @@ public class AutoMapperTests
         var registrations = services.Where(descriptor => descriptor.ServiceType == typeof(IObjectMapper)).ToList();
 
         Assert.Single(registrations);
-        Assert.Equal(typeof(SyZero.AutoMapper.ObjectMapper), registrations[0].ImplementationType);
+        Assert.Equal(typeof(SyZero.ObjectMapping.AutoMapper.ObjectMapper), registrations[0].ImplementationType);
 
         using var provider = services.BuildServiceProvider();
-        Assert.IsType<SyZero.AutoMapper.ObjectMapper>(provider.GetRequiredService<IObjectMapper>());
+        Assert.IsType<SyZero.ObjectMapping.AutoMapper.ObjectMapper>(provider.GetRequiredService<IObjectMapper>());
     }
 
     private sealed class TestProfile : Profile
@@ -93,3 +93,4 @@ public class AutoMapperTests
         public List<string>? Values { get; set; }
     }
 }
+

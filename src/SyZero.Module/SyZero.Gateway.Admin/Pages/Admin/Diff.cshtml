@@ -1,0 +1,66 @@
+@page "/admin/diff"
+@model SyZero.Gateway.Admin.Pages.Admin.DiffModel
+@{
+    ViewData["Title"] = "运行时 Diff";
+    ViewData["Subtitle"] = "对比磁盘配置与当前运行时配置（行级高亮）";
+}
+
+<div class="flex justify-between items-center mb-4">
+    <button class="btn btn-sm" onclick="loadDiff()">刷新</button>
+</div>
+
+<div id="notice" class="alert alert-info mb-4 hidden"><span id="notice-text"></span></div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+    <div class="card bg-base-100 shadow"><div class="card-body p-3"><h3 class="font-bold text-sm opacity-60">磁盘 (Stored)</h3><pre class="text-xs overflow-auto max-h-96"><code id="stored"></code></pre></div></div>
+    <div class="card bg-base-100 shadow"><div class="card-body p-3"><h3 class="font-bold text-sm opacity-60">运行时 (Runtime)</h3><pre class="text-xs overflow-auto max-h-96"><code id="runtime"></code></pre></div></div>
+</div>
+
+<div class="card bg-base-100 shadow">
+    <div class="card-body">
+        <h2 class="card-title text-base">行级 Diff</h2>
+        <pre class="text-xs overflow-auto max-h-[32rem] leading-snug font-mono whitespace-pre-wrap" id="diff-out">（尚未计算）</pre>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/diff@5/dist/diff.min.js"></script>
+    <script>
+        function setNotice(msg) {
+            const n = document.getElementById('notice');
+            if (!msg) { n.classList.add('hidden'); return; }
+            n.classList.remove('hidden');
+            document.getElementById('notice-text').textContent = msg;
+        }
+        function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]); }
+        async function loadDiff() {
+            try {
+                const data = await adminFetch('/admin-api/runtime/diff');
+                const stored = data.stored || '';
+                const runtime = data.runtime;
+                document.getElementById('stored').textContent = stored;
+                document.getElementById('runtime').textContent = runtime || '（无）';
+                if (!runtime) {
+                    setNotice('未注册 IGateway 或读取运行时配置失败，无法计算 Diff。');
+                    document.getElementById('diff-out').textContent = '（不可用）';
+                    return;
+                }
+                setNotice('');
+                if (!window.Diff) { document.getElementById('diff-out').textContent = '加载 diff 库失败'; return; }
+                const parts = Diff.diffLines(stored, runtime);
+                let html = '';
+                for (const p of parts) {
+                    const cls = p.added ? 'text-success' : p.removed ? 'text-error' : 'opacity-60';
+                    const prefix = p.added ? '+ ' : p.removed ? '- ' : '  ';
+                    const lines = p.value.split(/\r?\n/);
+                    if (lines[lines.length - 1] === '') lines.pop();
+                    for (const ln of lines) {
+                        html += `<span class="${cls}">${escapeHtml(prefix + ln)}</span>\n`;
+                    }
+                }
+                document.getElementById('diff-out').innerHTML = html || '<span class="opacity-60">（无差异）</span>';
+            } catch (e) { adminToast(e.message, 'error'); }
+        }
+        loadDiff();
+    </script>
+}

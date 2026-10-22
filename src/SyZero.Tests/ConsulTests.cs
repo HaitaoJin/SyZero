@@ -1,12 +1,12 @@
-using System.Net;
+﻿using System.Net;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using NConsul;
 using NConsul.Interfaces;
 using SyZero.Cache;
-using SyZero.Consul;
-using SyZero.Consul.Config;
+using SyZero.ServiceDiscovery.Consul;
+using SyZero.ServiceDiscovery.Consul.Config;
 using SyZero.Runtime.Security;
 using SyZero.Service;
 using Xunit;
@@ -324,3 +324,4 @@ public class ConsulTests
         }
     }
 }
+
