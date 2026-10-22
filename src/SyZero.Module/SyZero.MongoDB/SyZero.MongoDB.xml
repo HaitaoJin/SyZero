@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.MongoDB</name>
+    </assembly>
+    <members>
+        <member name="T:SyZero.MongoDB.MongoRepository`1">
+            <summary>
+            默认 long 主键的 Mongo 仓储（兼容历史用法）。
+            </summary>
+        </member>
+        <member name="T:SyZero.MongoDB.MongoRepository`2">
+            <summary>
+            通用 Mongo 仓储（自定义主键类型）。
+            </summary>
+        </member>
+        <member name="T:SyZero.SyZeroMongoDBExtension">
+            <summary>
+            MongoDB 扩展方法
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroMongoDBExtension.AddSyZeroMongoDB(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            使用 AppConfig 中的 MongoDB 配置注册服务
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroMongoDBExtension.AddSyZeroMongoDB(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,System.String)">
+            <summary>
+            使用指定配置注册服务
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroMongoDBExtension.AddSyZeroMongoDB(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Action{SyZero.MongoDB.MongoOptions})">
+            <summary>
+            使用默认配置并允许额外覆盖注册服务
+            </summary>
+        </member>
+    </members>
+</doc>

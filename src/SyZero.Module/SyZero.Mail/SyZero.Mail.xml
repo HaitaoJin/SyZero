@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.Mail</name>
+    </assembly>
+    <members>
+        <member name="T:SyZero.Mail.ISyMailSender">
+            <summary>
+            SyZero 邮件发送抽象。业务侧依赖此接口，避免直接耦合 SMTP / 第三方 SaaS。
+            </summary>
+        </member>
+        <member name="T:SyZero.Mail.SyMailOptions">
+            <summary>SMTP 配置。</summary>
+        </member>
+        <member name="T:SyZero.Mail.SmtpMailSender">
+            <summary>基于 <see cref="T:System.Net.Mail.SmtpClient"/> 的默认实现。</summary>
+        </member>
+        <member name="T:SyZero.Mail.ConsoleMailSender">
+            <summary>仅写日志的占位实现，便于开发环境与单测使用。</summary>
+        </member>
+        <member name="T:SyZero.SyZeroMailExtension">
+            <summary>SyZero.Mail 模块的 DI 扩展。</summary>
+        </member>
+    </members>
+</doc>

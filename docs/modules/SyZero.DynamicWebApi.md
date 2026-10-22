@@ -13,6 +13,7 @@ dotnet add package SyZero.DynamicWebApi
 - 🚀 **动态生成** - 根据应用服务自动生成 Web API
 - 🎯 **RESTful** - 自动映射为 RESTful 风格
 - 📖 **Swagger** - 自动生成 API 文档
+- 🧬 **Provider 抽象** - 内部类型筛选 / 名称归一化 / 程序集扫描 / 特性缓存等公共能力均下沉至 [`SyZero.Core`](./SyZero.Core) 的 `SyZero.Application.DynamicApi` 命名空间，与 [`SyZero.DynamicGrpc`](./SyZero.DynamicGrpc) 共用同一套规则
 
 ---
 

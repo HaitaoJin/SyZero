@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.Example3.Core</name>
+    </assembly>
+    <members>
+        <member name="T:SyZero.Example3.Core.Entities.Example">
+            <summary>
+            示例实体
+            </summary>
+        </member>
+        <member name="P:SyZero.Example3.Core.Entities.Example.Name">
+            <summary>
+            名称
+            </summary>
+        </member>
+        <member name="P:SyZero.Example3.Core.Entities.Example.Description">
+            <summary>
+            描述
+            </summary>
+        </member>
+        <member name="P:SyZero.Example3.Core.Entities.Example.Status">
+            <summary>
+            状态 0:禁用 1:启用
+            </summary>
+        </member>
+        <member name="P:SyZero.Example3.Core.Entities.Example.Sort">
+            <summary>
+            排序
+            </summary>
+        </member>
+        <member name="P:SyZero.Example3.Core.Entities.Example.CreateTime">
+            <summary>
+            创建时间
+            </summary>
+        </member>
+        <member name="P:SyZero.Example3.Core.Entities.Example.UpdateTime">
+            <summary>
+            更新时间
+            </summary>
+        </member>
+    </members>
+</doc>

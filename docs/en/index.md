@@ -31,5 +31,9 @@ features:
 ## Start here
 
 1. Follow [Getting Started](/en/guide/getting-started).
-2. Browse [Module Index](/en/modules/index).
-3. Review [Release Notes](/en/release-notes).
+2. Read [Building a Layered Service](/en/guide/layered-service).
+3. Read [Data Access and Repositories](/en/guide/data-access).
+4. Read [Service Registration and Discovery](/en/guide/service-discovery).
+5. Read [Event Bus and Integration Events](/en/guide/event-bus).
+6. Browse [Module Index](/en/modules/index).
+7. Review [Release Notes](/en/release-notes).

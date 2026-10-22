@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.BackgroundJobs.Quartz</name>
+    </assembly>
+    <members>
+        <member name="M:SyZero.BackgroundJobs.Quartz.SyZeroBackgroundJobsQuartzExtension.AddSyZeroBackgroundJobsQuartz(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Action{Quartz.IServiceCollectionQuartzConfigurator})">
+            <summary>
+            注册 Quartz 调度器与 SyZero 适配 IJob。
+            </summary>
+        </member>
+        <member name="M:SyZero.BackgroundJobs.Quartz.SyZeroBackgroundJobsQuartzExtension.AddSyZeroCron``2(Quartz.IServiceCollectionQuartzConfigurator,System.String,``1,System.String)">
+            <summary>
+            注册一条 Cron 调度，把指定 SyZero 任务（<typeparamref name="TJob"/> + <typeparamref name="TArgs"/>）按 cron 触发。
+            </summary>
+        </member>
+        <member name="T:SyZero.BackgroundJobs.Quartz.SyZeroQuartzJobAdapter">
+            <summary>
+            Quartz IJob 适配：从 JobDataMap 还原 SyZero <see cref="T:SyZero.BackgroundJobs.IBackgroundJob`1"/> 并执行。
+            JobDataMap 必须包含 "JobType"（程序集限定名）与 "ArgsType"、"ArgsJson"。
+            </summary>
+        </member>
+    </members>
+</doc>

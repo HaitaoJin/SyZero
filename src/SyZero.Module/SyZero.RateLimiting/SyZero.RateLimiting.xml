@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.RateLimiting</name>
+    </assembly>
+    <members>
+        <member name="T:SyZero.RateLimiting.IDistributedRateLimiter">
+            <summary>
+            分布式限流抽象。默认实现 <see cref="T:SyZero.RateLimiting.LocalDistributedRateLimiter"/> 使用进程内令牌桶，
+            多实例部署请改用 SyZero.Redis 提供的 Redis 实现（通过 INCR + EXPIRE 模拟滑动窗口）。
+            </summary>
+        </member>
+        <member name="M:SyZero.RateLimiting.IDistributedRateLimiter.TryAcquireAsync(System.String,System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            尝试在指定窗口内消费一次令牌。
+            </summary>
+            <param name="key">限流维度键，例如 "user:123" / "ip:1.2.3.4" / "api:/orders"。</param>
+            <param name="permitLimit">窗口内允许的最大次数。</param>
+            <param name="window">窗口长度（秒）。</param>
+            <param name="cancellationToken">取消令牌。</param>
+            <returns>true 表示获得许可，false 表示已超过限制。</returns>
+        </member>
+        <member name="T:SyZero.RateLimiting.LocalDistributedRateLimiter">
+            <summary>
+            进程内分布式限流实现：基于固定窗口计数器（key + 窗口起点 → 计数）。
+            仅适用于单实例或粘性会话场景；多实例请使用 Redis 实现。
+            </summary>
+        </member>
+        <member name="M:SyZero.RateLimiting.LocalDistributedRateLimiter.TryAcquireAsync(System.String,System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="T:SyZero.RateLimiting.SyZeroRateLimitingOptions">
+            <summary>
+            SyZero.RateLimiting 配置选项。
+            </summary>
+        </member>
+        <member name="F:SyZero.RateLimiting.SyZeroRateLimitingOptions.SectionName">
+            <summary>
+            配置节名称。
+            </summary>
+        </member>
+        <member name="P:SyZero.RateLimiting.SyZeroRateLimitingOptions.EnableGlobal">
+            <summary>
+            是否启用全局 ASP.NET Core RateLimiter 中间件，默认 true。
+            </summary>
+        </member>
+        <member name="P:SyZero.RateLimiting.SyZeroRateLimitingOptions.GlobalPolicyName">
+            <summary>
+            全局策略名称，默认 "syzero-global"。
+            </summary>
+        </member>
+        <member name="P:SyZero.RateLimiting.SyZeroRateLimitingOptions.GlobalPermitLimit">
+            <summary>
+            全局每窗口允许的请求数，默认 100。
+            </summary>
+        </member>
+        <member name="P:SyZero.RateLimiting.SyZeroRateLimitingOptions.GlobalWindowSeconds">
+            <summary>
+            全局窗口长度（秒），默认 60。
+            </summary>
+        </member>
+        <member name="P:SyZero.RateLimiting.SyZeroRateLimitingOptions.RejectionStatusCode">
+            <summary>
+            拒绝时返回的 HTTP 状态码，默认 429。
+            </summary>
+        </member>
+        <member name="T:SyZero.SyZeroRateLimitingExtension">
+            <summary>
+            SyZero.RateLimiting 扩展方法。
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroRateLimitingExtension.AddSyZeroRateLimiting(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,System.Action{SyZero.RateLimiting.SyZeroRateLimitingOptions},System.String)">
+            <summary>
+            注册 SyZero 限流：默认包括进程内 <see cref="T:SyZero.RateLimiting.IDistributedRateLimiter"/> 实现，
+            以及一个固定窗口的全局限流策略（可在 <see cref="T:SyZero.RateLimiting.SyZeroRateLimitingOptions"/> 中关闭）。
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroRateLimitingExtension.UseSyZeroRateLimiting(Microsoft.AspNetCore.Builder.IApplicationBuilder)">
+            <summary>
+            启用 SyZero 限流中间件。须在 <c>UseRouting</c> 之后、<c>UseEndpoints</c>/<c>MapXxx</c> 之前调用。
+            </summary>
+        </member>
+    </members>
+</doc>

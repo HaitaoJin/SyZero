@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.BackgroundJobs</name>
+    </assembly>
+    <members>
+        <member name="T:SyZero.BackgroundJobs.BackgroundJobItem">
+            <summary>
+            单条已排队任务，包含执行委托与可选的入队上下文。
+            委托内部已闭包实参，由 Worker 取出后建立 IServiceScope 解析 Job 并执行。
+            </summary>
+        </member>
+        <member name="T:SyZero.BackgroundJobs.BackgroundJobChannel">
+            <summary>基于 <see cref="T:System.Threading.Channels.Channel`1"/> 的内存任务队列（单例）。</summary>
+        </member>
+        <member name="T:SyZero.BackgroundJobs.BackgroundJobsOptions">
+            <summary>后台任务模块配置。</summary>
+        </member>
+        <member name="P:SyZero.BackgroundJobs.BackgroundJobsOptions.QueueCapacity">
+            <summary>队列容量。0 = 无界（注意内存占用）。</summary>
+        </member>
+        <member name="P:SyZero.BackgroundJobs.BackgroundJobsOptions.DropOldestWhenFull">
+            <summary>队列已满时是否丢弃最旧任务（默认 false：拒绝新任务并返回 false）。</summary>
+        </member>
+        <member name="P:SyZero.BackgroundJobs.BackgroundJobsOptions.WorkerCount">
+            <summary>并发 Worker 数。</summary>
+        </member>
+        <member name="T:SyZero.BackgroundJobs.BackgroundJobWorker">
+            <summary>从 <see cref="T:SyZero.BackgroundJobs.BackgroundJobChannel"/> 取任务并执行的 Worker。可启动多个并发实例。</summary>
+        </member>
+        <member name="T:SyZero.BackgroundJobs.ChannelBackgroundJobManager">
+            <summary>基于 <see cref="T:SyZero.BackgroundJobs.BackgroundJobChannel"/> 的默认 <see cref="T:SyZero.BackgroundJobs.IBackgroundJobManager"/>。</summary>
+        </member>
+        <member name="T:SyZero.BackgroundJobs.IBackgroundJob`1">
+            <summary>
+            后台任务契约。每种任务一个实现，由 DI 容器解析，DI 生命周期 = Scoped（每次执行新建作用域）。
+            </summary>
+        </member>
+        <member name="T:SyZero.BackgroundJobs.IBackgroundJobManager">
+            <summary>后台任务投递入口。Scoped 注入。</summary>
+        </member>
+        <member name="M:SyZero.BackgroundJobs.IBackgroundJobManager.EnqueueAsync``2(``1,System.Threading.CancellationToken)">
+            <summary>把一个任务排入队列等待执行。返回是否入队成功（队列已满 / 已停止时返回 false）。</summary>
+        </member>
+        <member name="T:SyZero.BackgroundJobs.SyZeroBackgroundJobsExtension">
+            <summary>SyZero.BackgroundJobs 注册扩展。</summary>
+        </member>
+        <member name="M:SyZero.BackgroundJobs.SyZeroBackgroundJobsExtension.AddSyZeroBackgroundJobs(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,System.Action{SyZero.BackgroundJobs.BackgroundJobsOptions})">
+            <summary>
+            注册 Channel 默认实现 + Worker（IHostedService）。业务侧需自行用
+            <see cref="M:SyZero.BackgroundJobs.SyZeroBackgroundJobsExtension.AddBackgroundJob``1(Microsoft.Extensions.DependencyInjection.IServiceCollection)"/> 把每种 Job 注册到 DI（默认 Scoped）。
+            </summary>
+        </member>
+        <member name="M:SyZero.BackgroundJobs.SyZeroBackgroundJobsExtension.AddBackgroundJob``1(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>把一种 Job 注册到 DI（Scoped）。</summary>
+        </member>
+    </members>
+</doc>

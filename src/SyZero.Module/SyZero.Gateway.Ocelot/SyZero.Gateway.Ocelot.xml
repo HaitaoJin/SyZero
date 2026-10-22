@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.Gateway.Ocelot</name>
+    </assembly>
+    <members>
+        <member name="T:SyZero.Gateway.Ocelot.OcelotConfigurationApplier">
+            <summary>
+            把 <see cref="T:SyZero.Gateway.GatewayConfiguration"/> 热下发到 Ocelot 的 <see cref="T:Ocelot.Configuration.Setter.IFileConfigurationSetter"/>。
+            </summary>
+        </member>
+        <member name="T:SyZero.Gateway.Ocelot.OcelotConfigurationStore">
+            <summary>
+            基于 Ocelot 的 <see cref="T:SyZero.Gateway.IGatewayConfigurationStore"/> 实现：
+            在内容根目录读写 <c>configuration.json</c>，写入时自动备份并触发 <see cref="T:SyZero.Gateway.IGatewayConfigurationApplier"/> 热下发。
+            </summary>
+        </member>
+        <member name="T:SyZero.Gateway.Ocelot.OcelotGateway">
+            <summary>
+            基于 Ocelot 的 <see cref="T:SyZero.Gateway.IGateway"/> 实现：从 Ocelot 内部 <see cref="T:Ocelot.Configuration.Repository.IFileConfigurationRepository"/>
+            读取当前生效的 <see cref="T:Ocelot.Configuration.File.FileConfiguration"/> 并映射为 SyZero 的中性 <see cref="T:SyZero.Gateway.GatewayConfiguration"/>。
+            </summary>
+        </member>
+        <member name="T:SyZero.Gateway.Ocelot.SyZeroConsulServiceBuilder">
+            <summary>
+            自定义 Ocelot Consul 服务构建器，使用 <c>Service.Address</c> 作为下游主机，
+            而非 Consul Node 的 Address，匹配 SyZero 服务注册习惯。
+            </summary>
+        </member>
+        <member name="T:SyZero.Gateway.Ocelot.SyZeroOcelotOptions">
+            <summary>
+            SyZero.Gateway.Ocelot 模块的选项。包含 <see cref="T:SyZero.Gateway.GatewayOptions"/> 中的通用配置，
+            以及 Ocelot 专属的 Consul / Polly / CacheManager 等开关。
+            </summary>
+        </member>
+        <member name="P:SyZero.Gateway.Ocelot.SyZeroOcelotOptions.EnableSyZeroServiceDiscovery">
+            <summary>
+            是否启用基于 <see cref="T:SyZero.Service.IServiceManagement"/> 的统一服务发现 Provider；
+            启用后可在 <c>ocelot.json</c> 通过 <c>"Type": "SyZero"</c> 指定 Ocelot 走该 Provider，
+            从而把任意 SyZero 服务发现后端（Consul / Nacos / Redis / Local / DB）接入 Ocelot。
+            </summary>
+        </member>
+        <member name="M:SyZero.Gateway.Ocelot.SyZeroOcelotOptions.CreateDefault(Microsoft.Extensions.Configuration.IConfiguration)">
+            <summary>
+            基于配置创建默认的 Ocelot 选项。
+            </summary>
+        </member>
+        <member name="T:SyZero.Gateway.Ocelot.SyZeroDiscovery">
+            <summary>
+            基于 SyZero <see cref="T:SyZero.Service.IServiceManagement"/> 抽象的 Ocelot 服务发现提供者。
+            与 <see cref="T:SyZero.Gateway.Ocelot.SyZeroConsulServiceBuilder"/> 不同，本实现完全脱离具体后端，
+            凡是注册了 <c>IServiceManagement</c>（Consul / Nacos / Redis / Local / DB）即可直接使用。
+            通过 <c>ocelot.json</c> 中
+            <c>GlobalConfiguration.ServiceDiscoveryProvider.Type = "SyZeroDiscovery"</c> 启用
+            （Ocelot 23 工厂以 provider 类的 <c>Type.Name</c> 与 <c>Type</c> 字段做大小写不敏感比较）。
+            </summary>
+        </member>
+        <member name="F:SyZero.Gateway.Ocelot.SyZeroDiscovery.ProviderType">
+            <summary>
+            在 <c>ocelot.json</c> 中识别此 Provider 的 <c>Type</c> 名称。
+            必须与本类的简单类型名一致（Ocelot 23 工厂硬编码做名称匹配）。
+            </summary>
+        </member>
+        <member name="T:SyZero.SyZeroOcelotExtension">
+            <summary>
+            SyZero.Gateway.Ocelot 模块的注册入口。
+            </summary>
+        </member>
+    </members>
+</doc>

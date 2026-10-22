@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.Authorization.AspNetCore</name>
+    </assembly>
+    <members>
+        <member name="T:SyZero.Authorization.AspNetCore.SyPermissionPolicy">
+            <summary>
+            把 SyZero 权限作为 ASP.NET Core 授权策略来声明。
+            用法：<c>[Authorize(Policy = SyPermissionPolicy.Prefix + "Order.Create")]</c>，
+            或 <c>options.AddSyPermission("Order.Create")</c>。
+            </summary>
+        </member>
+        <member name="F:SyZero.Authorization.AspNetCore.SyPermissionPolicy.Prefix">
+            <summary>策略名前缀。</summary>
+        </member>
+        <member name="M:SyZero.Authorization.AspNetCore.AuthorizationOptionsExtensions.AddSyPermission(Microsoft.AspNetCore.Authorization.AuthorizationOptions,System.String)">
+            <summary>
+            注册一条以 SyZero 权限为要求的策略，策略名为 <see cref="M:SyZero.Authorization.AspNetCore.SyPermissionPolicy.For(System.String)"/>(permission)。
+            </summary>
+        </member>
+        <member name="T:SyZero.Authorization.AspNetCore.SyPermissionRequirement">
+            <summary>
+            表示「需要某个 SyZero 权限」的策略要求。
+            </summary>
+        </member>
+        <member name="T:SyZero.Authorization.AspNetCore.SyPermissionAuthorizationHandler">
+            <summary>
+            把 ASP.NET Core 授权策略桥接到 <see cref="T:SyZero.Runtime.Security.IPermissionChecker"/>。
+            </summary>
+        </member>
+        <member name="M:SyZero.Authorization.AspNetCore.SyZeroAuthorizationAspNetCoreExtension.AddSyZeroAuthorizationBridge(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            注册 SyZero 权限到 ASP.NET Core 授权管线的桥接。
+            调用前请确保已注册 IPermissionChecker（SyZero.Core 默认提供 DefaultPermissionChecker）。
+            </summary>
+        </member>
+    </members>
+</doc>

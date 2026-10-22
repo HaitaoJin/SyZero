@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.Realtime</name>
+    </assembly>
+    <members>
+        <member name="T:SyZero.Realtime.SyRealtimeHub">
+            <summary>
+            SyZero 默认实时通知 Hub。客户端通过订阅事件名（method）即可收到 <see cref="T:SyZero.Realtime.ISyRealtimeNotifier"/> 推送的消息。
+            </summary>
+        </member>
+        <member name="T:SyZero.Realtime.ISyRealtimeNotifier">
+            <summary>
+            实时消息推送抽象，业务侧依赖此接口而非 IHubContext，以便单测/替换实现。
+            </summary>
+        </member>
+        <member name="M:SyZero.Realtime.ISyRealtimeNotifier.BroadcastAsync(System.String,System.Object)">
+            <summary>
+            向所有连接的客户端广播一条消息。
+            </summary>
+        </member>
+        <member name="M:SyZero.Realtime.ISyRealtimeNotifier.SendToUserAsync(System.String,System.String,System.Object)">
+            <summary>
+            向指定 user（IUserIdProvider 解析后的标识）的所有连接推送消息。
+            </summary>
+        </member>
+        <member name="T:SyZero.SyZeroRealtimeExtension">
+            <summary>
+            SyZero.Realtime DI / Endpoint 扩展。
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroRealtimeExtension.AddSyZeroRealtime(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            注册 SignalR 与 SyZero 实时通知抽象。
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroRealtimeExtension.MapSyZeroRealtime(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder,System.String)">
+            <summary>
+            映射默认 Hub 到 <paramref name="pattern"/>（默认 /hubs/sy-realtime）。
+            </summary>
+        </member>
+    </members>
+</doc>

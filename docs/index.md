@@ -41,5 +41,9 @@ SyZero 面向希望在 .NET 生态中快速构建微服务系统的团队，提�
 ## 下一步
 
 1. 阅读 [快速开始](/guide/getting-started) 完成第一个服务。
-2. 按需进入 [模块总览](/modules/index) 选择扩展能力。
-3. 查看 [发布说明](/release-notes) 了解版本变更。
+2. 阅读 [创建分层业务服务](/guide/layered-service) 搭起业务项目骨架。
+3. 阅读 [数据访问与仓储](/guide/data-access) 选择 EF Core / SqlSugar / MongoDB 路线。
+4. 阅读 [服务注册与发现](/guide/service-discovery) 接入 Local / Redis / Consul / Nacos。
+5. 阅读 [事件总线与集成事件](/guide/event-bus) 设计异步解耦链路。
+6. 按需进入 [模块总览](/modules/index) 选择扩展能力。
+7. 查看 [发布说明](/release-notes) 了解版本变更。

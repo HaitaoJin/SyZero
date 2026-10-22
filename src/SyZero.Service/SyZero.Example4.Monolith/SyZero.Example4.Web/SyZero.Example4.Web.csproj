@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <AssemblyName>SyZero.Example4.Web</AssemblyName>
+    <RootNamespace>SyZero.Example4.Web</RootNamespace>
+    <DocumentationFile></DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\SyZero.Module\SyZero.AspNetCore\SyZero.AspNetCore.csproj" />
+    <ProjectReference Include="..\..\..\SyZero.Module\SyZero.DynamicWebApi\SyZero.DynamicWebApi.csproj" />
+    <ProjectReference Include="..\..\..\SyZero.Module\SyZero.Swagger\SyZero.Swagger.csproj" />
+    <ProjectReference Include="..\SyZero.Example4.Application\SyZero.Example4.Application.csproj" />
+  </ItemGroup>
+
+</Project>

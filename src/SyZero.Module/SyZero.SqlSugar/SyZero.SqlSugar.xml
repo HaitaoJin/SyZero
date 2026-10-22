@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.SqlSugar</name>
+    </assembly>
+    <members>
+        <member name="T:SyZero.SqlSugar.Repositories.SqlSugarRepository`1">
+            <summary>
+            默认 long 主键的 SqlSugar 仓储（兼容历史用法）。
+            </summary>
+        </member>
+        <member name="T:SyZero.SqlSugar.Repositories.SqlSugarRepository`2">
+            <summary>
+            通用 SqlSugar 仓储（自定义主键类型）。
+            </summary>
+        </member>
+        <member name="T:SyZero.SqlSugar.SqlSugarTransactionScope">
+            <summary>
+            SqlSugar 事务作用域
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroSqlSugarExtension.AddSyZeroSqlSugar``1(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            注册SqlSugar
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroSqlSugarExtension.AddSyZeroSqlSugar(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            注册SqlSugar（使用默认的SyZeroDbContext）
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroSqlSugarExtension.InitTables(Microsoft.Extensions.Hosting.IHost)">
+            <summary>
+            初始化表
+            </summary>
+        </member>
+    </members>
+</doc>

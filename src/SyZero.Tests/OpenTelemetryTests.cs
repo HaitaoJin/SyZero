@@ -95,8 +95,6 @@ public class OpenTelemetryTests
 
     private static void ResetAppConfigCache(string fieldName)
     {
-        var field = typeof(AppConfig).GetField(fieldName, System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic)
-            ?? throw new MissingFieldException(typeof(AppConfig).FullName, fieldName);
-        field.SetValue(null, null);
+        AppConfig.ResetCacheForTests(fieldName);
     }
 }

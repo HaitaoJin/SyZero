@@ -1,9 +1,9 @@
-using log4net;
+﻿using log4net;
 using log4net.Config;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SyZero;
-using SyZero.Log4Net;
+using SyZero.Logging.Log4Net;
 using Xunit;
 
 namespace SyZero.Tests;
@@ -148,3 +148,4 @@ public sealed class Log4NetTests
         }
     }
 }
+

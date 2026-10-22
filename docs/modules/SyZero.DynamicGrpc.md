@@ -2,6 +2,8 @@
 
 SyZero 的动态 gRPC 模块，基于 `protobuf-net.Grpc.AspNetCore` 自动注册 Code-First gRPC 服务。
 
+> 内部 Provider 公共能力（类型筛选 / 名称归一化 / 程序集扫描 / 特性缓存）已下沉至 [`SyZero.Core`](./SyZero.Core) 的 `SyZero.Application.DynamicApi` 命名空间，与 [`SyZero.DynamicWebApi`](./SyZero.DynamicWebApi) 共用同一套规则。
+
 ## 安装
 
 ```bash

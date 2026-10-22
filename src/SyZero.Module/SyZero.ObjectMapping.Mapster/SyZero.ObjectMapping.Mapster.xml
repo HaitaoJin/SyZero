@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.ObjectMapping.Mapster</name>
+    </assembly>
+    <members>
+        <member name="T:SyZero.ObjectMapping.Mapster.MapsterObjectMapper">
+            <summary>
+            基于 Mapster 的 <see cref="T:SyZero.ObjectMapper.IObjectMapper"/> 实现。
+            通过 <see cref="T:MapsterMapper.IMapper"/> 转发调用，使上层业务代码与具体映射库解耦。
+            </summary>
+        </member>
+        <member name="M:SyZero.ObjectMapping.Mapster.MapsterObjectMapper.Map``1(System.Object)">
+            <inheritdoc />
+        </member>
+        <member name="M:SyZero.ObjectMapping.Mapster.MapsterObjectMapper.Map``2(``0,``1)">
+            <inheritdoc />
+        </member>
+        <member name="T:SyZero.SyZeroMapsterExtension">
+            <summary>
+            SyZero Mapster 扩展方法。
+            提供 IObjectMapper 的 Mapster 实现，并自动扫描程序集中实现 IRegister 的映射规则。
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroMapsterExtension.AddSyZeroMapster(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            添加 SyZero Mapster 服务（自动扫描所有程序集）。
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroMapsterExtension.AddSyZeroMapster(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Reflection.Assembly[])">
+            <summary>
+            添加 SyZero Mapster 服务（指定程序集）。
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroMapsterExtension.AddSyZeroMapster(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Action{Mapster.TypeAdapterConfig},System.Reflection.Assembly[])">
+            <summary>
+            添加 SyZero Mapster 服务（自定义配置 + 程序集）。
+            </summary>
+            <param name="services">服务集合</param>
+            <param name="configAction">在 IRegister 扫描完成后对 <see cref="T:Mapster.TypeAdapterConfig"/> 做的额外配置</param>
+            <param name="assemblies">要扫描的程序集；为空则使用 <c>ReflectionHelper.GetAssemblies()</c></param>
+        </member>
+    </members>
+</doc>

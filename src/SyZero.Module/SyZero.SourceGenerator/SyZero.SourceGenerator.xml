@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.SourceGenerator</name>
+    </assembly>
+    <members>
+        <member name="T:SyZero.SourceGenerator.SyDIRegistrationGenerator">
+            <summary>
+            扫描程序集中实现 <c>SyZero.Dependency.IScopedDependency</c> /
+            <c>ISingletonDependency</c> / <c>ITransientDependency</c> 的非抽象 class，
+            生成 <c>SyZeroGeneratedRegistration.AddSyZeroGenerated(IServiceCollection)</c> 扩展方法，
+            把每个候选类型按对应生命周期注册到 DI；如果该类型还实现了其他业务接口，会同时注册「接口 → 实现」的映射。
+            </summary>
+        </member>
+        <member name="T:SyZero.SourceGenerator.SyServiceMarkerGenerator">
+            <summary>
+            为继承 <c>SyZeroServiceBase</c> 且实现 <c>IApplicationService</c> 的类型生成
+            一段 marker 代码（占位骨架，未来用于生成 DI 注册或 controller 适配代码）。
+            本版本仅作为「接入示例」，不影响业务运行。
+            </summary>
+        </member>
+    </members>
+</doc>

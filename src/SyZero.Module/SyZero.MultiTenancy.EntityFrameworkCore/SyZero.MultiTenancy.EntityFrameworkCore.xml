@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.MultiTenancy.EntityFrameworkCore</name>
+    </assembly>
+    <members>
+        <member name="T:SyZero.MultiTenancy.EntityFrameworkCore.EfCoreTenantStore">
+            <summary>
+            基于 EF Core 的 <see cref="T:SyZero.MultiTenancy.ITenantStore"/> 持久化实现。
+            </summary>
+        </member>
+        <member name="M:SyZero.MultiTenancy.EntityFrameworkCore.SyZeroMultiTenancyEfCoreExtension.AddSyZeroMultiTenancyEfCore(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Action{Microsoft.EntityFrameworkCore.DbContextOptionsBuilder})">
+            <summary>
+            注册基于 EF Core 的租户存储；调用方负责传入 <see cref="T:Microsoft.EntityFrameworkCore.DbContextOptionsBuilder"/> 配置（连接字符串等）。
+            </summary>
+        </member>
+        <member name="T:SyZero.MultiTenancy.EntityFrameworkCore.TenantEntity">
+            <summary>
+            EF Core 用的租户实体。业务可继承扩展自有字段。
+            </summary>
+        </member>
+        <member name="T:SyZero.MultiTenancy.EntityFrameworkCore.TenantDbContext">
+            <summary>
+            SyZero 多租户元数据 DbContext，业务可直接继承或合入主 DbContext。
+            </summary>
+        </member>
+    </members>
+</doc>

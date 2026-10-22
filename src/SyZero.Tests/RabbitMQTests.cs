@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
@@ -8,7 +8,7 @@ using Moq;
 using RabbitMQ.Client;
 using SyZero;
 using SyZero.EventBus;
-using SyZero.RabbitMQ;
+using SyZero.EventBus.RabbitMQ;
 using Xunit;
 
 namespace SyZero.Tests;
@@ -345,3 +345,4 @@ public class RabbitMQTests
         }
     }
 }
+

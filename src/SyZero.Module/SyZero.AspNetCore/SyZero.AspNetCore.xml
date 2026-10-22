@@ -1,0 +1,122 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.AspNetCore</name>
+    </assembly>
+    <members>
+        <member name="P:SyZero.AspNetCore.Controllers.SyZeroController.Cache">
+            <summary>
+            缓存
+            </summary>
+        </member>
+        <member name="P:SyZero.AspNetCore.Controllers.SyZeroController.ObjectMapper">
+            <summary>
+            对象映射
+            </summary>
+        </member>
+        <member name="P:SyZero.AspNetCore.Controllers.SyZeroController.Logger">
+            <summary>
+            日志
+            </summary>
+        </member>
+        <member name="P:SyZero.AspNetCore.Controllers.SyZeroController.SySession">
+            <summary>
+            Sy会话
+            </summary>
+        </member>
+        <member name="T:SyZero.AspNetCore.RouteConvention">
+            <summary>
+            全局路由前缀配置
+            </summary>
+        </member>
+        <member name="F:SyZero.AspNetCore.RouteConvention._centralPrefix">
+            <summary>
+            定义一个路由前缀变量
+            </summary>
+        </member>
+        <member name="M:SyZero.AspNetCore.RouteConvention.#ctor(Microsoft.AspNetCore.Mvc.Routing.IRouteTemplateProvider)">
+            <summary>
+            调用时传入指定的路由前缀
+            </summary>
+            <param name="routeTemplateProvider"></param>
+        </member>
+        <member name="T:SyZero.AspNetCore.Middleware.SyAuthMiddleware">
+            <summary>
+            权限中间件
+            </summary>
+        </member>
+        <member name="T:SyZero.AspNetCore.Middleware.SyError">
+            <summary>
+            SyZero 统一错误码模型，用于 RFC 7807 ProblemDetails 输出。
+            </summary>
+        </member>
+        <member name="P:SyZero.AspNetCore.Middleware.SyError.Code">
+            <summary>
+            业务错误码（数字或字符串约定，由业务统一管理）。
+            </summary>
+        </member>
+        <member name="P:SyZero.AspNetCore.Middleware.SyError.Title">
+            <summary>
+            简短标题。
+            </summary>
+        </member>
+        <member name="P:SyZero.AspNetCore.Middleware.SyError.Detail">
+            <summary>
+            详细信息。
+            </summary>
+        </member>
+        <member name="P:SyZero.AspNetCore.Middleware.SyError.Type">
+            <summary>
+            关联类型 URI，建议使用文档链接。
+            </summary>
+        </member>
+        <member name="P:SyZero.AspNetCore.Middleware.SyError.Status">
+            <summary>
+            HTTP 状态码（默认 500）。
+            </summary>
+        </member>
+        <member name="T:SyZero.AspNetCore.Middleware.SyBusinessException">
+            <summary>
+            业务异常：携带 <see cref="T:SyZero.AspNetCore.Middleware.SyError"/>，由 <see cref="T:SyZero.AspNetCore.Middleware.SyExceptionMiddleware"/> 转换为 ProblemDetails。
+            </summary>
+        </member>
+        <member name="T:SyZero.AspNetCore.Middleware.SyExceptionMiddleware">
+            <summary>
+            全局异常处理中间件：捕获异常 → 输出 RFC 7807 ProblemDetails JSON，附带 TraceId。
+            注册：<c>app.UseMiddleware&lt;SyExceptionMiddleware&gt;()</c> 或 <c>app.UseSyZeroExceptionHandler()</c>。
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroAspNetExtension.AddSyZeroController(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            注册SyZeroControllerModule
+            </summary>
+            <typeparam name="TContext"></typeparam>
+            <param name="builder"></param>
+            <param name="configuration"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SyZero.SyZeroAspNetExtension.AddSyZeroExceptionHandler(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            注册 <see cref="T:SyZero.AspNetCore.Middleware.SyExceptionMiddleware"/>（全局异常 → ProblemDetails）。
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroAspNetExtension.UseSyZeroExceptionHandler(Microsoft.AspNetCore.Builder.IApplicationBuilder)">
+            <summary>
+            启用 <see cref="T:SyZero.AspNetCore.Middleware.SyExceptionMiddleware"/>，建议放在管线最前。
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Builder.MvcOptionsExtensions.UseCentralRoutePrefix(Microsoft.AspNetCore.Mvc.MvcOptions,Microsoft.AspNetCore.Mvc.Routing.IRouteTemplateProvider)">
+            <summary>
+            扩展方法
+            </summary>
+            <param name="opts"></param>
+            <param name="routeAttribute"></param>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Builder.MvcOptionsExtensions.UseSyAuthMiddleware(Microsoft.AspNetCore.Builder.IApplicationBuilder,System.Func{SyZero.Runtime.Session.ISySession,System.String})">
+            <summary>
+            权限中间件 - 扩展方法
+            </summary>
+            <param name="app"></param>
+        </member>
+    </members>
+</doc>

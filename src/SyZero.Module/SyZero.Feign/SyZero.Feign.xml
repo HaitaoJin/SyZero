@@ -1,0 +1,155 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.Feign</name>
+    </assembly>
+    <members>
+        <member name="T:SyZero.Feign.FeignRemoteServiceProvider">
+            <summary>
+            Feign 远程服务 Provider
+            扫描 <see cref="T:SyZero.Application.Service.IApplicationService"/> 接口（无本地实现的）并按协议生成代理。
+            </summary>
+        </member>
+        <member name="M:SyZero.Feign.FeignRemoteServiceProvider.#ctor">
+            <summary>
+            初始化 Feign Provider，并注册内置的 HTTP / gRPC 代理工厂
+            </summary>
+        </member>
+        <member name="P:SyZero.Feign.FeignRemoteServiceProvider.Name">
+            <inheritdoc />
+        </member>
+        <member name="M:SyZero.Feign.FeignRemoteServiceProvider.RegisterProxyFactory(SyZero.Client.RemoteService.IRemoteServiceProxyFactory)">
+            <summary>
+            注册（或覆盖）协议级代理工厂，可在调用 <see cref="T:Microsoft.Extensions.DependencyInjection.IServiceCollection"/> 注册前扩展
+            </summary>
+        </member>
+        <member name="M:SyZero.Feign.FeignRemoteServiceProvider.Register(Microsoft.Extensions.DependencyInjection.IServiceCollection,SyZero.Client.RemoteService.RemoteServiceOptions)">
+            <inheritdoc />
+        </member>
+        <member name="M:SyZero.Feign.FeignRemoteServiceProvider.RegisterFeignProxy(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Type,SyZero.Client.RemoteService.RemoteServiceOptions)">
+            <summary>
+            注册单个 Feign 代理
+            </summary>
+        </member>
+        <member name="M:SyZero.Feign.FeignRemoteServiceProvider.CreateEffectiveService(SyZero.Client.RemoteService.RemoteServiceItem,SyZero.Client.RemoteService.RemoteServiceSetting)">
+            <summary>
+            合并全局配置（服务配置优先）
+            </summary>
+        </member>
+        <member name="M:SyZero.Feign.FeignRemoteServiceProvider.MergeGlobalSettings(SyZero.Client.RemoteService.RemoteServiceItem,SyZero.Client.RemoteService.RemoteServiceSetting)">
+            <summary>
+            合并全局配置（服务配置优先）
+            </summary>
+        </member>
+        <member name="M:SyZero.Feign.FeignRemoteServiceProvider.GetServiceEndpoint(SyZero.Service.IServiceManagement,SyZero.Client.RemoteService.RemoteServiceItem)">
+            <summary>
+            解析服务端点
+            </summary>
+        </member>
+        <member name="T:SyZero.Feign.Proxy.GrpcProxyFactory">
+            <summary>
+            gRPC 协议代理工厂
+            </summary>
+        </member>
+        <member name="F:SyZero.Feign.Proxy.GrpcProxyFactory._channelCache">
+            <summary>
+            gRPC 通道缓存（按端点地址缓存）
+            </summary>
+        </member>
+        <member name="P:SyZero.Feign.Proxy.GrpcProxyFactory.Protocol">
+            <summary>
+            支持的协议类型
+            </summary>
+        </member>
+        <member name="M:SyZero.Feign.Proxy.GrpcProxyFactory.CreateProxy(System.Type,System.String,SyZero.Client.RemoteService.RemoteServiceItem,SyZero.Serialization.IJsonSerialize)">
+            <summary>
+            创建 gRPC 代理实例
+            </summary>
+        </member>
+        <member name="M:SyZero.Feign.Proxy.GrpcProxyFactory.GetOrCreateChannel(System.String,SyZero.Client.RemoteService.RemoteServiceItem)">
+            <summary>
+            获取或创建 gRPC 通道
+            </summary>
+        </member>
+        <member name="M:SyZero.Feign.Proxy.GrpcProxyFactory.CreateChannelOptions(SyZero.Client.RemoteService.RemoteServiceItem)">
+            <summary>
+            创建 gRPC 通道选项
+            </summary>
+        </member>
+        <member name="M:SyZero.Feign.Proxy.GrpcProxyFactory.GetGrpcClientType(System.Type)">
+            <summary>
+            获取 gRPC 客户端类型
+            </summary>
+            <remarks>
+            查找规则：
+            1. 接口 IXxxService 对应客户端 XxxService.XxxServiceClient
+            2. 接口 IXxx 对应客户端 Xxx.XxxClient
+            </remarks>
+        </member>
+        <member name="M:SyZero.Feign.Proxy.GrpcProxyFactory.ClearChannelCache">
+            <summary>
+            清除通道缓存
+            </summary>
+        </member>
+        <member name="T:SyZero.Feign.Proxy.HttpProxyFactory">
+            <summary>
+            HTTP 协议代理工厂（基于 Refit）
+            </summary>
+        </member>
+        <member name="P:SyZero.Feign.Proxy.HttpProxyFactory.Protocol">
+            <summary>
+            支持的协议类型
+            </summary>
+        </member>
+        <member name="M:SyZero.Feign.Proxy.HttpProxyFactory.ResolveLogger">
+            <summary>
+            解析 ILogger，DI 未就绪时回退到 NullLogger，避免在工厂初始化阶段抛异常。
+            </summary>
+        </member>
+        <member name="M:SyZero.Feign.Proxy.HttpProxyFactory.CreateProxy(System.Type,System.String,SyZero.Client.RemoteService.RemoteServiceItem,SyZero.Serialization.IJsonSerialize)">
+            <summary>
+            创建 HTTP 代理实例
+            </summary>
+        </member>
+        <member name="M:SyZero.Feign.Proxy.HttpProxyFactory.CreateHttpClient(System.String,SyZero.Client.RemoteService.RemoteServiceItem)">
+            <summary>
+            创建 HttpClient
+            </summary>
+        </member>
+        <member name="M:SyZero.Feign.Proxy.HttpProxyFactory.CreateRefitSettings(SyZero.Serialization.IJsonSerialize)">
+            <summary>
+            创建 Refit 设置
+            </summary>
+        </member>
+        <member name="M:SyZero.Feign.Proxy.HttpProxyFactory.CreateHttpMessageHandler(SyZero.Client.RemoteService.RemoteServiceItem)">
+            <summary>
+            创建 HTTP 消息处理器链
+            </summary>
+        </member>
+        <member name="T:SyZero.SyZeroFeignExtension">
+            <summary>
+            Feign 服务扩展方法
+            </summary>
+        </member>
+        <member name="F:SyZero.SyZeroFeignExtension.FeignSectionName">
+            <summary>
+            默认 Feign 配置节名称（保留与历史一致）
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroFeignExtension.AddSyZeroFeign(Microsoft.Extensions.DependencyInjection.IServiceCollection,SyZero.Client.RemoteService.RemoteServiceOptions)">
+            <summary>
+            添加 Feign 到依赖注入容器
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroFeignExtension.AddSyZeroFeign(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,System.String)">
+            <summary>
+            添加 Feign 到依赖注入容器（从配置读取）
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroFeignExtension.AddSyZeroFeign(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Action{SyZero.Client.RemoteService.RemoteServiceOptions},Microsoft.Extensions.Configuration.IConfiguration,System.String)">
+            <summary>
+            添加 Feign 到依赖注入容器（从配置读取，并支持额外配置）
+            </summary>
+        </member>
+    </members>
+</doc>

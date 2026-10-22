@@ -1,0 +1,226 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.Gateway.Abstractions</name>
+    </assembly>
+    <members>
+        <member name="T:SyZero.Gateway.GatewayConfiguration">
+            <summary>
+            网关顶层配置。字段命名沿用 ocelot.json 习惯（PascalCase），便于与现有 configuration.json 兼容；
+            其它后端实现负责自身的 mapping。
+            </summary>
+        </member>
+        <member name="P:SyZero.Gateway.GatewayConfiguration.Routes">
+            <summary>路由列表。</summary>
+        </member>
+        <member name="P:SyZero.Gateway.GatewayConfiguration.SwaggerEndPoints">
+            <summary>Swagger 聚合端点列表。</summary>
+        </member>
+        <member name="P:SyZero.Gateway.GatewayConfiguration.Extra">
+            <summary>透传未识别的根级字段（如 GlobalConfiguration），保证写回时不丢失。</summary>
+        </member>
+        <member name="M:SyZero.Gateway.GatewayConfiguration.GetGlobalRateLimit">
+            <summary>读取 <c>GlobalConfiguration.RateLimitOptions</c>。不存在时返回 null。</summary>
+        </member>
+        <member name="M:SyZero.Gateway.GatewayConfiguration.SetGlobalRateLimit(SyZero.Gateway.GatewayGlobalRateLimitOptions)">
+            <summary>
+            写入 / 覆盖 <c>GlobalConfiguration.RateLimitOptions</c>。
+            传入 <c>null</c> 会移除该子节点（保留 GlobalConfiguration 其它字段）。
+            </summary>
+        </member>
+        <member name="T:SyZero.Gateway.GatewayConfigurationBackup">
+            <summary>
+            网关配置备份元数据。供管理面板列表展示与还原使用。
+            </summary>
+        </member>
+        <member name="P:SyZero.Gateway.GatewayConfigurationBackup.Id">
+            <summary>
+            备份标识，由具体存储实现定义（文件型实现为去除前后缀的时间戳，如 <c>20260430153210</c>）。
+            </summary>
+        </member>
+        <member name="P:SyZero.Gateway.GatewayConfigurationBackup.CreatedAt">
+            <summary>
+            备份创建时间。
+            </summary>
+        </member>
+        <member name="P:SyZero.Gateway.GatewayConfigurationBackup.SizeBytes">
+            <summary>
+            备份内容大小（字节）。未知时为 0。
+            </summary>
+        </member>
+        <member name="T:SyZero.Gateway.GatewayGlobalRateLimitOptions">
+            <summary>
+            网关「全局」限流配置。对应 ocelot.json 中的
+            <c>GlobalConfiguration.RateLimitOptions</c> 节点。
+            所有字段均可空，<c>null</c> 表示沿用后端默认。
+            </summary>
+        </member>
+        <member name="P:SyZero.Gateway.GatewayGlobalRateLimitOptions.DisableRateLimitHeaders">
+            <summary>是否在响应头中关闭限流计数（X-Rate-Limit-*）。</summary>
+        </member>
+        <member name="P:SyZero.Gateway.GatewayGlobalRateLimitOptions.QuotaExceededMessage">
+            <summary>触发限流后返回的提示文案。</summary>
+        </member>
+        <member name="P:SyZero.Gateway.GatewayGlobalRateLimitOptions.HttpStatusCode">
+            <summary>触发限流时返回的 HTTP 状态码（默认 429）。</summary>
+        </member>
+        <member name="P:SyZero.Gateway.GatewayGlobalRateLimitOptions.ClientIdHeader">
+            <summary>用于识别客户端的请求头名称（Ocelot 默认 ClientId）。</summary>
+        </member>
+        <member name="T:SyZero.Gateway.GatewayLoadBalancerOptions">
+            <summary>
+            网关负载均衡选项。<see cref="P:SyZero.Gateway.GatewayLoadBalancerOptions.Type"/> 取值参考 ocelot 习惯：
+            <see cref="F:SyZero.Gateway.GatewayLoadBalancerOptions.RoundRobin"/> / <see cref="F:SyZero.Gateway.GatewayLoadBalancerOptions.LeastConnection"/> / <see cref="F:SyZero.Gateway.GatewayLoadBalancerOptions.NoLoadBalance"/>。
+            </summary>
+        </member>
+        <member name="T:SyZero.Gateway.GatewayOptions">
+            <summary>
+            网关公共选项基类。具体网关后端可继承本类追加专属开关（参见 SyZero.Ocelot 的 SyZeroOcelotOptions）。
+            </summary>
+        </member>
+        <member name="M:SyZero.Gateway.GatewayOptions.CreateDefault(Microsoft.Extensions.Configuration.IConfiguration)">
+            <summary>
+            基于配置创建默认选项。会读取 <c>SyZero:Name</c> 作为 Swagger 标题、<c>SyZero:CorsOrigins</c> 作为允许源。
+            </summary>
+        </member>
+        <member name="M:SyZero.Gateway.GatewayOptions.ApplyDefaults(SyZero.Gateway.GatewayOptions,Microsoft.Extensions.Configuration.IConfiguration)">
+            <summary>
+            把 <c>SyZero:Name</c> 与 <c>SyZero:CorsOrigins</c> 应用到既有选项。供子类复用。
+            </summary>
+        </member>
+        <member name="T:SyZero.Gateway.GatewayRateLimitOptions">
+            <summary>
+            网关「单路由」限流选项。字段对齐 Ocelot 的 <c>RateLimitOptions</c> 习惯，便于多后端共用。
+            所有字段均可空：null 表示不变更。<see cref="P:SyZero.Gateway.GatewayRateLimitOptions.EnableRateLimiting"/> 为 false 时其它字段被实现侧忽略。
+            </summary>
+        </member>
+        <member name="P:SyZero.Gateway.GatewayRateLimitOptions.EnableRateLimiting">
+            <summary>是否启用限流。默认 false。</summary>
+        </member>
+        <member name="P:SyZero.Gateway.GatewayRateLimitOptions.Period">
+            <summary>窗口长度，格式 <c>1s/5m/1h/1d</c>。</summary>
+        </member>
+        <member name="P:SyZero.Gateway.GatewayRateLimitOptions.PeriodTimespan">
+            <summary>窗口超时（秒）。Ocelot 中是「客户端达到 Limit 后等待多久才能再次发起请求」。</summary>
+        </member>
+        <member name="P:SyZero.Gateway.GatewayRateLimitOptions.Limit">
+            <summary>同窗口内允许的最大请求数。</summary>
+        </member>
+        <member name="P:SyZero.Gateway.GatewayRateLimitOptions.ClientWhitelist">
+            <summary>客户端白名单（按 ClientId 匹配）。</summary>
+        </member>
+        <member name="T:SyZero.Gateway.GatewayRoute">
+            <summary>
+            网关路由 DTO。字段命名对齐 ocelot.json，便于多后端共用。
+            </summary>
+        </member>
+        <member name="P:SyZero.Gateway.GatewayRoute.RateLimitOptions">
+            <summary>
+            单路由限流配置。<c>null</c> 表示该路由不参与限流（与 ocelot.json 中省略 RateLimitOptions 等价）。
+            </summary>
+        </member>
+        <member name="P:SyZero.Gateway.GatewayRoute.Disabled">
+            <summary>
+            路由是否被禁用（默认 false）。
+            启用 Admin 面板的「批量启停」时可标记，<see cref="T:SyZero.Gateway.IGateway"/> 下发实现侧应跳过 <c>true</c> 的路由。
+            </summary>
+        </member>
+        <member name="P:SyZero.Gateway.GatewayRoute.Tags">
+            <summary>
+            路由标签，用于 Admin UI 分组 / 过滤 / 批量操作。下发到具体后端时被忽略。
+            </summary>
+        </member>
+        <member name="P:SyZero.Gateway.GatewayRoute.Description">
+            <summary>
+            路由描述（支持 Markdown）。仅作为元数据保存在 <c>configuration.json</c> 中，下发到具体后端时被忽略。
+            </summary>
+        </member>
+        <member name="P:SyZero.Gateway.GatewayRoute.Extra">
+            <summary>透传未识别字段，避免后端特有配置写回丢失。</summary>
+        </member>
+        <member name="T:SyZero.Gateway.GatewaySwaggerEndPoint">
+            <summary>
+            Swagger 聚合端点。字段命名对齐 ocelot.json。
+            </summary>
+        </member>
+        <member name="T:SyZero.Gateway.IGateway">
+            <summary>
+            网关抽象。具体网关后端（如 Ocelot、YARP）通过实现该接口接入 SyZero。
+            </summary>
+        </member>
+        <member name="P:SyZero.Gateway.IGateway.ProviderName">
+            <summary>
+            当前实现的标识，例如 "Ocelot"、"YARP"。供诊断与日志使用。
+            </summary>
+        </member>
+        <member name="M:SyZero.Gateway.IGateway.GetConfigurationAsync(System.Threading.CancellationToken)">
+            <summary>
+            读取当前生效的网关配置（路由 / Swagger 端点等）。
+            </summary>
+        </member>
+        <member name="T:SyZero.Gateway.IGatewayConfigurationApplier">
+            <summary>
+            网关配置热下发抽象。具体网关实现负责把 <see cref="T:SyZero.Gateway.GatewayConfiguration"/>
+            推送到运行中的网关管线（例如 Ocelot 的 IFileConfigurationSetter、YARP 的 InMemoryConfigProvider）。
+            </summary>
+        </member>
+        <member name="M:SyZero.Gateway.IGatewayConfigurationApplier.ApplyAsync(SyZero.Gateway.GatewayConfiguration,System.Threading.CancellationToken)">
+            <summary>
+            将配置应用到运行中的网关。失败时实现应抛出异常或记录日志，由调用方决定后续策略。
+            </summary>
+        </member>
+        <member name="T:SyZero.Gateway.IGatewayConfigurationStore">
+            <summary>
+            网关配置持久化抽象。供管理面板（SyZero.Gateway.Admin）读写网关配置使用。
+            具体实现决定存储介质（文件、DB、Consul 等）。
+            </summary>
+        </member>
+        <member name="P:SyZero.Gateway.IGatewayConfigurationStore.ConfigPath">
+            <summary>
+            当前配置存储位置的可读描述（文件路径、DB 连接、Consul Key 等），用于诊断展示。
+            </summary>
+        </member>
+        <member name="P:SyZero.Gateway.IGatewayConfigurationStore.LastBackupTime">
+            <summary>
+            最近一次备份时间。未实现备份的存储可返回 <c>null</c>。
+            </summary>
+        </member>
+        <member name="M:SyZero.Gateway.IGatewayConfigurationStore.ReadAsync(System.Threading.CancellationToken)">
+            <summary>
+            读取当前配置。
+            </summary>
+        </member>
+        <member name="M:SyZero.Gateway.IGatewayConfigurationStore.WriteAsync(SyZero.Gateway.GatewayConfiguration,System.Threading.CancellationToken)">
+            <summary>
+            持久化配置；实现内部应负责备份、原子写入并触发 <see cref="T:SyZero.Gateway.IGatewayConfigurationApplier"/> 完成热下发。
+            </summary>
+        </member>
+        <member name="M:SyZero.Gateway.IGatewayConfigurationStore.ReloadAsync(System.Threading.CancellationToken)">
+            <summary>
+            强制重新加载配置并下发到运行中的网关。
+            </summary>
+        </member>
+        <member name="M:SyZero.Gateway.IGatewayConfigurationStore.ListBackupsAsync(System.Threading.CancellationToken)">
+            <summary>
+            列出所有可用备份（按创建时间倒序）。默认返回空列表，
+            表示当前实现不支持备份枚举（如 DB / Consul 等无文件备份语义的实现）。
+            </summary>
+        </member>
+        <member name="M:SyZero.Gateway.IGatewayConfigurationStore.ReadBackupAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            读取指定备份的配置内容。默认返回 <c>null</c>，表示不存在或当前实现不支持。
+            </summary>
+        </member>
+        <member name="M:SyZero.Gateway.IGatewayConfigurationStore.RestoreBackupAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            将指定备份还原为当前配置。还原会先备份当前配置再写入，并触发热下发。
+            默认抛出 <see cref="T:System.NotSupportedException"/>。
+            </summary>
+        </member>
+        <member name="M:SyZero.Gateway.IGatewayConfigurationStore.DeleteBackupAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            删除指定备份。默认抛出 <see cref="T:System.NotSupportedException"/>。
+            </summary>
+        </member>
+    </members>
+</doc>

@@ -1,0 +1,418 @@
+@page "/admin/tester"
+@model SyZero.Gateway.Admin.Pages.Admin.TesterModel
+@{
+    ViewData["Title"] = "路由测试器";
+    ViewData["Subtitle"] = "浏览器侧直接发起请求（不走管理 API）";
+}
+<div class="alert alert-info mb-4">
+    <span>该测试器在浏览器中直接 <code>fetch</code> 网关地址（不经过管理 API），用于快速验证路由是否生效。仅支持当前域名下的 URL。</span>
+</div>
+
+<div class="card bg-base-100 shadow">
+    <div class="card-body">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-2 items-end">
+            <select id="t-method" class="select select-bordered md:col-span-2">
+                <option>GET</option><option>POST</option><option>PUT</option><option>DELETE</option><option>PATCH</option><option>OPTIONS</option>
+            </select>
+            <input id="t-url" class="input input-bordered md:col-span-8" value="/" placeholder="/api/Foo/bar" />
+            <button class="btn btn-primary md:col-span-2" onclick="runTest()">发送</button>
+        </div>
+
+        <div class="mt-3">
+            <div class="flex justify-between items-center">
+                <span class="font-semibold text-sm">请求头（每行 <code>Key: Value</code>）</span>
+                <button class="btn btn-xs" onclick="document.getElementById('t-headers').value=''">清空</button>
+            </div>
+            <textarea id="t-headers" class="textarea textarea-bordered w-full font-mono text-xs mt-1" rows="3" placeholder="Authorization: Bearer xxx&#10;X-Trace: 123"></textarea>
+        </div>
+
+        <div class="mt-3">
+            <span class="font-semibold text-sm">请求体（GET/HEAD 会忽略）</span>
+            <textarea id="t-body" class="textarea textarea-bordered w-full font-mono text-xs mt-1" rows="6" placeholder='{ "hello": "world" }'></textarea>
+        </div>
+
+        <div class="mt-3 flex flex-wrap gap-2">
+            <button class="btn btn-sm" onclick="openSaveDialog()" title="保存到收藏夹">★ 保存</button>
+            <button class="btn btn-sm" onclick="copyAsCurl()" title="复制为 cURL 命令">复制 cURL</button>
+            <button class="btn btn-sm" onclick="openImportCurlDialog()" title="从 cURL 导入">从 cURL 导入</button>
+            <button class="btn btn-sm" onclick="exportFavorites()" title="导出收藏夹 JSON">导出收藏</button>
+            <button class="btn btn-sm" onclick="document.getElementById('fav-import-file').click()" title="导入收藏夹 JSON">导入收藏</button>
+            <input type="file" id="fav-import-file" class="hidden" accept=".json,application/json" onchange="onImportFavoritesFile(event)" />
+        </div>
+    </div>
+</div>
+
+<div class="card bg-base-100 shadow mt-4">
+    <div class="card-body">
+        <h2 class="card-title text-base">响应</h2>
+        <div class="text-sm flex flex-wrap gap-3 items-center">
+            <span>状态：<span id="r-status" class="badge">-</span></span>
+            <span>耗时：<span id="r-time">-</span> ms</span>
+            <span>大小：<span id="r-size">-</span></span>
+        </div>
+        <div class="mt-3">
+            <h3 class="font-semibold text-sm">响应头</h3>
+            <pre class="text-xs overflow-auto max-h-40 bg-base-200 p-2 rounded mt-1" id="r-headers">-</pre>
+        </div>
+        <div class="mt-3">
+            <h3 class="font-semibold text-sm">响应体</h3>
+            <pre class="text-xs overflow-auto max-h-96 bg-base-200 p-2 rounded mt-1" id="r-body">-</pre>
+        </div>
+    </div>
+</div>
+
+<div class="card bg-base-100 shadow mt-4">
+    <div class="card-body">
+        <div class="flex justify-between items-center">
+            <h2 class="card-title text-base">收藏夹（Saved Requests）</h2>
+            <span class="text-xs opacity-50">存于浏览器 localStorage</span>
+        </div>
+        <div id="fav-list" class="text-sm divide-y"></div>
+    </div>
+</div>
+
+<div class="card bg-base-100 shadow mt-4">
+    <div class="card-body">
+        <div class="flex justify-between items-center">
+            <h2 class="card-title text-base">历史记录</h2>
+            <button class="btn btn-xs btn-ghost" onclick="clearHistory()">清空全部</button>
+        </div>
+        <div id="history-list" class="text-sm divide-y"></div>
+    </div>
+</div>
+
+<dialog id="save-dialog" class="modal">
+    <div class="modal-box">
+        <h3 class="font-bold text-lg">保存到收藏夹</h3>
+        <label class="form-control mt-3">
+            <span class="label-text">名称</span>
+            <input id="sv-name" class="input input-bordered" placeholder="例如：登录-管理员" />
+        </label>
+        <label class="form-control mt-3">
+            <span class="label-text">分组（可选）</span>
+            <input id="sv-group" class="input input-bordered" placeholder="例如：Auth / Order" />
+        </label>
+        <div class="modal-action">
+            <button class="btn" onclick="document.getElementById('save-dialog').close()">取消</button>
+            <button class="btn btn-primary" onclick="submitSave()">保存</button>
+        </div>
+    </div>
+</dialog>
+
+<dialog id="curl-dialog" class="modal">
+    <div class="modal-box w-11/12 max-w-3xl">
+        <h3 class="font-bold text-lg">从 cURL 导入</h3>
+        <p class="text-xs opacity-70 mt-1">支持 <code>curl ... -X METHOD ... -H 'K: V' ... --data / -d / --data-raw '...'</code> 等常见形态。仅取 path（含 query），忽略协议/主机。</p>
+        <textarea id="curl-text" class="textarea textarea-bordered w-full font-mono text-xs mt-3" rows="8" placeholder="curl 'https://api.example.com/foo?x=1' -X POST -H 'Content-Type: application/json' --data '{\"a\":1}'"></textarea>
+        <div class="modal-action">
+            <button class="btn" onclick="document.getElementById('curl-dialog').close()">取消</button>
+            <button class="btn btn-primary" onclick="submitImportCurl()">导入</button>
+        </div>
+    </div>
+</dialog>
+
+@section Scripts {
+    <script>
+        const HIST_KEY = 'gw-tester-history';
+        function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]); }
+        function loadHistory() {
+            try { return JSON.parse(localStorage.getItem(HIST_KEY) || '[]'); } catch { return []; }
+        }
+        function saveHistory(items) { localStorage.setItem(HIST_KEY, JSON.stringify(items.slice(0, 20))); }
+        function pushHistory(entry) {
+            const items = loadHistory();
+            items.unshift(entry);
+            saveHistory(items);
+            renderHistory();
+        }
+        function clearHistory() { if (!confirm('确认清空所有历史？')) return; localStorage.removeItem(HIST_KEY); renderHistory(); }
+        function deleteHistory(i) { const items = loadHistory(); items.splice(i, 1); saveHistory(items); renderHistory(); }
+        function applyHistory(i) {
+            const items = loadHistory(); const e = items[i]; if (!e) return;
+            document.getElementById('t-method').value = e.method || 'GET';
+            document.getElementById('t-url').value = e.url || '/';
+            document.getElementById('t-headers').value = e.headers || '';
+            document.getElementById('t-body').value = e.body || '';
+        }
+        function renderHistory() {
+            const host = document.getElementById('history-list');
+            const items = loadHistory();
+            if (items.length === 0) { host.innerHTML = '<div class="opacity-50 py-2">暂无历史（发送请求后自动记录最近 20 条）</div>'; return; }
+            host.innerHTML = items.map((e, i) => {
+                const status = e.status == null ? '-' : e.status;
+                const cls = e.status == null ? 'badge-ghost' : (e.status < 300 ? 'badge-success' : e.status < 400 ? 'badge-info' : e.status < 500 ? 'badge-warning' : 'badge-error');
+                const ts = e.ts ? new Date(e.ts).toLocaleString() : '';
+                return `<div class="py-2 flex items-center gap-2">
+                    <span class="badge ${cls}">${status}</span>
+                    <span class="badge badge-outline">${escapeHtml(e.method || 'GET')}</span>
+                    <code class="flex-1 truncate" title="${escapeHtml(e.url || '')}">${escapeHtml(e.url || '')}</code>
+                    <span class="text-xs opacity-50">${e.elapsed != null ? e.elapsed + 'ms' : ''}</span>
+                    <span class="text-xs opacity-50 hidden md:inline">${ts}</span>
+                    <button class="btn btn-xs" onclick="applyHistory(${i})">回填</button>
+                    <button class="btn btn-xs btn-ghost" onclick="deleteHistory(${i})">删除</button>
+                </div>`;
+            }).join('');
+        }
+        function applyQueryPrefill() {
+            const qs = new URLSearchParams(location.search);
+            const m = qs.get('method'); if (m) document.getElementById('t-method').value = m.toUpperCase();
+            const u = qs.get('url'); if (u) document.getElementById('t-url').value = u;
+            const h = qs.get('headers'); if (h !== null) document.getElementById('t-headers').value = h;
+            const b = qs.get('body'); if (b !== null) document.getElementById('t-body').value = b;
+        }
+        // ===== 收藏夹（Saved Requests） =====
+        const FAV_KEY = 'gw-tester-favorites';
+        function loadFavorites() { try { return JSON.parse(localStorage.getItem(FAV_KEY) || '[]'); } catch { return []; } }
+        function saveFavorites(items) { localStorage.setItem(FAV_KEY, JSON.stringify(items)); }
+        function currentRequest() {
+            return {
+                method: document.getElementById('t-method').value,
+                url: document.getElementById('t-url').value,
+                headers: document.getElementById('t-headers').value,
+                body: document.getElementById('t-body').value
+            };
+        }
+        function applyRequest(e) {
+            if (!e) return;
+            document.getElementById('t-method').value = e.method || 'GET';
+            document.getElementById('t-url').value = e.url || '/';
+            document.getElementById('t-headers').value = e.headers || '';
+            document.getElementById('t-body').value = e.body || '';
+        }
+        function openSaveDialog() {
+            document.getElementById('sv-name').value = '';
+            document.getElementById('sv-group').value = '';
+            document.getElementById('save-dialog').showModal();
+        }
+        function submitSave() {
+            const name = document.getElementById('sv-name').value.trim();
+            if (!name) { adminToast ? adminToast('请输入名称', 'error') : alert('请输入名称'); return; }
+            const group = document.getElementById('sv-group').value.trim();
+            const req = currentRequest();
+            const items = loadFavorites();
+            items.unshift({ id: Date.now() + '_' + Math.random().toString(36).slice(2, 6), name, group, ...req, ts: Date.now() });
+            saveFavorites(items);
+            document.getElementById('save-dialog').close();
+            renderFavorites();
+        }
+        function applyFavorite(id) { const e = loadFavorites().find(x => x.id === id); applyRequest(e); }
+        function deleteFavorite(id) {
+            if (!confirm('删除该收藏？')) return;
+            saveFavorites(loadFavorites().filter(x => x.id !== id));
+            renderFavorites();
+        }
+        function renderFavorites() {
+            const host = document.getElementById('fav-list');
+            if (!host) return;
+            const items = loadFavorites();
+            if (items.length === 0) { host.innerHTML = '<div class="opacity-50 py-2">暂无收藏（点击上方「★ 保存」把当前请求加入收藏夹）</div>'; return; }
+            // 按 group 分组
+            const groups = {};
+            for (const e of items) { (groups[e.group || ''] = groups[e.group || ''] || []).push(e); }
+            const keys = Object.keys(groups).sort();
+            host.innerHTML = keys.map(g => {
+                const head = g ? `<div class="font-semibold text-xs opacity-70 pt-2">${escapeHtml(g)}</div>` : '';
+                const rows = groups[g].map(e => `<div class="py-2 flex items-center gap-2">
+                    <span class="badge badge-outline">${escapeHtml(e.method || 'GET')}</span>
+                    <span class="font-medium">${escapeHtml(e.name)}</span>
+                    <code class="flex-1 truncate opacity-70" title="${escapeHtml(e.url || '')}">${escapeHtml(e.url || '')}</code>
+                    <button class="btn btn-xs" onclick="applyFavorite('${e.id}')">回填</button>
+                    <button class="btn btn-xs" onclick="copyAsCurlOf('${e.id}')">cURL</button>
+                    <button class="btn btn-xs btn-ghost" onclick="deleteFavorite('${e.id}')">删除</button>
+                </div>`).join('');
+                return head + rows;
+            }).join('');
+        }
+        function exportFavorites() {
+            const blob = new Blob([JSON.stringify(loadFavorites(), null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'tester-favorites.json';
+            document.body.appendChild(a); a.click();
+            setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 0);
+        }
+        function onImportFavoritesFile(ev) {
+            const f = ev.target.files && ev.target.files[0]; if (!f) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                try {
+                    const arr = JSON.parse(e.target.result);
+                    if (!Array.isArray(arr)) throw new Error('文件格式错误');
+                    const cur = loadFavorites();
+                    const ids = new Set(cur.map(x => x.id));
+                    for (const x of arr) {
+                        if (!x.id || ids.has(x.id)) x.id = Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+                        cur.unshift({ id: x.id, name: x.name || '(未命名)', group: x.group || '', method: x.method || 'GET', url: x.url || '/', headers: x.headers || '', body: x.body || '', ts: x.ts || Date.now() });
+                    }
+                    saveFavorites(cur);
+                    renderFavorites();
+                    if (typeof adminToast === 'function') adminToast('已导入 ' + arr.length + ' 条', 'success');
+                } catch (err) { alert('导入失败：' + err.message); }
+            };
+            reader.readAsText(f);
+            ev.target.value = '';
+        }
+        // ===== cURL 互转 =====
+        function shellQuote(s) {
+            if (s == null) return "''";
+            return "'" + String(s).replace(/'/g, "'\\''") + "'";
+        }
+        function buildCurl(req) {
+            const parts = ['curl'];
+            parts.push('-X', req.method || 'GET');
+            parts.push(shellQuote(req.url || '/'));
+            parseHeaders(req.headers || '');
+            (req.headers || '').split(/\r?\n/).forEach(line => {
+                const idx = line.indexOf(':');
+                if (idx <= 0) return;
+                parts.push('-H', shellQuote(line.trim()));
+            });
+            const m = (req.method || 'GET').toUpperCase();
+            if (m !== 'GET' && m !== 'HEAD' && (req.body || '').length > 0) {
+                parts.push('--data-raw', shellQuote(req.body));
+            }
+            return parts.join(' ');
+        }
+        function copyAsCurl() {
+            const text = buildCurl(currentRequest());
+            navigator.clipboard.writeText(text).then(
+                () => { if (typeof adminToast === 'function') adminToast('已复制 cURL 到剪贴板', 'success'); },
+                () => { prompt('复制失败，请手动复制：', text); });
+        }
+        function copyAsCurlOf(id) {
+            const e = loadFavorites().find(x => x.id === id); if (!e) return;
+            const text = buildCurl(e);
+            navigator.clipboard.writeText(text).then(
+                () => { if (typeof adminToast === 'function') adminToast('已复制 cURL 到剪贴板', 'success'); },
+                () => { prompt('复制失败，请手动复制：', text); });
+        }
+        function openImportCurlDialog() {
+            document.getElementById('curl-text').value = '';
+            document.getElementById('curl-dialog').showModal();
+        }
+        function parseCurl(text) {
+            // 简易解析：合并续行，按 shell 词法切分（仅支持单/双引号 + 反斜杠转义）
+            const cleaned = String(text || '').replace(/\\\r?\n/g, ' ').trim();
+            const tokens = [];
+            let i = 0, cur = '', quote = null;
+            while (i < cleaned.length) {
+                const c = cleaned[i];
+                if (quote) {
+                    if (c === '\\' && quote === '"' && i + 1 < cleaned.length) { cur += cleaned[i + 1]; i += 2; continue; }
+                    if (c === quote) { quote = null; i++; continue; }
+                    cur += c; i++; continue;
+                }
+                if (c === '\'' || c === '"') { quote = c; i++; continue; }
+                if (/\s/.test(c)) { if (cur) { tokens.push(cur); cur = ''; } i++; continue; }
+                if (c === '\\' && i + 1 < cleaned.length) { cur += cleaned[i + 1]; i += 2; continue; }
+                cur += c; i++;
+            }
+            if (cur) tokens.push(cur);
+            // 跳过开头 curl
+            let idx = 0;
+            if (tokens[0] && tokens[0].toLowerCase() === 'curl') idx = 1;
+            const out = { method: 'GET', url: '/', headers: '', body: '' };
+            const headerLines = [];
+            while (idx < tokens.length) {
+                const t = tokens[idx];
+                if (t === '-X' || t === '--request') { out.method = (tokens[++idx] || 'GET').toUpperCase(); idx++; continue; }
+                if (t === '-H' || t === '--header') { headerLines.push(tokens[++idx] || ''); idx++; continue; }
+                if (t === '-d' || t === '--data' || t === '--data-raw' || t === '--data-binary' || t === '--data-ascii') {
+                    out.body = tokens[++idx] || '';
+                    if (out.method === 'GET') out.method = 'POST';
+                    idx++; continue;
+                }
+                if (t === '--url') { out.url = tokens[++idx] || '/'; idx++; continue; }
+                if (t.startsWith('-')) { idx++; continue; } // 忽略其他 flag（含其参数会被下一轮 startsWith('-') 跳过或被当做 url）
+                if (out.url === '/') { out.url = t; }
+                idx++;
+            }
+            // 把 url 规整为 path（含 query）
+            try {
+                if (/^https?:\/\//i.test(out.url)) {
+                    const u = new URL(out.url);
+                    out.url = u.pathname + (u.search || '');
+                }
+            } catch { }
+            out.headers = headerLines.join('\n');
+            return out;
+        }
+        function submitImportCurl() {
+            const text = document.getElementById('curl-text').value;
+            if (!text.trim()) { alert('请粘贴 cURL 命令'); return; }
+            try {
+                const req = parseCurl(text);
+                applyRequest(req);
+                document.getElementById('curl-dialog').close();
+                if (typeof adminToast === 'function') adminToast('已导入', 'success');
+            } catch (e) { alert('解析失败：' + e.message); }
+        }
+        function parseHeaders(text) {
+            const out = {};
+            (text || '').split(/\r?\n/).forEach(line => {
+                const idx = line.indexOf(':');
+                if (idx <= 0) return;
+                const k = line.substring(0, idx).trim();
+                const v = line.substring(idx + 1).trim();
+                if (k) out[k] = v;
+            });
+            return out;
+        }
+        function fmtBytes(n) {
+            if (n == null) return '-';
+            if (n < 1024) return n + ' B';
+            if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+            return (n / 1024 / 1024).toFixed(2) + ' MB';
+        }
+        async function runTest() {
+            const method = document.getElementById('t-method').value;
+            const url = document.getElementById('t-url').value.trim() || '/';
+            const headersText = document.getElementById('t-headers').value;
+            const headers = parseHeaders(headersText);
+            const bodyRaw = document.getElementById('t-body').value;
+            const init = { method, headers };
+            if (method !== 'GET' && method !== 'HEAD' && bodyRaw.length > 0) {
+                init.body = bodyRaw;
+                if (!Object.keys(headers).some(k => k.toLowerCase() === 'content-type')) {
+                    init.headers['Content-Type'] = 'application/json';
+                }
+            }
+            document.getElementById('r-status').textContent = '...';
+            document.getElementById('r-time').textContent = '...';
+            document.getElementById('r-size').textContent = '...';
+            document.getElementById('r-headers').textContent = '';
+            document.getElementById('r-body').textContent = '';
+
+            const t0 = performance.now();
+            try {
+                const resp = await fetch(url, init);
+                const ms = (performance.now() - t0).toFixed(0);
+                const text = await resp.text();
+                const status = resp.status;
+                const badge = document.getElementById('r-status');
+                badge.textContent = status + ' ' + resp.statusText;
+                badge.className = 'badge ' + (status < 300 ? 'badge-success' : status < 400 ? 'badge-info' : status < 500 ? 'badge-warning' : 'badge-error');
+                document.getElementById('r-time').textContent = ms;
+                document.getElementById('r-size').textContent = fmtBytes(text.length);
+                let headersStr = '';
+                resp.headers.forEach((v, k) => headersStr += k + ': ' + v + '\n');
+                document.getElementById('r-headers').textContent = headersStr || '(空)';
+                let pretty = text;
+                const ct = resp.headers.get('content-type') || '';
+                if (ct.includes('json')) {
+                    try { pretty = JSON.stringify(JSON.parse(text), null, 2); } catch { /* keep raw */ }
+                }
+                document.getElementById('r-body').textContent = pretty || '(空)';
+                pushHistory({ method, url, headers: headersText, body: bodyRaw, status, elapsed: Number(ms), ts: Date.now() });
+            } catch (e) {
+                document.getElementById('r-status').textContent = 'ERR';
+                document.getElementById('r-status').className = 'badge badge-error';
+                document.getElementById('r-body').textContent = '请求失败：' + e.message;
+                pushHistory({ method, url, headers: headersText, body: bodyRaw, status: null, elapsed: null, ts: Date.now() });
+            }
+        }
+        applyQueryPrefill();
+        renderHistory();
+        renderFavorites();
+    </script>
+}

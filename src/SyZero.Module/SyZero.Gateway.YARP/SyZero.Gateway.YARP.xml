@@ -1,0 +1,117 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.Gateway.YARP</name>
+    </assembly>
+    <members>
+        <member name="T:SyZero.SyZeroYarpExtension">
+            <summary>
+            SyZero.Gateway.YARP 模块的注册入口。
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroYarpExtension.AddSyZeroYarpServiceDiscovery(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            启用基于 <see cref="T:SyZero.Service.IServiceManagement"/> 的 YARP 目标解析（自动桥接 Consul / Nacos /
+            Redis / Local / DB 等 SyZero 服务发现后端）。需要先调用 <c>AddSyZeroYarp</c> 与对应的
+            <c>AddConsul()</c> / <c>AddNacos()</c> / <c>AddRedisServiceManagement()</c> 等扩展。
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroYarpExtension.MapSyZeroYarp(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)">
+            <summary>
+            在管道中映射 YARP 反向代理终端。注意必须放在 <c>UseRouting</c> 之后。
+            启动时会调用 <see cref="M:SyZero.Gateway.IGatewayConfigurationStore.ReloadAsync(System.Threading.CancellationToken)"/> 把
+            <c>configuration.json</c> 装载到内存提供者；若文件不存在则保持空路由表。
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroYarpExtension.UseSyZeroYarpAsync(Microsoft.AspNetCore.Builder.IApplicationBuilder)">
+            <summary>
+            启动时初始化 YARP 路由（不映射终端），常配合 <c>app.UseEndpoints</c> 内部 <see cref="M:SyZero.SyZeroYarpExtension.MapSyZeroYarp(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)"/> 使用。
+            若你直接调用了 <see cref="M:SyZero.SyZeroYarpExtension.MapSyZeroYarp(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)"/>，则无需再调用本方法。
+            </summary>
+        </member>
+        <member name="T:SyZero.Gateway.YARP.SyZeroYarpOptions">
+            <summary>
+            SyZero.Gateway.YARP 模块的选项。继承 <see cref="T:SyZero.Gateway.GatewayOptions"/> 复用通用 CORS / Swagger 开关，
+            并追加 YARP 专属配置（配置文件名、是否启用从 appsettings 加载等）。
+            </summary>
+        </member>
+        <member name="P:SyZero.Gateway.YARP.SyZeroYarpOptions.LoadFromConfigurationFile">
+            <summary>
+            是否在启动时从 <c>configuration.json</c>（与 Ocelot 共享相同 schema）加载初始路由。
+            关闭后初始路由集为空，需要通过管理面板/Applier 注入。
+            </summary>
+        </member>
+        <member name="P:SyZero.Gateway.YARP.SyZeroYarpOptions.ConfigurationFileName">
+            <summary>
+            配置文件相对内容根目录的路径。默认 <c>configuration.json</c>，与 Ocelot 一致以便互换。
+            </summary>
+        </member>
+        <member name="P:SyZero.Gateway.YARP.SyZeroYarpOptions.LoadFromReverseProxySection">
+            <summary>
+            是否额外从 <see cref="T:Microsoft.Extensions.Configuration.IConfiguration"/> 的 <c>ReverseProxy</c> 段载入 YARP 原生配置；启用后
+            与文件型 SyZero 路由会合并到同一个内存提供者。
+            </summary>
+        </member>
+        <member name="T:SyZero.Gateway.YARP.SyZeroYarpProxyConfigProvider">
+            <summary>
+            内存型的 YARP 配置提供者，支持运行时热更新。
+            由 <see cref="T:SyZero.Gateway.YARP.YarpConfigurationApplier"/> 调用 <see cref="M:SyZero.Gateway.YARP.SyZeroYarpProxyConfigProvider.Update(System.Collections.Generic.IReadOnlyList{Yarp.ReverseProxy.Configuration.RouteConfig},System.Collections.Generic.IReadOnlyList{Yarp.ReverseProxy.Configuration.ClusterConfig})"/> 进行热下发。
+            </summary>
+        </member>
+        <member name="T:SyZero.Gateway.YARP.SyZeroYarpServiceDiscoveryDestinationResolver">
+            <summary>
+            基于 SyZero <see cref="T:SyZero.Service.IServiceManagement"/> 抽象的 YARP 目标解析器。
+            把形如 <c>discovery://{serviceName}</c> 的占位 destination 展开为
+            真实的 <c>{scheme}://{address}:{port}</c> 列表，从而打通 Consul / Nacos / Redis / Local /
+            DB 等 SyZero 服务发现后端 与 YARP 的桥梁。
+            </summary>
+            <remarks>
+            <para>使用约定：</para>
+            <list type="bullet">
+              <item>当 <see cref="P:SyZero.Gateway.GatewayRoute.ServiceName"/> 不为空时，<see cref="T:SyZero.Gateway.YARP.YarpConfigMapper"/>
+              会为对应集群生成一个 <c>discovery://{ServiceName}</c> 占位 destination。</item>
+              <item>本解析器在 YARP 加载/刷新集群时被调用，把占位地址展开为
+              <see cref="M:SyZero.Service.IServiceManagement.GetHealthyServices(System.String)"/> 返回的健康实例列表。</item>
+              <item>解析时会订阅 <see cref="M:SyZero.Service.IServiceManagement.Subscribe(System.String,System.Action{System.Collections.Generic.List{SyZero.Service.ServiceInfo}})"/>；当服务实例上下线时
+              通过 <see cref="T:Microsoft.Extensions.Primitives.IChangeToken"/> 通知 YARP 仅刷新对应 cluster，无需重新加载整份网关配置。</item>
+              <item>非 <c>discovery</c> scheme 的 destination 原样透传，便于与静态 cluster 共存。</item>
+            </list>
+            </remarks>
+        </member>
+        <member name="T:SyZero.Gateway.YARP.YarpConfigMapper">
+            <summary>
+            <see cref="T:SyZero.Gateway.GatewayConfiguration"/>（Ocelot 风格 schema）与 YARP 原生 <see cref="T:Yarp.ReverseProxy.Configuration.RouteConfig"/> /
+            <see cref="T:Yarp.ReverseProxy.Configuration.ClusterConfig"/> 之间的双向映射。
+            </summary>
+            <remarks>
+            为保证多后端可互换，SyZero 中性 schema 沿用 Ocelot 命名（UpstreamPathTemplate / DownstreamPathTemplate / ServiceName 等）。
+            本类负责把 Ocelot 的 catch-all 模板（<c>{everything}</c>）转写成 YARP 风格（<c>{**catchAll}</c>），
+            并把按 ServiceName 分组的路由聚合成 YARP 集群（每个 ServiceName 一个 cluster）。
+            若路由未指定 ServiceName，则按 UpstreamPathTemplate 派生唯一 cluster id。
+            </remarks>
+        </member>
+        <member name="T:SyZero.Gateway.YARP.YarpConfigurationApplier">
+            <summary>
+            把 <see cref="T:SyZero.Gateway.GatewayConfiguration"/> 热下发到 <see cref="T:SyZero.Gateway.YARP.SyZeroYarpProxyConfigProvider"/>，
+            YARP 会通过 <c>IChangeToken</c> 自动感知并重建路由表，无需重启进程。
+            </summary>
+        </member>
+        <member name="T:SyZero.Gateway.YARP.YarpConfigurationStore">
+            <summary>
+            YARP 后端的 <see cref="T:SyZero.Gateway.IGatewayConfigurationStore"/> 实现：与 Ocelot 共享 <c>configuration.json</c>
+            文件 schema，便于在 SyZero.Gateway.Ocelot / SyZero.Gateway.YARP 之间切换实现而无需迁移配置。
+            写入时自动备份并触发 <see cref="T:SyZero.Gateway.IGatewayConfigurationApplier"/> 热下发。
+            </summary>
+        </member>
+        <member name="T:SyZero.Gateway.YARP.YarpGateway">
+            <summary>
+            基于 YARP 内存提供者的 <see cref="T:SyZero.Gateway.IGateway"/> 实现：直接读取当前生效的
+            <see cref="T:SyZero.Gateway.YARP.SyZeroYarpProxyConfigProvider"/>，把 RouteConfig 反向映射回 SyZero 中性 schema。
+            </summary>
+            <remarks>
+            注意：YARP RouteConfig 的丰富字段（Transforms / RateLimiterPolicy 等）会被简化丢弃；
+            反向映射主要用于 Admin 面板做"读取当前生效配置"的查询，不应作为持久化来源。
+            </remarks>
+        </member>
+    </members>
+</doc>

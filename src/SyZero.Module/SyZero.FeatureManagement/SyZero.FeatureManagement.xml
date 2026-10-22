@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.FeatureManagement</name>
+    </assembly>
+    <members>
+        <member name="T:SyZero.FeatureManagement.ISyFeatureManager">
+            <summary>
+            SyZero 特性开关抽象。在业务层直接依赖此接口而非 Microsoft.FeatureManagement，便于替换或 mock。
+            </summary>
+        </member>
+        <member name="M:SyZero.FeatureManagement.ISyFeatureManager.IsEnabledAsync(System.String)">
+            <summary>判断指定特性是否启用。</summary>
+        </member>
+        <member name="T:SyZero.FeatureManagement.DefaultSyFeatureManager">
+            <summary>
+            包装 <see cref="T:Microsoft.FeatureManagement.IFeatureManager"/> 的默认实现。
+            </summary>
+        </member>
+        <member name="M:SyZero.FeatureManagement.SyZeroFeatureManagementExtension.AddSyZeroFeatureManagement(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration)">
+            <summary>
+            注册 Microsoft.FeatureManagement 与 SyZero 适配。
+            默认从 IConfiguration 的 "FeatureManagement" 节读取开关。
+            </summary>
+        </member>
+    </members>
+</doc>

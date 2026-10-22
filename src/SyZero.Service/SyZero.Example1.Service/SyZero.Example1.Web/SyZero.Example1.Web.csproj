@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -25,12 +25,19 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\SyZero.Core\SyZero.AspNetCore\SyZero.AspNetCore.csproj" />
-    <ProjectReference Include="..\..\..\SyZero.Core\SyZero.DynamicWebApi\SyZero.DynamicWebApi.csproj" />
-    <ProjectReference Include="..\..\..\SyZero.Core\SyZero.Feign\SyZero.Feign.csproj" />
-    <ProjectReference Include="..\..\..\SyZero.Core\SyZero.Log4Net\SyZero.Log4Net.csproj" />
-    <ProjectReference Include="..\..\..\SyZero.Core\SyZero.OpenTelemetry\SyZero.OpenTelemetry.csproj" />
-    <ProjectReference Include="..\..\..\SyZero.Core\SyZero.Swagger\SyZero.Swagger.csproj" />
+    <ProjectReference Include="..\..\..\SyZero.Module\SyZero.AspNetCore\SyZero.AspNetCore.csproj" />
+    <ProjectReference Include="..\..\..\SyZero.Module\SyZero.DynamicWebApi\SyZero.DynamicWebApi.csproj" />
+    <ProjectReference Include="..\..\..\SyZero.Module\SyZero.Feign\SyZero.Feign.csproj" />
+    <ProjectReference Include="..\..\..\SyZero.Module\SyZero.Logging.Log4Net\SyZero.Logging.Log4Net.csproj" />
+    <ProjectReference Include="..\..\..\SyZero.Module\SyZero.Observability.OpenTelemetry\SyZero.Observability.OpenTelemetry.csproj" />
+    <ProjectReference Include="..\..\..\SyZero.Module\SyZero.Swagger\SyZero.Swagger.csproj" />
+    <!-- v1.5.0 集成示例：Diagnostics + GraphQL 默认开启；ApiKey / SourceGenerator 在 Program.cs 中以注释形式提供示例 -->
+    <ProjectReference Include="..\..\..\SyZero.Module\SyZero.Diagnostics\SyZero.Diagnostics.csproj" />
+    <ProjectReference Include="..\..\..\SyZero.Module\SyZero.GraphQL\SyZero.GraphQL.csproj" />
+    <ProjectReference Include="..\..\..\SyZero.Module\SyZero.Authentication.ApiKey\SyZero.Authentication.ApiKey.csproj" />
+    <ProjectReference Include="..\..\..\SyZero.Module\SyZero.SourceGenerator\SyZero.SourceGenerator.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\SyZero.Example1.Application\SyZero.Example1.Application.csproj" />
   </ItemGroup>
 
@@ -44,3 +51,4 @@
   </ItemGroup>
 
 </Project>
+

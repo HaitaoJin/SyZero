@@ -1,8 +1,8 @@
-using Moq;
+﻿using Moq;
 using Nacos.V2;
 using Nacos.V2.Naming.Event;
 using SyZero.Cache;
-using SyZero.Nacos;
+using SyZero.ServiceDiscovery.Nacos;
 using SyZero.Runtime.Security;
 using ServiceInfo = SyZero.Service.ServiceInfo;
 using Xunit;
@@ -228,3 +228,4 @@ public class NacosTests
         }
     }
 }
+
