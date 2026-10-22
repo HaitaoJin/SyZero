@@ -174,7 +174,7 @@ namespace SyZero
 
             services.TryAddSingleton<ICache, Redis.Cache>();
             services.TryAddSingleton<ILockUtil, LockUtil>();
-            services.TryAddSingleton<DistributedLock.IDistributedLockProvider, RedisDistributedLockProvider>();
+            services.TryAddSingleton<IDistributedLockProvider, RedisDistributedLockProvider>();
             services.TryAddSingleton<Microsoft.Extensions.Caching.Distributed.IDistributedCache, RedisDistributedCache>();
             return services;
         }

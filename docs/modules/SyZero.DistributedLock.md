@@ -1,5 +1,7 @@
 # SyZero.DistributedLock
 
+> ⚠️ **v9.1.0 起已并入 [SyZero.Core](./SyZero.Core.md)**：无需单独安装 `SyZero.DistributedLock`，引用 `SyZero.Core` 即可使用。命名空间已合并到 `SyZero`，原 `using SyZero.DistributedLock;` 直接删除。
+
 SyZero 分布式锁模块。`IDistributedLockProvider` 抽象 + 进程内默认实现。Redis 实现位于 [`SyZero.Redis`](/modules/SyZero.Redis) 模块（避免循环依赖）。
 
 ## 设计概览

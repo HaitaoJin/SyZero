@@ -1,11 +1,15 @@
 # SyZero.Audit
 
+> ⚠️ **Merged into [SyZero.Core](./SyZero.Core.md) since v9.1.0**: no need to install `SyZero.Audit` separately — referencing `SyZero.Core` is enough. The namespace is now `SyZero`; just remove `using SyZero.Audit;`.
+
 Audit logging module: provides a unified `AuditLogEntry` model, a pluggable `IAuditLogStore` abstraction, and a `[Sensitive]`-aware data masker for safely capturing "who did what to which resource and when".
 
 ## 📦 Installation
 
+Ships with `SyZero.Core`:
+
 ```bash
-dotnet add package SyZero.Audit
+dotnet add package SyZero.Core
 ```
 
 ## ✨ Features

@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using SyZero.DistributedLock;
 using Xunit;
 
 namespace SyZero.Tests;

@@ -11,7 +11,7 @@
 <p align="center">
   <a href="https://github.com/HaitaoJin/SyZero"><img src="https://img.shields.io/github/stars/HaitaoJin/SyZero?style=flat-square" alt="GitHub Stars"/></a>
   <a href="https://github.com/HaitaoJin/SyZero/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License"/></a>
-  <a href="https://www.nuget.org/packages/SyZero"><img src="https://img.shields.io/nuget/v/SyZero?style=flat-square" alt="NuGet"/></a>
+  <a href="https://www.nuget.org/packages/SyZero.Core"><img src="https://img.shields.io/nuget/v/SyZero.Core?style=flat-square" alt="NuGet"/></a>
     <a href="https://docs.syzero.com/"><img src="https://img.shields.io/badge/docs-docs.syzero.com-green?style=flat-square" alt="Documentation"/></a>
 </p>
 
@@ -38,7 +38,7 @@ SyZero 是一个基于 .NET 的模块化微服务开发框架，提供了丰富�
 
 | 模块 | NuGet 包 | 说明 |
 |------|----------|------|
-| **SyZero** | [![NuGet](https://img.shields.io/nuget/v/SyZero?style=flat-square)](https://www.nuget.org/packages/SyZero) | 核心模块，提供基础功能和依赖注入 |
+| **SyZero.Core** | [![NuGet](https://img.shields.io/nuget/v/SyZero.Core?style=flat-square)](https://www.nuget.org/packages/SyZero.Core) | 核心模块，提供基础功能和依赖注入 |
 | **SyZero.AspNetCore** | [![NuGet](https://img.shields.io/nuget/v/SyZero.AspNetCore?style=flat-square)](https://www.nuget.org/packages/SyZero.AspNetCore) | ASP.NET Core 集成 |
 | **SyZero.AspNetCore.SpaProxy** | [![NuGet](https://img.shields.io/nuget/v/SyZero.AspNetCore.SpaProxy?style=flat-square)](https://www.nuget.org/packages/SyZero.AspNetCore.SpaProxy) | SPA 代理支持（开发环境前后端联调） |
 | **SyZero.DynamicWebApi** | [![NuGet](https://img.shields.io/nuget/v/SyZero.DynamicWebApi?style=flat-square)](https://www.nuget.org/packages/SyZero.DynamicWebApi) | 动态 Web API 生成 |
@@ -58,7 +58,7 @@ SyZero 是一个基于 .NET 的模块化微服务开发框架，提供了丰富�
 | 模块 | NuGet 包 | 说明 |
 |------|----------|------|
 | **SyZero.Redis** | [![NuGet](https://img.shields.io/nuget/v/SyZero.Redis?style=flat-square)](https://www.nuget.org/packages/SyZero.Redis) | Redis 缓存、服务管理与 Redis 事件总线 |
-| **SyZero.RabbitMQ** | [![NuGet](https://img.shields.io/nuget/v/SyZero.RabbitMQ?style=flat-square)](https://www.nuget.org/packages/SyZero.RabbitMQ) | RabbitMQ 消息队列与事件总线 |
+| **SyZero.EventBus.RabbitMQ** | [![NuGet](https://img.shields.io/nuget/v/SyZero.EventBus.RabbitMQ?style=flat-square)](https://www.nuget.org/packages/SyZero.EventBus.RabbitMQ) | RabbitMQ 消息队列与事件总线 |
 
 > 💡 **内置事件总线**：SyZero 核心模块还提供了 `LocalEventBus`（基于内存）和 `DBEventBus`（基于数据库）两种轻量级事件总线实现，适用于单体应用或简单分布式场景。
 
@@ -66,8 +66,8 @@ SyZero 是一个基于 .NET 的模块化微服务开发框架，提供了丰富�
 
 | 模块 | NuGet 包 | 说明 |
 |------|----------|------|
-| **SyZero.Consul** | [![NuGet](https://img.shields.io/nuget/v/SyZero.Consul?style=flat-square)](https://www.nuget.org/packages/SyZero.Consul) | Consul 服务注册与发现 |
-| **SyZero.Nacos** | [![NuGet](https://img.shields.io/nuget/v/SyZero.Nacos?style=flat-square)](https://www.nuget.org/packages/SyZero.Nacos) | Nacos 服务注册与配置中心 |
+| **SyZero.ServiceDiscovery.Consul** | [![NuGet](https://img.shields.io/nuget/v/SyZero.ServiceDiscovery.Consul?style=flat-square)](https://www.nuget.org/packages/SyZero.ServiceDiscovery.Consul) | Consul 服务注册与发现 |
+| **SyZero.ServiceDiscovery.Nacos** | [![NuGet](https://img.shields.io/nuget/v/SyZero.ServiceDiscovery.Nacos?style=flat-square)](https://www.nuget.org/packages/SyZero.ServiceDiscovery.Nacos) | Nacos 服务注册与配置中心 |
 | **SyZero.Gateway.Abstractions** | [![NuGet](https://img.shields.io/nuget/v/SyZero.Gateway.Abstractions?style=flat-square)](https://www.nuget.org/packages/SyZero.Gateway.Abstractions) | 网关抽象层（`IGateway` / `IGatewayConfigurationStore` / `GatewayConfiguration` 等） |
 | **SyZero.Gateway.Ocelot** | [![NuGet](https://img.shields.io/nuget/v/SyZero.Gateway.Ocelot?style=flat-square)](https://www.nuget.org/packages/SyZero.Gateway.Ocelot) | API 网关支持（基于 Ocelot 的 `IGateway` 实现） |
 | **SyZero.Gateway.YARP** | [![NuGet](https://img.shields.io/nuget/v/SyZero.Gateway.YARP?style=flat-square)](https://www.nuget.org/packages/SyZero.Gateway.YARP) | API 网关支持（基于 YARP 的 `IGateway` 实现，与 Ocelot 同级互斥） |
@@ -80,12 +80,14 @@ SyZero 是一个基于 .NET 的模块化微服务开发框架，提供了丰富�
 
 | 模块 | NuGet 包 | 说明 |
 |------|----------|------|
-| **SyZero.AutoMapper** | [![NuGet](https://img.shields.io/nuget/v/SyZero.AutoMapper?style=flat-square)](https://www.nuget.org/packages/SyZero.AutoMapper) | AutoMapper 对象映射 |
-| **SyZero.Log4Net** | [![NuGet](https://img.shields.io/nuget/v/SyZero.Log4Net?style=flat-square)](https://www.nuget.org/packages/SyZero.Log4Net) | Log4Net 日志支持 |
-| **SyZero.OpenTelemetry** | [![NuGet](https://img.shields.io/nuget/v/SyZero.OpenTelemetry?style=flat-square)](https://www.nuget.org/packages/SyZero.OpenTelemetry) | OpenTelemetry 分布式追踪 |
+| **SyZero.ObjectMapping.AutoMapper** | [![NuGet](https://img.shields.io/nuget/v/SyZero.ObjectMapping.AutoMapper?style=flat-square)](https://www.nuget.org/packages/SyZero.ObjectMapping.AutoMapper) | AutoMapper 对象映射 |
+| **SyZero.Logging.Log4Net** | [![NuGet](https://img.shields.io/nuget/v/SyZero.Logging.Log4Net?style=flat-square)](https://www.nuget.org/packages/SyZero.Logging.Log4Net) | Log4Net 日志支持 |
+| **SyZero.Observability.OpenTelemetry** | [![NuGet](https://img.shields.io/nuget/v/SyZero.Observability.OpenTelemetry?style=flat-square)](https://www.nuget.org/packages/SyZero.Observability.OpenTelemetry) | OpenTelemetry 分布式追踪 |
 | **SyZero.Web.Common** | [![NuGet](https://img.shields.io/nuget/v/SyZero.Web.Common?style=flat-square)](https://www.nuget.org/packages/SyZero.Web.Common) | Web 公共组件与通用能力封装 |
 
 ## 🛠️ 快速开始
+
+> 💡 当前正式版本为 `v9.1.0`。`v1.2.0` 之后到 `v1.6.0` 之间的阶段性变更未单独发布，已统一并入 `v9.1.0`；相关升级与破坏性变更请查看 [docs/release-notes.md](docs/release-notes.md)。
 
 ### 安装
 
@@ -468,17 +470,17 @@ SyZero/
 │   ├── SyZero.Core/                    # 核心库（NuGet 包：SyZero.Core）
 │   ├── SyZero.Module/                  # 可插拔框架模块
 │   │   ├── SyZero.AspNetCore/          # ASP.NET Core 集成
-│   │   ├── SyZero.AutoMapper/          # AutoMapper 支持
-│   │   ├── SyZero.Consul/              # Consul 服务发现
+│   │   ├── SyZero.ObjectMapping.AutoMapper/          # AutoMapper 支持
+│   │   ├── SyZero.ServiceDiscovery.Consul/              # Consul 服务发现
 │   │   ├── SyZero.DynamicGrpc/         # 动态 gRPC
 │   │   ├── SyZero.DynamicWebApi/       # 动态 WebApi
 │   │   ├── SyZero.EntityFrameworkCore/ # EF Core 支持
 │   │   ├── SyZero.Feign/               # 声明式 HTTP 客户端
-│   │   ├── SyZero.Log4Net/             # Log4Net 日志
+│   │   ├── SyZero.Logging.Log4Net/             # Log4Net 日志
 │   │   ├── SyZero.MongoDB/             # MongoDB 支持
-│   │   ├── SyZero.Nacos/               # Nacos 支持
-│   │   ├── SyZero.OpenTelemetry/       # 链路追踪
-│   │   ├── SyZero.RabbitMQ/            # RabbitMQ 消息队列
+│   │   ├── SyZero.ServiceDiscovery.Nacos/               # Nacos 支持
+│   │   ├── SyZero.Observability.OpenTelemetry/       # 链路追踪
+│   │   ├── SyZero.EventBus.RabbitMQ/            # RabbitMQ 消息队列
 │   │   ├── SyZero.Redis/               # Redis 缓存
 │   │   ├── SyZero.SqlSugar/            # SqlSugar ORM
 │   │   ├── SyZero.Swagger/             # Swagger 文档
@@ -494,7 +496,7 @@ SyZero/
 
 ## 🔧 技术栈
 
-- **.NET**: .NET 9.0+ / .NET Standard 2.1+
+- **.NET**: 运行时模块统一要求 .NET 9 SDK / Runtime；仅 `SyZero.SourceGenerator` 作为 Analyzer 保持 `netstandard2.0`
 - **IDE**: Visual Studio 2022 / VS Code / Rider
 - **数据库**: SQL Server / MySQL / MongoDB / PostgreSQL (可选)
 - **缓存**: Redis / 内存缓存 (可选)
@@ -508,7 +510,7 @@ SyZero/
 
 ## 📋 更新历史
 
-查看完整的 [更新日志](docs/release-notes.md)。
+查看完整的 [更新日志](docs/release-notes.md) 了解 `v9.1.0` 的合并发布与升级说明。
 
 ## 🤝 贡献
 
@@ -537,3 +539,4 @@ SyZero/
 ---
 
 <p align="center">Made with ❤️ by HaitaoJin</p>
+

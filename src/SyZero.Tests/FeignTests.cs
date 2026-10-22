@@ -22,7 +22,7 @@ namespace SyZero.Tests;
 public class FeignTests
 {
     [Fact]
-    public async Task RequestFeignHandler_BuildsGatewayPath_WithoutDuplicateSlashes()
+    public async Task RequestFeignHandler_BuildsDynamicApiPath_WithoutServiceNamePrefix()
     {
         var innerHandler = new CaptureHandler();
         var handler = new RequestFeignHandler("sample-service", innerHandler);
@@ -32,7 +32,7 @@ public class FeignTests
 
         await client.SendAsync(request);
 
-        Assert.Equal("/api/sample-service/orders/orders/list", innerHandler.LastRequest!.RequestUri!.AbsolutePath);
+        Assert.Equal("/api/orders/orders/list", innerHandler.LastRequest!.RequestUri!.AbsolutePath);
     }
 
     [Fact]
@@ -45,6 +45,20 @@ public class FeignTests
         await client.GetAsync("http://localhost/api/orders/list");
 
         Assert.Equal("/orders/list", innerHandler.LastRequest!.RequestUri!.AbsolutePath);
+    }
+
+    [Fact]
+    public async Task RequestFeignHandler_NormalizesLegacyApiPrefixFromRoutingAttribute()
+    {
+        var innerHandler = new CaptureHandler();
+        var handler = new RequestFeignHandler("sample-service", innerHandler);
+        using var client = new HttpClient(handler);
+        using var request = new HttpRequestMessage(HttpMethod.Get, "http://localhost/APIGetServiceInfo");
+        request.Options.Set(new HttpRequestOptionsKey<TypeInfo>(HttpRequestMessageOptions.InterfaceType), typeof(SampleRemoteServiceClient).GetTypeInfo());
+
+        await client.SendAsync(request);
+
+        Assert.Equal("/api/example2/GetServiceInfo", innerHandler.LastRequest!.RequestUri!.AbsolutePath);
     }
 
     [Fact]
@@ -240,6 +254,13 @@ public class FeignTests
         Assert.IsType<FormatException>(deserializationException!.InnerException);
 
         Assert.NotNull(settings.ExceptionFactory);
+        var success = await settings.ExceptionFactory!(
+            new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("{\"id\":1}", System.Text.Encoding.UTF8, "application/json")
+            });
+        Assert.Null(success);
+
         var clientError = await settings.ExceptionFactory!(
             new HttpResponseMessage(HttpStatusCode.BadRequest)
             {
@@ -255,6 +276,35 @@ public class FeignTests
         Assert.IsType<SyMessageException>(serverError);
     }
 
+    [Fact]
+    public async Task RefitProxy_CanDeserializeUnwrappedServiceInfoDto()
+    {
+        var responseHandler = new ResponseFeignHandler("SyZero.Example2", new StaticResponseHandler(
+            new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(
+                    "{\"code\":1,\"data\":{\"serviceName\":\"SyZero.Example2\",\"version\":\"1.0.0\",\"port\":5003,\"timestamp\":\"2026-05-01 20:00:00\"}}",
+                    System.Text.Encoding.UTF8,
+                    "application/json")
+            }));
+        var requestHandler = new RequestFeignHandler("SyZero.Example2", responseHandler);
+        var method = typeof(HttpProxyFactory).GetMethod("CreateRefitSettings", BindingFlags.Instance | BindingFlags.NonPublic)
+            ?? throw new MissingMethodException(typeof(HttpProxyFactory).FullName, "CreateRefitSettings");
+        var settings = (RefitSettings)method.Invoke(new HttpProxyFactory(), [new DefaultJsonSerialize()])!;
+        using var client = new HttpClient(requestHandler)
+        {
+            BaseAddress = new Uri("http://localhost:5003")
+        };
+
+        var proxy = RestService.For<SampleRemoteServiceClient>(client, settings);
+        var result = await proxy.GetServiceInfo();
+
+        Assert.NotNull(result);
+        Assert.Equal("SyZero.Example2", result.ServiceName);
+        Assert.Equal("1.0.0", result.Version);
+        Assert.Equal(5003, result.Port);
+    }
+
     private static object? InvokePrivateStaticMethod(Type type, string methodName, params object[] parameters)
     {
         var method = type.GetMethod(methodName, BindingFlags.Static | BindingFlags.NonPublic)
@@ -265,6 +315,21 @@ public class FeignTests
     [Api("orders")]
     private interface OrderClient : IApplicationService
     {
+    }
+
+    [Api("example2")]
+    public interface SampleRemoteServiceClient : IApplicationService
+    {
+        [Refit.Get("/GetServiceInfo")]
+        Task<SampleServiceInfoDto> GetServiceInfo();
+    }
+
+    public sealed class SampleServiceInfoDto
+    {
+        public string? ServiceName { get; set; }
+        public string? Version { get; set; }
+        public int Port { get; set; }
+        public string? Timestamp { get; set; }
     }
 
     private sealed class CaptureHandler : HttpMessageHandler

@@ -51,6 +51,10 @@ namespace SyZero
 
             //注入SySession
             services.AddScoped<ISySession, SySession>();
+            services.AddSyZeroValidation();
+            services.AddOptions();
+            services.AddMemoryCache();
+            services.AddDistributedMemoryCache();
 
             //// 获取所有实现了IScopedDependency接口的类型
             //var scopedDependency = ReflectionHelper.GetTypes()

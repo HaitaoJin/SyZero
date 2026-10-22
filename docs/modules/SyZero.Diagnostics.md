@@ -1,4 +1,4 @@
-# SyZero.Diagnostics
+﻿# SyZero.Diagnostics
 
 统一的请求诊断中间件：写入 method / path / status / 耗时 / TraceId / UserId / TenantId 结构化日志，并把这些字段填入 `HttpContext.Items` 便于业务读取。
 
@@ -26,4 +26,5 @@ app.UseAuthorization();
 
 ## 🔗 与 OpenTelemetry 配合
 
-启用 [SyZero.OpenTelemetry](./SyZero.OpenTelemetry) 后，`Activity.Current` 由 ASP.NET Core 自动填充，本中间件无需额外配置即可写入正确的 TraceId。
+启用 [SyZero.Observability.OpenTelemetry](./SyZero.Observability.OpenTelemetry) 后，`Activity.Current` 由 ASP.NET Core 自动填充，本中间件无需额外配置即可写入正确的 TraceId。
+

@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version Condition=" '$(BUILD_BUILDNUMBER)' == '' ">1.6.0</Version>
+    <Version Condition=" '$(BUILD_BUILDNUMBER)' == '' ">9.1.0</Version>
     <Version Condition=" '$(BUILD_BUILDNUMBER)' != '' ">$(BUILD_BUILDNUMBER)</Version>
     <DocumentationFile Condition=" '$(DocumentationFile)' == '' ">$(MSBuildProjectName).xml</DocumentationFile>
     <PackageOutputPath>$(SyZeroRootPath)nuget</PackageOutputPath>

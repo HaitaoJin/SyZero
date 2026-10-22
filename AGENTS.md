@@ -1,6 +1,6 @@
 ﻿# SyZero — Agent 指南
 
-SyZero 是一个 **.NET 9** 模块化微服务框架，发布为一组 NuGet 包（`SyZero.*`，当前版本 `1.1.10`）。
+SyZero 是一个 **.NET 9** 模块化微服务框架，发布为一组 NuGet 包（`SyZero.*`，当前版本 `9.1.0`）。
 面向用户的中文/英文文档：[README.md](README.md) · [README.en.md](README.en.md) · [docs/](docs/index.md)
 
 > 与代理交互的默认语言为 **简体中文**。代码注释、提交说明、PR 描述也保持中文（除非用户另有说明）。
@@ -9,8 +9,8 @@ SyZero 是一个 **.NET 9** 模块化微服务框架，发布为一组 NuGet 包
 
 | 路径 | 用途 |
 |---|---|
-| [src/SyZero.Core/](src/SyZero.Core) | 框架内核 NuGet 包 `SyZero.Core`（`AssemblyName=SyZero`、根命名空间 `SyZero`），提供依赖注入、应用基础设施、仓储/工作单元抽象、轻量服务管理与事件总线 |
-| [src/SyZero.Module/](src/SyZero.Module) | 框架可插拔模块包，每个子目录就是一个独立 NuGet 包（`SyZero.AspNetCore`、`SyZero.Redis`、`SyZero.Consul`、`SyZero.Nacos`、`SyZero.SqlSugar`、`SyZero.EntityFrameworkCore`、`SyZero.DynamicWebApi`、`SyZero.DynamicGrpc`、`SyZero.RabbitMQ`、`SyZero.OpenTelemetry`、`SyZero.Gateway.Abstractions`、`SyZero.Gateway.Ocelot`、`SyZero.Gateway.YARP`、`SyZero.Gateway.Admin`、`SyZero.Feign`、`SyZero.Swagger`、`SyZero.AutoMapper`、`SyZero.Log4Net`、`SyZero.MongoDB`、`SyZero.AspNetCore.SpaProxy`、`SyZero.Web.Common`） |
+| [src/SyZero.Core/](src/SyZero.Core) | 框架内核 NuGet 包 `SyZero.Core`（`AssemblyName=SyZero`、根命名空间 `SyZero`），提供依赖注入、应用基础设施、仓储/工作单元抽象、轻量服务管理与事件总线。**v9.1.0 起合并了 `Validation` / `DistributedLock` / `Audit` 三个轻量能力**（位于 `Validation/` / `DistributedLock/` / `Audit/` 子目录，同为 `SyZero.*` 命名空间） |
+| [src/SyZero.Module/](src/SyZero.Module) | 框架可插拔模块包，每个子目录就是一个独立 NuGet 包，涵盖 ASP.NET Core / 仓储（EF Core / SqlSugar / MongoDB）/ 缓存（Redis）/ 服务发现（Consul / Nacos）/ 事件总线（RabbitMQ / Kafka）/ 网关（Ocelot / YARP）/ 可观测性（OpenTelemetry / Log4Net）/ 对象映射（AutoMapper / Mapster）/ 多租户、任务调度、认证授权、资源限流 等能力。完整清单参见 [docs/modules/index.md](docs/modules/index.md) |
 | [src/SyZero.Service/](src/SyZero.Service) | 示例业务服务（`SyZero.Example1.Service`、`SyZero.Example2.Service`），演示 **Web / Application / IApplication / Core** 分层，是新业务服务的参考模板 |
 | [src/SyZero.Gateway/](src/SyZero.Gateway) | 基于 Ocelot 的 API 网关示例 |
 | [src/SyZero.Tests/](src/SyZero.Tests) | 单一 xUnit 测试项目，引用并测试所有模块（按模块拆分文件，如 `RedisTests.cs`、`SqlSugarTests.cs`） |
@@ -70,3 +70,4 @@ SyZero 是一个 **.NET 9** 模块化微服务框架，发布为一组 NuGet 包
 - 修改 [Directory.Build.props](Directory.Build.props) 的 `Version` 会改变所有包版本——发布前与维护者确认。
 - 解决方案文件是 `.slnx`（XML 新格式），部分旧版工具可能不识别——请用 .NET 9+ SDK / 最新 VS / VS Code C# Dev Kit。
 - README 文档/中文标点遵循中文写作风格；示例代码块使用 ` ```csharp `。
+

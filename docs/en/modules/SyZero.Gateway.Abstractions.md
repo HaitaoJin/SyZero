@@ -1,6 +1,6 @@
 # SyZero.Gateway.Abstractions
 
-> Introduced in v1.6.0. Previously the same abstractions (namespace `SyZero.Gateway`) lived inside `SyZero.Core`; they have been extracted into their own package so that `SyZero.Core` truly focuses on the framework kernel (DI / repository / service management / event bus / multi-level cache).
+> Introduced in v9.1.0. Previously the same abstractions (namespace `SyZero.Gateway`) lived inside `SyZero.Core`; they have been extracted into their own package so that `SyZero.Core` truly focuses on the framework kernel (DI / repository / service management / event bus / multi-level cache).
 
 `SyZero.Gateway.Abstractions` contains **interfaces and DTOs only** — no specific gateway dependency. All SyZero gateway implementations (`SyZero.Gateway.Ocelot`, `SyZero.Gateway.YARP`) and the admin panel (`SyZero.Gateway.Admin`) share a single set of abstractions through this package, so implementations are pluggable, the admin panel is reusable, and the configuration schema is identical.
 
@@ -66,4 +66,4 @@ services.AddSingleton<IGatewayConfigurationApplier, MyCustomApplier>();
 
 ## History
 
-- v1.6.0: extracted from `SyZero.Core` into its own NuGet package. The `SyZero.Gateway` namespace is preserved — business `using` directives need no change; only project references that previously relied on `SyZero.Core` for these types must now reference a concrete implementation package (or this abstractions package).
+- v9.1.0: extracted from `SyZero.Core` into its own NuGet package. The `SyZero.Gateway` namespace is preserved — business `using` directives need no change; only project references that previously relied on `SyZero.Core` for these types must now reference a concrete implementation package (or this abstractions package).

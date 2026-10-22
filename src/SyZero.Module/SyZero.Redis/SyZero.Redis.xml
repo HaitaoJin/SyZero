@@ -18,7 +18,7 @@
         </member>
         <member name="T:SyZero.Redis.RedisDistributedLockProvider">
             <summary>
-            基于 Redis <c>SET NX PX</c> + Lua 释放脚本的 <see cref="T:SyZero.DistributedLock.IDistributedLockProvider"/> 实现。
+            基于 Redis <c>SET NX PX</c> + Lua 释放脚本的 <see cref="T:SyZero.IDistributedLockProvider"/> 实现。
             多实例部署的推荐选择。
             </summary>
         </member>

@@ -16,12 +16,16 @@
 
 <div class="flex flex-wrap items-center gap-2 mb-4">
     <button class="btn btn-sm" onclick="loadUsers()">刷新</button>
-    @if (isAdmin)
-    {
-        <button class="btn btn-sm btn-primary" onclick="openCreate()">新增用户</button>
-    }
+    <button class="btn btn-sm btn-primary" onclick="openCreate()" disabled="@(!isAdmin)" title="@(isAdmin ? "新增 users.json 用户" : "需要 Admin 权限")">新增用户</button>
     <button class="btn btn-sm btn-ghost ml-auto" onclick="openMyPwd()">修改我的密码</button>
 </div>
+
+@if (!isAdmin)
+{
+    <div class="alert alert-warning mb-4">
+        <span>当前账号为 <b>Reader</b>，可查看用户列表和修改自己的密码，但不能新增、编辑、删除其他账号</span>
+    </div>
+}
 
 <div class="card bg-base-100 shadow">
     <div class="card-body p-0">
@@ -144,6 +148,7 @@
         }
 
         function openCreate() {
+            if (!isAdmin) { adminToast('需要 Admin 权限才能新增用户', 'warning'); return; }
             document.getElementById('cu-name').value = '';
             document.getElementById('cu-pwd').value = '';
             document.getElementById('cu-role').value = 'Admin';

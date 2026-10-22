@@ -25,5 +25,23 @@
             仅供 <see cref="T:SyZero.Tests.MapsterTests"/> 使用的 IRegister，验证程序集扫描可以拾取自定义映射规则。
             </summary>
         </member>
+        <member name="T:Refit.Implementation.Generated">
+            <inheritdoc />
+        </member>
+        <member name="T:Refit.Implementation.Generated.SyZeroTestsFeignTestsSampleRemoteServiceClient">
+            <inheritdoc />
+        </member>
+        <member name="P:Refit.Implementation.Generated.SyZeroTestsFeignTestsSampleRemoteServiceClient.Client">
+            <inheritdoc />
+        </member>
+        <member name="M:Refit.Implementation.Generated.SyZeroTestsFeignTestsSampleRemoteServiceClient.#ctor(System.Net.Http.HttpClient,Refit.IRequestBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Refit.Implementation.Generated.SyZeroTestsFeignTestsSampleRemoteServiceClient.GetServiceInfo">
+            <inheritdoc />
+        </member>
+        <member name="M:Refit.Implementation.Generated.SyZeroTestsFeignTestsSampleRemoteServiceClient.SyZero#Tests#FeignTests#SampleRemoteServiceClient#GetServiceInfo">
+            <inheritdoc />
+        </member>
     </members>
 </doc>

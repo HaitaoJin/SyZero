@@ -34,6 +34,7 @@
         if (IsActive("/admin/routes")) return "路由管理";
         if (IsActive("/admin/route-overview")) return "路由概览";
         if (IsActive("/admin/swagger-endpoints")) return "Swagger 端点";
+        if (IsActive("/admin/service-interfaces")) return "服务接口";
         if (IsActive("/admin/backups")) return "备份";
         if (IsActive("/admin/raw-editor")) return "原生 JSON";
         if (IsActive("/admin/diff")) return "运行时 Diff";
@@ -43,6 +44,37 @@
         if (IsActive("/admin/users")) return "用户管理";
         if (IsActive("/admin/tester")) return "路由测试器";
         return ViewData["Title"]?.ToString() ?? "网关管理";
+    }
+
+    string PageIconSvg()
+    {
+        if (IsActive("/admin", exact: true))
+            return "<svg class=\"w-5 h-5\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M3 12l9-9 9 9M5 10v10h4v-6h6v6h4V10\"/></svg>";
+        if (IsActive("/admin/routes"))
+            return "<svg class=\"w-5 h-5\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M4 6h16M4 12h16M4 18h10\"/></svg>";
+        if (IsActive("/admin/route-overview"))
+            return "<svg class=\"w-5 h-5\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18\"/></svg>";
+        if (IsActive("/admin/swagger-endpoints"))
+            return "<svg class=\"w-5 h-5\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M5 5h14v4H5zM5 11h14v8H5z\"/></svg>";
+        if (IsActive("/admin/service-interfaces"))
+            return "<svg class=\"w-5 h-5\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M7 7h10M7 12h10M7 17h6\"/><rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/></svg>";
+        if (IsActive("/admin/rate-limiting"))
+            return "<svg class=\"w-5 h-5\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v5l3 3\"/></svg>";
+        if (IsActive("/admin/load-balancing"))
+            return "<svg class=\"w-5 h-5\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"6\" cy=\"6\" r=\"2\"/><circle cx=\"18\" cy=\"6\" r=\"2\"/><circle cx=\"12\" cy=\"18\" r=\"2\"/><path d=\"M8 7.5l2.5 7M16 7.5l-2.5 7\"/></svg>";
+        if (IsActive("/admin/backups"))
+            return "<svg class=\"w-5 h-5\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><ellipse cx=\"12\" cy=\"6\" rx=\"7\" ry=\"3\"/><path d=\"M5 6v8c0 1.7 3.1 3 7 3s7-1.3 7-3V6\"/></svg>";
+        if (IsActive("/admin/raw-editor"))
+            return "<svg class=\"w-5 h-5\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M8 8l-4 4 4 4M16 8l4 4-4 4\"/></svg>";
+        if (IsActive("/admin/diff"))
+            return "<svg class=\"w-5 h-5\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M12 3v18M7 8l-4 4 4 4M17 8l4 4-4 4\"/></svg>";
+        if (IsActive("/admin/audit"))
+            return "<svg class=\"w-5 h-5\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11\"/></svg>";
+        if (IsActive("/admin/users"))
+            return "<svg class=\"w-5 h-5\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M16 11a4 4 0 10-8 0 4 4 0 008 0zM3 21a7 7 0 0114 0M17 11a3 3 0 100-6M21 21a5 5 0 00-7-4.6\"/></svg>";
+        if (IsActive("/admin/tester"))
+            return "<svg class=\"w-5 h-5\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M5 12l5 5L20 7\"/></svg>";
+        return "<svg class=\"w-5 h-5\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M3 12h4l3-9 4 18 3-9h4\"/></svg>";
     }
 }
 <!DOCTYPE html>
@@ -238,7 +270,7 @@
                 }
                 <div class="mb-4 flex items-center gap-3">
                     <span class="w-10 h-10 rounded-xl gw-brand-grad text-white inline-flex items-center justify-center shadow-sm">
-                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3-9 4 18 3-9h4"/></svg>
+                        @Html.Raw(PageIconSvg())
                     </span>
                     <div class="min-w-0">
                         <h1 class="text-2xl font-semibold leading-tight gw-text-grad truncate">@pageTitle</h1>
@@ -266,8 +298,8 @@
                 <a href="/admin" class="flex items-center gap-2 px-2 py-3 mb-2 border-b border-base-300/60 hover:bg-base-200/60 rounded-lg transition gw-side-brand" title="返回首页 / SyZero 网关管理台">
                     <span class="w-10 h-10 rounded-xl gw-brand-grad text-white inline-flex items-center justify-center text-sm font-bold shadow flex-shrink-0">SZ</span>
                     <span class="flex flex-col leading-tight gw-side-brand-text">
-                        <span class="text-base font-semibold gw-text-grad">SyZero</span>
-                        <span class="text-[11px] text-base-content/60">网关管理台</span>
+                        <span class="text-base font-semibold gw-text-grad">网关管理台</span>
+                        <span class="text-[11px] text-base-content/60">SyZero</span>
                     </span>
                     <label for="gw-drawer" class="btn btn-ghost btn-sm btn-square ml-auto lg:hidden" aria-label="关闭菜单">✕</label>
                 </a>
@@ -294,6 +326,12 @@
                         <a href="/admin/swagger-endpoints" class="@ActiveCls("/admin/swagger-endpoints")" title="Swagger 端点">
                             <svg class="gw-side-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v4H4zM4 10h16v4H4zM4 16h16v4H4z"/></svg>
                             <span class="gw-side-label">Swagger 端点</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/service-interfaces" class="@ActiveCls("/admin/service-interfaces")" title="服务接口">
+                            <svg class="gw-side-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 7h10M7 12h10M7 17h6"/><rect x="3" y="4" width="18" height="16" rx="2"/></svg>
+                            <span class="gw-side-label">服务接口</span>
                         </a>
                     </li>
                     <li class="menu-title gw-side-label"><span>高级</span></li>
@@ -355,6 +393,25 @@
 
     <div id="toast-host" class="toast toast-end z-50"></div>
     <script>
+        // ===== 页面级清理钩子 =====
+        (function () {
+            const cleanupFns = [];
+            let cleaned = false;
+            window.registerAdminCleanup = function (fn) {
+                if (typeof fn === 'function') cleanupFns.push(fn);
+            };
+            window.runAdminCleanup = function () {
+                if (cleaned) return;
+                cleaned = true;
+                while (cleanupFns.length) {
+                    const fn = cleanupFns.pop();
+                    try { fn && fn(); } catch {}
+                }
+            };
+            window.addEventListener('pagehide', window.runAdminCleanup, { once: true });
+            window.addEventListener('beforeunload', window.runAdminCleanup, { once: true });
+        })();
+
         // ===== 主题切换 =====
         var gwDarkThemes = ['dark', 'dracula', 'business', 'night', 'synthwave', 'black', 'halloween', 'forest', 'luxury', 'coffee', 'sunset'];
         function gwApplyTheme(t) {
@@ -478,10 +535,48 @@
         })();
 
         // ===== Fetch 包装：401 自动跳登录页 + 顶部进度条 =====
+        window.__adminFetchControllers = window.__adminFetchControllers || new Set();
+        if (window.registerAdminCleanup) {
+            window.registerAdminCleanup(function () {
+                window.__adminFetchControllers.forEach(function (controller) {
+                    try { controller.abort(); } catch {}
+                });
+                window.__adminFetchControllers.clear();
+            });
+        }
         window.adminFetch = async function (url, options) {
             options = options || {};
-            options.headers = Object.assign({ 'Content-Type': 'application/json' }, options.headers || {});
+            const method = String(options.method || 'GET').toUpperCase();
+            const headers = Object.assign({}, options.headers || {});
+            if (!headers['Content-Type'] && !headers['content-type'] && method !== 'GET' && method !== 'HEAD') {
+                headers['Content-Type'] = 'application/json';
+            }
+            options.headers = headers;
             options.credentials = options.credentials || 'same-origin';
+            const timeoutMs = typeof options.timeoutMs === 'number'
+                ? options.timeoutMs
+                : (method === 'GET' || method === 'HEAD' ? 10000 : 20000);
+            const externalSignal = options.signal;
+            const controller = new AbortController();
+            let timedOut = false;
+            let timeoutId = null;
+            let externalAbortHandler = null;
+            if (externalSignal) {
+                if (externalSignal.aborted) controller.abort();
+                else {
+                    externalAbortHandler = function () { controller.abort(); };
+                    externalSignal.addEventListener('abort', externalAbortHandler, { once: true });
+                }
+            }
+            options.signal = controller.signal;
+            delete options.timeoutMs;
+            window.__adminFetchControllers.add(controller);
+            if (timeoutMs > 0) {
+                timeoutId = setTimeout(function () {
+                    timedOut = true;
+                    try { controller.abort(); } catch {}
+                }, timeoutMs);
+            }
             if (window.adminProgress) window.adminProgress.start();
             try {
                 const resp = await fetch(url, options);
@@ -498,7 +593,17 @@
                     throw new Error(msg);
                 }
                 return data;
+            } catch (e) {
+                if (controller.signal.aborted) {
+                    throw new Error(timedOut ? '请求超时，请稍后重试' : '请求已取消');
+                }
+                throw e;
             } finally {
+                if (timeoutId) clearTimeout(timeoutId);
+                if (externalSignal && externalAbortHandler) {
+                    try { externalSignal.removeEventListener('abort', externalAbortHandler); } catch {}
+                }
+                window.__adminFetchControllers.delete(controller);
                 if (window.adminProgress) window.adminProgress.done();
             }
         };
@@ -532,6 +637,7 @@
             let es = null;
             let backoff = 1000;
             let badgeEl = null;
+            let reconnectTimer = null;
             function setStatus(state) {
                 if (!badgeEl) return;
                 badgeEl.classList.remove('badge-success', 'badge-warning', 'badge-error');
@@ -543,16 +649,30 @@
                 badgeEl = document.getElementById('admin-sse-status');
                 if (badgeEl) setStatus(es && es.readyState === 1 ? 'live' : 'reconnect');
             }
+            function clearReconnect() {
+                if (reconnectTimer) {
+                    clearTimeout(reconnectTimer);
+                    reconnectTimer = null;
+                }
+            }
+            function closeStream() {
+                clearReconnect();
+                if (es) {
+                    try { es.close(); } catch { }
+                    es = null;
+                }
+            }
             function connect() {
+                if (document.hidden || es) return;
                 try {
                     es = new EventSource('/admin-api/events', { withCredentials: true });
                     es.onopen = function () { backoff = 1000; setStatus('live'); };
                     es.onerror = function () {
+                        closeStream();
                         setStatus('reconnect');
-                        try { es.close(); } catch { }
-                        es = null;
+                        if (document.hidden) return;
                         // 自动重连：指数退避到 30s 上限
-                        setTimeout(connect, backoff);
+                        reconnectTimer = setTimeout(connect, backoff);
                         backoff = Math.min(backoff * 2, 30000);
                     };
                     es.onmessage = function (e) { dispatch({ type: 'message', data: e.data }); };
@@ -580,12 +700,27 @@
                 if (evt && evt.type && evt.type !== 'message') {
                     var who = evt.user ? '@@' + evt.user : '';
                     var toast = window.adminToast;
-                    if (toast) toast(evt.summary || evt.type, 'info');
+                    if (toast && !document.hidden) toast(evt.summary || evt.type, 'info');
                     // 控制台辅助
                     try { console.debug('[admin-sse]', evt.type, who, evt); } catch { }
                 }
             }
+            function handleVisibilityChange() {
+                if (document.hidden) {
+                    closeStream();
+                    setStatus('reconnect');
+                    return;
+                }
+                connect();
+            }
             window.__adminSse = { connect: connect, attachBadge: attachBadge };
+            document.addEventListener('visibilitychange', handleVisibilityChange);
+            if (window.registerAdminCleanup) {
+                window.registerAdminCleanup(function () {
+                    document.removeEventListener('visibilitychange', handleVisibilityChange);
+                    closeStream();
+                });
+            }
             // 页面加载完成后启动
             if (document.readyState === 'complete' || document.readyState === 'interactive') {
                 attachBadge(); connect();

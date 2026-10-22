@@ -17,7 +17,7 @@ dotnet add package SyZero.Core
 - 📣 **轻量级事件总线** - 内置 `LocalEventBus`、`DBEventBus`
 - 🛰 **远程服务调用抽象** - `IRemoteServiceProvider` / `IRemoteServiceProxyFactory` / `RemoteServiceOptions`，由 [`SyZero.Feign`](./SyZero.Feign) 等模块提供具体 Provider 实现，未来可平行新增更多 Provider
 
-> 💡 v1.6.0 起，原本位于本包的网关抽象（`IGateway` / `IGatewayConfigurationStore` / `GatewayConfiguration` 等）已迁移到独立包 [`SyZero.Gateway.Abstractions`](./SyZero.Gateway.Abstractions)，请按需引用。
+> 💡 v9.1.0 起，原本位于本包的网关抽象（`IGateway` / `IGatewayConfigurationStore` / `GatewayConfiguration` 等）已迁移到独立包 [`SyZero.Gateway.Abstractions`](./SyZero.Gateway.Abstractions)，请按需引用。
 - 🧬 **动态 API Provider 抽象** - `SyZero.Application.DynamicApi.*`：`DynamicApiTypeFilter` / `DynamicApiNameNormalizer` / `DynamicApiAttributeCache` / `DynamicApiAssemblyScanner` / `DynamicApiOptionsBase` 等公共能力，被 [`SyZero.DynamicWebApi`](./SyZero.DynamicWebApi) 与 [`SyZero.DynamicGrpc`](./SyZero.DynamicGrpc) 共用，方便后续平行新增 Provider
 - �🔧 **配置与工具** - 统一配置读取、异常模型、常用扩展工具
 
@@ -159,11 +159,12 @@ public class OrderService
 
 1. `builder.AddSyZero()` 会注册核心依赖，并在 `app.UseSyZero()` 时初始化全局运行时。
 2. `ISySession` 是请求作用域对象，应只在请求链路内访问。
-3. 轻量级事件总线和服务管理适合简单场景；需要更强可靠性时，建议使用 `SyZero.RabbitMQ`、`SyZero.Redis`、`SyZero.Consul`、`SyZero.Nacos` 等模块。
+3. 轻量级事件总线和服务管理适合简单场景；需要更强可靠性时，建议使用 `SyZero.EventBus.RabbitMQ`、`SyZero.Redis`、`SyZero.ServiceDiscovery.Consul`、`SyZero.ServiceDiscovery.Nacos` 等模块。
 
 ---
 
 ## 📄 许可证
 
 MIT License - 详见 [LICENSE](../../LICENSE)
+
 

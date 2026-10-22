@@ -1,11 +1,15 @@
 # SyZero.Validation
 
+> ⚠️ **Merged into [SyZero.Core](./SyZero.Core.md) since v9.1.0**: no need to install `SyZero.Validation` separately — referencing `SyZero.Core` is enough. The namespace is now `SyZero`; just remove `using SyZero.Validation;`.
+
 Validation framework: `ISyValidator<T>` abstraction + `ISyValidatorRunner` entry point with a `DataAnnotations`-based fallback. Easy to adapt FluentValidation or any other library.
 
 ## 📦 Installation
 
+Ships with `SyZero.Core`:
+
 ```bash
-dotnet add package SyZero.Validation
+dotnet add package SyZero.Core
 ```
 
 ## ✨ Features

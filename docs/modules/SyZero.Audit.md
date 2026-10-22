@@ -1,11 +1,15 @@
 # SyZero.Audit
 
+> ⚠️ **v9.1.0 起已并入 [SyZero.Core](./SyZero.Core.md)**：无需单独安装 `SyZero.Audit`，引用 `SyZero.Core` 即可使用。命名空间已合并到 `SyZero`，原 `using SyZero.Audit;` 直接删除。
+
 审计日志模块：提供审计条目模型、可插拔存储抽象 `IAuditLogStore`，以及基于 `[Sensitive]` 特性的字段脱敏序列化器，便于在业务层记录"谁在何时对哪个资源做了什么"。
 
 ## 📦 安装
 
+本能力随 `SyZero.Core` 发布，无需独立安装：
+
 ```bash
-dotnet add package SyZero.Audit
+dotnet add package SyZero.Core
 ```
 
 ## ✨ 特性

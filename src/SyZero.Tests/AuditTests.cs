@@ -1,6 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
 using SyZero;
-using SyZero.Audit;
 using Xunit;
 
 namespace SyZero.Tests;

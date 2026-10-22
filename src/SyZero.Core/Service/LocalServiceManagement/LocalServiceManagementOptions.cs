@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using SyZero.Service;
 
 namespace SyZero.Service.LocalServiceManagement
 {
@@ -96,6 +98,12 @@ namespace SyZero.Service.LocalServiceManagement
         /// <para>默认值: 10，应小于 LeaderLockExpireSeconds</para>
         /// </summary>
         public int LeaderLockRenewIntervalSeconds { get; set; } = 10;
+
+        /// <summary>
+        /// 预置的服务实例列表。
+        /// 适用于本地联调时静态声明下游实例，避免依赖运行时注册同步。
+        /// </summary>
+        public List<ServiceInfo> Services { get; set; } = new List<ServiceInfo>();
 
         /// <summary>
         /// 获取实际的数据文件路径

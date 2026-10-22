@@ -852,6 +852,122 @@ namespace SyZero.Gateway.Admin.Controllers
             }
         }
 
+        public sealed class RegisteredServiceInstanceDto
+        {
+            public string ServiceId { get; set; } = string.Empty;
+            public string ServiceAddress { get; set; } = string.Empty;
+            public int ServicePort { get; set; }
+            public string Protocol { get; set; } = string.Empty;
+            public string Version { get; set; } = string.Empty;
+            public bool IsHealthy { get; set; }
+            public bool Enabled { get; set; }
+            public string HealthCheckUrl { get; set; } = string.Empty;
+        }
+
+        public sealed class RegisteredServiceInterfacesDto
+        {
+            public string ServiceName { get; set; } = string.Empty;
+            public string Version { get; set; } = string.Empty;
+            public int InstanceCount { get; set; }
+            public int HealthyInstanceCount { get; set; }
+            public int EndpointCount { get; set; }
+            public string? SwaggerJsonUrl { get; set; }
+            public string? SwaggerUiUrl { get; set; }
+            public List<ServiceApiEndpointInfo> Endpoints { get; set; } = new List<ServiceApiEndpointInfo>();
+            public List<RegisteredServiceInstanceDto> Instances { get; set; } = new List<RegisteredServiceInstanceDto>();
+        }
+
+        [HttpGet("service-interfaces")]
+        public async Task<IActionResult> GetServiceInterfaces([FromQuery] string? service, CancellationToken ct)
+        {
+            var sm = _services.GetService(typeof(IServiceManagement)) as IServiceManagement;
+            if (sm is null)
+            {
+                return Ok(new { Available = false, Items = Array.Empty<RegisteredServiceInterfacesDto>() });
+            }
+            try
+            {
+                var names = await sm.GetAllServices();
+                var items = new List<RegisteredServiceInterfacesDto>();
+                foreach (var name in (names ?? new List<string>())
+                    .Where(n => !string.IsNullOrWhiteSpace(n))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(n => n, StringComparer.OrdinalIgnoreCase))
+                {
+                    if (!string.IsNullOrWhiteSpace(AppConfig.ServerOptions?.Name)
+                        && string.Equals(name, AppConfig.ServerOptions.Name, StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+                    if (!string.IsNullOrWhiteSpace(service)
+                        && !string.Equals(name, service, StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    ct.ThrowIfCancellationRequested();
+                    var instances = (await sm.GetService(name))
+                        .GroupBy(BuildInstanceKey, StringComparer.OrdinalIgnoreCase)
+                        .Select(group => group
+                            .OrderByDescending(HasApiEndpointMetadata)
+                            .ThenByDescending(s => s.IsHealthy && s.Enabled)
+                            .ThenBy(s => s.ServiceID, StringComparer.OrdinalIgnoreCase)
+                            .First())
+                        .ToList();
+                    if (instances == null || instances.Count == 0)
+                    {
+                        continue;
+                    }
+
+                    var primary = instances
+                        .OrderByDescending(HasApiEndpointMetadata)
+                        .ThenByDescending(s => s.IsHealthy && s.Enabled)
+                        .ThenBy(s => s.ServiceID, StringComparer.OrdinalIgnoreCase)
+                        .First();
+
+                    var endpoints = instances
+                        .SelectMany(ParseApiEndpoints)
+                        .GroupBy(endpoint => endpoint.Method + "::" + endpoint.Path, StringComparer.OrdinalIgnoreCase)
+                        .Select(group => group.First())
+                        .OrderBy(endpoint => endpoint.Path, StringComparer.OrdinalIgnoreCase)
+                        .ThenBy(endpoint => endpoint.Method, StringComparer.OrdinalIgnoreCase)
+                        .ToList();
+
+                    items.Add(new RegisteredServiceInterfacesDto
+                    {
+                        ServiceName = name,
+                        Version = primary.Version ?? string.Empty,
+                        InstanceCount = instances.Count,
+                        HealthyInstanceCount = instances.Count(s => s.IsHealthy && s.Enabled),
+                        EndpointCount = endpoints.Count,
+                        SwaggerJsonUrl = BuildServiceUrl(primary, "/swagger/v1/swagger.json"),
+                        SwaggerUiUrl = BuildServiceUrl(primary, "/api/swagger/index.html"),
+                        Endpoints = endpoints,
+                        Instances = instances
+                            .OrderByDescending(s => s.IsHealthy && s.Enabled)
+                            .ThenBy(s => s.ServiceID, StringComparer.OrdinalIgnoreCase)
+                            .Select(instance => new RegisteredServiceInstanceDto
+                            {
+                                ServiceId = instance.ServiceID,
+                                ServiceAddress = instance.ServiceAddress,
+                                ServicePort = instance.ServicePort,
+                                Protocol = instance.ServiceProtocol.ToString().ToLowerInvariant(),
+                                Version = instance.Version ?? string.Empty,
+                                IsHealthy = instance.IsHealthy,
+                                Enabled = instance.Enabled,
+                                HealthCheckUrl = instance.HealthCheckUrl ?? string.Empty
+                            })
+                            .ToList()
+                    });
+                }
+                return Ok(new { Available = true, Items = items });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { Available = false, Items = Array.Empty<RegisteredServiceInterfacesDto>(), Error = ex.Message });
+            }
+        }
+
         // ---------- 审计 ----------
 
         [HttpGet("audit")]
@@ -1001,6 +1117,47 @@ namespace SyZero.Gateway.Admin.Controllers
             if (!needQuote) return value;
             return "\"" + value.Replace("\"", "\"\"") + "\"";
         }
+
+        private static bool HasApiEndpointMetadata(ServiceInfo service)
+            => service.Metadata != null
+               && service.Metadata.TryGetValue(ServiceMetadataKeys.ApiEndpoints, out var json)
+               && !string.IsNullOrWhiteSpace(json);
+
+        private static IEnumerable<ServiceApiEndpointInfo> ParseApiEndpoints(ServiceInfo service)
+        {
+            if (!HasApiEndpointMetadata(service))
+            {
+                return Enumerable.Empty<ServiceApiEndpointInfo>();
+            }
+            try
+            {
+                return JsonSerializer.Deserialize<List<ServiceApiEndpointInfo>>(
+                           service.Metadata[ServiceMetadataKeys.ApiEndpoints],
+                           ReadOptions)
+                       ?? Enumerable.Empty<ServiceApiEndpointInfo>();
+            }
+            catch
+            {
+                return Enumerable.Empty<ServiceApiEndpointInfo>();
+            }
+        }
+
+        private static string? BuildServiceUrl(ServiceInfo service, string path)
+        {
+            if (string.IsNullOrWhiteSpace(service.ServiceAddress) || service.ServicePort <= 0)
+            {
+                return null;
+            }
+
+            var scheme = service.ServiceProtocol.ToString().ToLowerInvariant();
+            var normalizedPath = string.IsNullOrWhiteSpace(path)
+                ? string.Empty
+                : (path.StartsWith("/", StringComparison.Ordinal) ? path : "/" + path);
+            return $"{scheme}://{service.ServiceAddress}:{service.ServicePort}{normalizedPath}";
+        }
+
+        private static string BuildInstanceKey(ServiceInfo service)
+            => $"{service.ServiceProtocol.ToString().ToLowerInvariant()}://{service.ServiceAddress}:{service.ServicePort}";
 
         // ---------- helpers ----------
 

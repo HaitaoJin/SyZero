@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Net;
+using System.Net.NetworkInformation;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -21,10 +23,12 @@ namespace SyZero.Service.LocalServiceManagement
     /// </summary>
     public class LocalServiceManagement : IServiceManagement, IDisposable
     {
+        private const string LocalAddressPlaceholder = "__local__";
         private readonly ConcurrentDictionary<string, List<ServiceInfo>> _services = new ConcurrentDictionary<string, List<ServiceInfo>>();
         private readonly ConcurrentDictionary<string, Action<List<ServiceInfo>>> _subscriptions = new ConcurrentDictionary<string, Action<List<ServiceInfo>>>();
         private readonly ConcurrentDictionary<string, bool> _healthStatus = new ConcurrentDictionary<string, bool>();
         private static readonly ThreadLocal<Random> RandomProvider = new ThreadLocal<Random>(() => new Random(Guid.NewGuid().GetHashCode()));
+        private static readonly Lazy<HashSet<string>> LocalAddressAliases = new Lazy<HashSet<string>>(BuildLocalAddressAliases);
         private readonly LocalServiceManagementOptions _options;
         private readonly ILogger _logger;
         private readonly string _dataFilePath;
@@ -80,6 +84,8 @@ namespace SyZero.Service.LocalServiceManagement
                     InitFileWatcher();
                 }
             }
+
+            SeedConfiguredServices();
 
             // 如果启用 Leader 选举，先尝试获取 Leader
             if (_options.EnableLeaderElection)
@@ -250,7 +256,7 @@ namespace SyZero.Service.LocalServiceManagement
             {
                 if (_services.TryGetValue(serviceName, out var services))
                 {
-                    return Task.FromResult(CloneServices(services));
+                    return Task.FromResult(NormalizeServices(services));
                 }
             }
 
@@ -263,12 +269,10 @@ namespace SyZero.Service.LocalServiceManagement
             {
                 if (_services.TryGetValue(serviceName, out var services))
                 {
-                    var healthyServices = services.Where(s =>
+                    var healthyServices = NormalizeServices(services.Where(s =>
                         s.Enabled &&
                         s.IsHealthy &&
-                        (!_healthStatus.TryGetValue(s.ServiceID, out var isHealthy) || isHealthy))
-                        .Select(CloneServiceInfo)
-                        .ToList();
+                        (!_healthStatus.TryGetValue(s.ServiceID, out var isHealthy) || isHealthy)));
                     return Task.FromResult(healthyServices);
                 }
             }
@@ -652,7 +656,7 @@ namespace SyZero.Service.LocalServiceManagement
                 lock (_stateLock)
                 {
                     services = _services.TryGetValue(serviceName, out var currentServices)
-                        ? CloneServices(currentServices)
+                        ? NormalizeServices(currentServices)
                         : new List<ServiceInfo>();
                 }
 
@@ -810,6 +814,91 @@ namespace SyZero.Service.LocalServiceManagement
             return RandomProvider.Value ?? new Random(Guid.NewGuid().GetHashCode());
         }
 
+        private static List<ServiceInfo> NormalizeServices(IEnumerable<ServiceInfo> services)
+        {
+            return services
+                .GroupBy(BuildServiceInstanceKey, StringComparer.OrdinalIgnoreCase)
+                .Select(group => group
+                    .OrderByDescending(HasApiEndpointMetadata)
+                    .ThenByDescending(s => s.Enabled && s.IsHealthy)
+                    .ThenByDescending(s => s.LastHeartbeat ?? s.RegisterTime)
+                    .ThenByDescending(s => s.RegisterTime)
+                    .ThenBy(s => s.ServiceID, StringComparer.OrdinalIgnoreCase)
+                    .Select(CloneServiceInfo)
+                    .First())
+                .ToList();
+        }
+
+        private static string BuildServiceInstanceKey(ServiceInfo service)
+        {
+            var scheme = service.ServiceProtocol.ToString().ToLowerInvariant();
+            var address = NormalizeServiceAddress(service.ServiceAddress);
+            return $"{scheme}://{address}:{service.ServicePort}";
+        }
+
+        private static string NormalizeServiceAddress(string? address)
+        {
+            if (string.IsNullOrWhiteSpace(address))
+            {
+                return string.Empty;
+            }
+
+            var normalized = address.Trim();
+            if (LocalAddressAliases.Value.Contains(normalized))
+            {
+                return LocalAddressPlaceholder;
+            }
+
+            if (Uri.CheckHostName(normalized) == UriHostNameType.Dns
+                && string.Equals(normalized, Dns.GetHostName(), StringComparison.OrdinalIgnoreCase))
+            {
+                return LocalAddressPlaceholder;
+            }
+
+            return normalized.ToLowerInvariant();
+        }
+
+        private static HashSet<string> BuildLocalAddressAliases()
+        {
+            var aliases = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "localhost",
+                "127.0.0.1",
+                "::1"
+            };
+
+            try
+            {
+                aliases.Add(Dns.GetHostName());
+            }
+            catch
+            {
+            }
+
+            try
+            {
+                foreach (var networkInterface in NetworkInterface.GetAllNetworkInterfaces())
+                {
+                    foreach (var address in networkInterface.GetIPProperties().UnicastAddresses)
+                    {
+                        aliases.Add(address.Address.ToString());
+                    }
+                }
+            }
+            catch
+            {
+            }
+
+            return aliases;
+        }
+
+        private static bool HasApiEndpointMetadata(ServiceInfo service)
+        {
+            return service.Metadata != null
+                   && service.Metadata.TryGetValue(ServiceMetadataKeys.ApiEndpoints, out var json)
+                   && !string.IsNullOrWhiteSpace(json);
+        }
+
         private Dictionary<string, List<ServiceInfo>> SnapshotServices()
         {
             lock (_stateLock)
@@ -829,6 +918,73 @@ namespace SyZero.Service.LocalServiceManagement
         private static List<ServiceInfo> CloneServices(IEnumerable<ServiceInfo> services)
         {
             return services.Select(CloneServiceInfo).ToList();
+        }
+
+        private void SeedConfiguredServices()
+        {
+            if (_options.Services == null || _options.Services.Count == 0)
+            {
+                return;
+            }
+
+            var changed = false;
+
+            lock (_stateLock)
+            {
+                foreach (var configuredService in _options.Services)
+                {
+                    if (configuredService == null
+                        || string.IsNullOrWhiteSpace(configuredService.ServiceName)
+                        || string.IsNullOrWhiteSpace(configuredService.ServiceAddress)
+                        || configuredService.ServicePort <= 0)
+                    {
+                        continue;
+                    }
+
+                    var normalized = CloneServiceInfo(configuredService);
+                    normalized.ServiceID = string.IsNullOrWhiteSpace(normalized.ServiceID)
+                        ? $"{normalized.ServiceName}-{normalized.ServiceAddress}-{normalized.ServicePort}"
+                        : normalized.ServiceID;
+                    normalized.RegisterTime = normalized.RegisterTime == default ? DateTime.UtcNow : normalized.RegisterTime;
+                    normalized.LastHeartbeat ??= DateTime.UtcNow;
+                    normalized.HealthCheckIntervalSeconds = normalized.HealthCheckIntervalSeconds > 0
+                        ? normalized.HealthCheckIntervalSeconds
+                        : _options.HealthCheckIntervalSeconds;
+                    normalized.HealthCheckTimeoutSeconds = normalized.HealthCheckTimeoutSeconds > 0
+                        ? normalized.HealthCheckTimeoutSeconds
+                        : _options.HealthCheckTimeoutSeconds;
+                    normalized.HealthCheckUrl = string.IsNullOrWhiteSpace(normalized.HealthCheckUrl)
+                        ? BuildDefaultHealthCheckUrl(normalized)
+                        : normalized.HealthCheckUrl;
+
+                    _services.AddOrUpdate(
+                        normalized.ServiceName,
+                        _ => new List<ServiceInfo> { normalized },
+                        (_, existingList) =>
+                        {
+                            existingList.RemoveAll(item =>
+                                string.Equals(item.ServiceID, normalized.ServiceID, StringComparison.OrdinalIgnoreCase)
+                                || (string.Equals(item.ServiceAddress, normalized.ServiceAddress, StringComparison.OrdinalIgnoreCase)
+                                    && item.ServicePort == normalized.ServicePort));
+                            existingList.Add(normalized);
+                            return existingList;
+                        });
+
+                    _healthStatus[normalized.ServiceID] = normalized.IsHealthy;
+                    changed = true;
+                }
+            }
+
+            if (changed)
+            {
+                SaveToFile();
+            }
+        }
+
+        private static string BuildDefaultHealthCheckUrl(ServiceInfo service)
+        {
+            var scheme = service.ServiceProtocol == ProtocolType.HTTPS ? "https" : "http";
+            return $"{scheme}://{service.ServiceAddress}:{service.ServicePort}/health";
         }
 
         private static ServiceInfo CloneServiceInfo(ServiceInfo service)

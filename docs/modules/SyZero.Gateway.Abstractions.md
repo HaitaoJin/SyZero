@@ -1,6 +1,6 @@
 # SyZero.Gateway.Abstractions
 
-> 自 v1.6.0 引入的网关抽象层。在此之前，相同抽象（命名空间 `SyZero.Gateway`）位于 `SyZero.Core` 包内；为了让 `SyZero.Core` 真正聚焦于框架内核（DI / 仓储 / 服务管理 / 事件总线 / 多级缓存），网关相关抽象被独立成本包。
+> 自 v9.1.0 引入的网关抽象层。在此之前，相同抽象（命名空间 `SyZero.Gateway`）位于 `SyZero.Core` 包内；为了让 `SyZero.Core` 真正聚焦于框架内核（DI / 仓储 / 服务管理 / 事件总线 / 多级缓存），网关相关抽象被独立成本包。
 
 `SyZero.Gateway.Abstractions` 只包含**接口与 DTO**，不引入任何具体网关依赖。所有 SyZero 网关实现（`SyZero.Gateway.Ocelot`、`SyZero.Gateway.YARP`）以及管理面板（`SyZero.Gateway.Admin`）都通过本包共享同一套抽象，从而实现「实现可插拔、面板共用、配置 schema 一致」。
 
@@ -66,4 +66,4 @@ services.AddSingleton<IGatewayConfigurationApplier, MyCustomApplier>();
 
 ## 历史
 
-- v1.6.0：从 `SyZero.Core` 抽出，作为独立 NuGet 包发布。命名空间 `SyZero.Gateway` 保持不变 —— 业务 `using` 无需修改，只需在引用了 `SyZero.Core` 的项目里改为引用具体实现包（或本抽象包）。
+- v9.1.0：从 `SyZero.Core` 抽出，作为独立 NuGet 包发布。命名空间 `SyZero.Gateway` 保持不变 —— 业务 `using` 无需修改，只需在引用了 `SyZero.Core` 的项目里改为引用具体实现包（或本抽象包）。

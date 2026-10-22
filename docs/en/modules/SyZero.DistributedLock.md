@@ -1,5 +1,7 @@
 # SyZero.DistributedLock
 
+> ⚠️ **Merged into [SyZero.Core](./SyZero.Core.md) since v9.1.0**: no need to install `SyZero.DistributedLock` separately — referencing `SyZero.Core` is enough. The namespace is now `SyZero`; just remove `using SyZero.DistributedLock;`.
+
 SyZero distributed lock module: `IDistributedLockProvider` abstraction + in-process default. The Redis implementation lives in [`SyZero.Redis`](/en/modules/SyZero.Redis) (to avoid a circular dependency).
 
 ## Design

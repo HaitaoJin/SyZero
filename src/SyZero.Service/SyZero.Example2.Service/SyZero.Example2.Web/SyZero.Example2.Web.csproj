@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -28,8 +28,8 @@
     <ProjectReference Include="..\..\..\SyZero.Module\SyZero.AspNetCore\SyZero.AspNetCore.csproj" />
     <ProjectReference Include="..\..\..\SyZero.Module\SyZero.DynamicWebApi\SyZero.DynamicWebApi.csproj" />
     <ProjectReference Include="..\..\..\SyZero.Module\SyZero.Feign\SyZero.Feign.csproj" />
-    <ProjectReference Include="..\..\..\SyZero.Module\SyZero.Log4Net\SyZero.Log4Net.csproj" />
-    <ProjectReference Include="..\..\..\SyZero.Module\SyZero.OpenTelemetry\SyZero.OpenTelemetry.csproj" />
+    <ProjectReference Include="..\..\..\SyZero.Module\SyZero.Logging.Log4Net\SyZero.Logging.Log4Net.csproj" />
+    <ProjectReference Include="..\..\..\SyZero.Module\SyZero.Observability.OpenTelemetry\SyZero.Observability.OpenTelemetry.csproj" />
     <ProjectReference Include="..\..\..\SyZero.Module\SyZero.Swagger\SyZero.Swagger.csproj" />
     <!-- v1.5.0 集成示例：默认开启 Diagnostics + AI Echo；Kafka / DistributedTransaction 在 Program.cs 以注释提供 -->
     <ProjectReference Include="..\..\..\SyZero.Module\SyZero.Diagnostics\SyZero.Diagnostics.csproj" />
@@ -49,3 +49,4 @@
   </ItemGroup>
 
 </Project>
+

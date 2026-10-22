@@ -1,0 +1,214 @@
+@page "/admin/service-interfaces"
+@model SyZero.Gateway.Admin.Pages.Admin.ServiceInterfacesModel
+@{
+    ViewData["Title"] = "服务接口";
+    ViewData["Subtitle"] = "从注册中心读取下游服务已上报的 HTTP 接口清单";
+}
+
+<div class="flex justify-between items-center mb-4 gap-3 flex-wrap">
+    <div class="flex gap-2 items-center flex-wrap">
+        <button class="btn btn-sm" onclick="loadInterfaces()">刷新</button>
+        <select id="service-filter" class="select select-bordered select-sm" onchange="renderInterfaces()">
+            <option value="">全部服务</option>
+        </select>
+        <select id="method-filter" class="select select-bordered select-sm" onchange="renderInterfaces()">
+            <option value="">全部方法</option>
+        </select>
+        <input id="keyword-filter" class="input input-bordered input-sm min-w-[16rem]" placeholder="搜索 Path / Controller / Action" oninput="renderInterfaces()" />
+    </div>
+</div>
+
+<div id="summary-cards" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4"></div>
+
+<div class="card bg-base-100 shadow mb-4">
+    <div class="card-body">
+        <h2 class="card-title text-base">服务摘要</h2>
+        <div id="service-cards" class="grid grid-cols-1 xl:grid-cols-2 gap-4"></div>
+    </div>
+</div>
+
+<div class="card bg-base-100 shadow">
+    <div class="card-body p-0">
+        <div class="overflow-x-auto">
+            <table class="table table-zebra">
+                <thead>
+                    <tr>
+                        <th>Service</th>
+                        <th>Method</th>
+                        <th>Path</th>
+                        <th>Controller</th>
+                        <th>Action</th>
+                        <th>Group</th>
+                        <th class="w-32">来源</th>
+                    </tr>
+                </thead>
+                <tbody id="interfaces-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let servicesCache = [];
+
+        function escapeHtml(s) {
+            return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+        }
+
+        function methodBadge(method) {
+            const upper = String(method || '').toUpperCase();
+            const cls = upper === 'GET'
+                ? 'badge-info'
+                : upper === 'POST'
+                    ? 'badge-success'
+                    : upper === 'PUT' || upper === 'PATCH'
+                        ? 'badge-warning'
+                        : upper === 'DELETE'
+                            ? 'badge-error'
+                            : 'badge-ghost';
+            return `<span class="badge badge-sm ${cls}">${escapeHtml(upper || '-')}</span>`;
+        }
+
+        function statCard(title, value, tone) {
+            return `<div class="stat bg-base-100 shadow rounded-box">
+                <div class="stat-title">${title}</div>
+                <div class="stat-value text-${tone}">${value}</div>
+            </div>`;
+        }
+
+        async function loadInterfaces() {
+            const tbody = document.getElementById('interfaces-tbody');
+            tbody.innerHTML = adminSkeletonRows(6, 7);
+            try {
+                const data = await adminFetch('/admin-api/service-interfaces', { timeoutMs: 12000 });
+                servicesCache = (data && data.items) || [];
+                renderFilters();
+                renderInterfaces();
+            } catch (e) {
+                servicesCache = [];
+                document.getElementById('summary-cards').innerHTML = '';
+                document.getElementById('service-cards').innerHTML = adminEmpty('加载服务接口失败', e.message || '');
+                tbody.innerHTML = `<tr><td colspan="7">${adminEmpty('加载服务接口失败', e.message || '')}</td></tr>`;
+                adminToast(e.message || '加载失败', 'error');
+            }
+        }
+
+        function renderFilters() {
+            const serviceFilter = document.getElementById('service-filter');
+            const methodFilter = document.getElementById('method-filter');
+            const currentService = serviceFilter.value;
+            const currentMethod = methodFilter.value;
+            const serviceOptions = servicesCache
+                .map(s => s.serviceName)
+                .filter(Boolean)
+                .sort((a, b) => a.localeCompare(b, 'zh-CN'));
+            const methodOptions = Array.from(new Set(servicesCache.flatMap(s => (s.endpoints || []).map(e => (e.method || '').toUpperCase()).filter(Boolean))))
+                .sort();
+            serviceFilter.innerHTML = '<option value="">全部服务</option>' + serviceOptions.map(name => `<option value="${escapeHtml(name)}"${name === currentService ? ' selected' : ''}>${escapeHtml(name)}</option>`).join('');
+            methodFilter.innerHTML = '<option value="">全部方法</option>' + methodOptions.map(name => `<option value="${escapeHtml(name)}"${name === currentMethod ? ' selected' : ''}>${escapeHtml(name)}</option>`).join('');
+        }
+
+        function renderInterfaces() {
+            const serviceName = document.getElementById('service-filter').value;
+            const method = document.getElementById('method-filter').value;
+            const keyword = (document.getElementById('keyword-filter').value || '').trim().toLowerCase();
+            const filteredServices = servicesCache.filter(s => !serviceName || s.serviceName === serviceName);
+            const rows = [];
+            for (const service of filteredServices) {
+                for (const endpoint of (service.endpoints || [])) {
+                    const hay = [
+                        service.serviceName,
+                        endpoint.path,
+                        endpoint.controller,
+                        endpoint.action,
+                        endpoint.groupName,
+                        endpoint.displayName
+                    ].join(' ').toLowerCase();
+                    if (method && String(endpoint.method || '').toUpperCase() !== method) continue;
+                    if (keyword && hay.indexOf(keyword) < 0) continue;
+                    rows.push({ service, endpoint });
+                }
+            }
+
+            renderSummary(filteredServices, rows);
+            renderServiceCards(filteredServices);
+
+            const tbody = document.getElementById('interfaces-tbody');
+            if (rows.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7">${adminEmpty(
+                    filteredServices.length === 0 ? '当前没有已注册服务' : '当前筛选条件下没有接口',
+                    filteredServices.length === 0 ? '确认下游服务已启动并完成注册' : '调整服务 / 方法 / 关键字筛选'
+                )}</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = rows.map(({ service, endpoint }) => `
+                <tr>
+                    <td>
+                        <div class="flex flex-col">
+                            <a class="link link-primary" href="#" onclick="document.getElementById('service-filter').value='${escapeHtml(service.serviceName)}';renderInterfaces();return false;"><code>${escapeHtml(service.serviceName)}</code></a>
+                            <span class="text-xs opacity-60">${service.healthyInstanceCount}/${service.instanceCount} 实例健康</span>
+                        </div>
+                    </td>
+                    <td>${methodBadge(endpoint.method)}</td>
+                    <td><code>${escapeHtml(endpoint.path || '')}</code></td>
+                    <td>${escapeHtml(endpoint.controller || '-')}</td>
+                    <td>${escapeHtml(endpoint.action || '-')}</td>
+                    <td>${escapeHtml(endpoint.groupName || '-')}</td>
+                    <td class="whitespace-nowrap">
+                        ${service.swaggerJsonUrl ? `<a class="btn btn-xs" href="${escapeHtml(service.swaggerJsonUrl)}" target="_blank" rel="noopener">JSON</a>` : ''}
+                        ${service.swaggerUiUrl ? `<a class="btn btn-xs" href="${escapeHtml(service.swaggerUiUrl)}" target="_blank" rel="noopener">UI</a>` : ''}
+                    </td>
+                </tr>`).join('');
+        }
+
+        function renderSummary(filteredServices, rows) {
+            const totalServices = filteredServices.length;
+            const totalEndpoints = rows.length;
+            const totalInstances = filteredServices.reduce((sum, item) => sum + (item.instanceCount || 0), 0);
+            const healthyServices = filteredServices.filter(item => (item.healthyInstanceCount || 0) > 0).length;
+            document.getElementById('summary-cards').innerHTML = [
+                statCard('服务数', totalServices, 'primary'),
+                statCard('当前接口数', totalEndpoints, 'success'),
+                statCard('实例数', totalInstances, 'info'),
+                statCard('健康服务', healthyServices, 'warning')
+            ].join('');
+        }
+
+        function renderServiceCards(filteredServices) {
+            const host = document.getElementById('service-cards');
+            if (filteredServices.length === 0) {
+                host.innerHTML = adminEmpty('暂无服务摘要', '等待服务注册中心返回实例');
+                return;
+            }
+
+            host.innerHTML = filteredServices.map(service => `
+                <div class="card bg-base-100 border border-base-300">
+                    <div class="card-body gap-3">
+                        <div class="flex items-start justify-between gap-3 flex-wrap">
+                            <div>
+                                <h3 class="card-title text-base"><code>${escapeHtml(service.serviceName)}</code></h3>
+                                <div class="text-xs opacity-60 mt-1">版本 ${escapeHtml(service.version || '-')} · ${service.endpointCount || 0} 个接口 · ${service.healthyInstanceCount || 0}/${service.instanceCount || 0} 实例健康</div>
+                            </div>
+                            <div class="flex gap-2 flex-wrap">
+                                ${service.swaggerJsonUrl ? `<a class="btn btn-xs" href="${escapeHtml(service.swaggerJsonUrl)}" target="_blank" rel="noopener">Swagger JSON</a>` : ''}
+                                ${service.swaggerUiUrl ? `<a class="btn btn-xs" href="${escapeHtml(service.swaggerUiUrl)}" target="_blank" rel="noopener">Swagger UI</a>` : ''}
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            ${(service.instances || []).map(instance => `
+                                <span class="badge badge-outline ${instance.isHealthy && instance.enabled ? 'badge-success' : 'badge-warning'}">
+                                    ${escapeHtml(instance.protocol)}://${escapeHtml(instance.serviceAddress)}:${instance.servicePort}
+                                </span>`).join('')}
+                        </div>
+                        ${(service.endpoints || []).length > 0
+                            ? `<div class="flex flex-wrap gap-2">${service.endpoints.slice(0, 8).map(endpoint => `${methodBadge(endpoint.method)} <code>${escapeHtml(endpoint.path || '')}</code>`).join('')} ${(service.endpoints || []).length > 8 ? `<span class="text-xs opacity-60">另有 ${(service.endpoints || []).length - 8} 个接口</span>` : ''}</div>`
+                            : '<div class="alert alert-warning"><span>该服务已注册，但当前实例未上报接口元数据。确认服务已升级到带接口注册能力的版本</span></div>'}
+                    </div>
+                </div>`).join('');
+        }
+
+        loadInterfaces();
+    </script>
+}

@@ -1,6 +1,6 @@
 ﻿# SyZero.Gateway.Admin
 
-SyZero 网关抽象的可视化管理面板。**仅依赖 `SyZero.Core` 中的 `IGateway` / `IGatewayConfigurationStore` / `IGatewayConfigurationApplier`**，不绑定具体网关实现，因此可与 [`SyZero.Gateway.Ocelot`](./SyZero.Gateway.Ocelot) 或将来任何 `IGateway` 实现配合使用。
+SyZero 网关抽象的可视化管理面板。**仅依赖 [`SyZero.Gateway.Abstractions`](./SyZero.Gateway.Abstractions) 中定义的 `IGateway` / `IGatewayConfigurationStore` / `IGatewayConfigurationApplier`**，不绑定具体网关实现，因此可与 [`SyZero.Gateway.Ocelot`](./SyZero.Gateway.Ocelot) 或将来任何 `IGateway` 实现配合使用。
 
 挂载到宿主项目（一般就是网关项目本身）后，提供 `/admin` Razor Pages UI 与 `/admin-api/*` REST 接口，对网关配置中的 `Routes` 与 `SwaggerEndPoints` 进行 CRUD；写入由当前注册的 `IGatewayConfigurationStore` 负责，并在写入后调用 `IGatewayConfigurationApplier` 触发实现侧热更新（如 Ocelot 的 `IFileConfigurationSetter`）。当宿主未注册具体实现时，模块兜底使用 `FileGatewayConfigurationStore`（写盘 + 备份，最多保留 10 份）。
 
@@ -47,7 +47,7 @@ await app.RunAsync();
 
 ## 🔐 凭据配置
 
-> v1.5.0 起在保留旧版 `Gateway:Admin:Username` / `Gateway:Admin:Password` 单账号写法的基础上，**新增** `Gateway:Admin:Users[]` 多账号 + 角色 与运行时 `users.json`。两种 appsettings 写法可并存（同名时数组覆盖单账号项），均视为内置账号（`IsBuiltIn=true`，UI 不可改）。
+> 自 `v9.1.0` 起，在保留旧版 `Gateway:Admin:Username` / `Gateway:Admin:Password` 单账号写法的基础上，**新增** `Gateway:Admin:Users[]` 多账号 + 角色 与运行时 `users.json`。两种 appsettings 写法可并存（同名时数组覆盖单账号项），均视为内置账号（`IsBuiltIn=true`，UI 不可改）。
 
 管理员凭据可来自三个来源（启动时合并）：
 
@@ -87,7 +87,7 @@ await app.RunAsync();
 
 环境变量覆盖示例：`Gateway__Admin__Users__0__Name=admin`、`Gateway__Admin__Users__0__Password=...`、`Gateway__Admin__Users__0__Role=Admin`。
 
-### 用户管理（v1.5.0 新增）
+### 用户管理（`v9.1.0` 提供）
 
 页面：`GET /admin/users`（仅 Admin 可见编辑入口；Reader 仅可改自己密码）。
 REST：
@@ -104,7 +104,7 @@ REST：
 
 ### 登录失败限流
 
-v1.2.3 起 `/admin-api/auth/login` 启用基于客户端 IP 的内存限流：默认 **5 次失败/15 分钟窗口、锁定 5 分钟**，触发后返回 `429 + Retry-After`。可通过配置覆盖：
+自 `v9.1.0` 起，`/admin-api/auth/login` 启用基于客户端 IP 的内存限流：默认 **5 次失败/15 分钟窗口、锁定 5 分钟**，触发后返回 `429 + Retry-After`。可通过配置覆盖：
 
 ```json
 {
@@ -129,7 +129,7 @@ v1.2.3 起 `/admin-api/auth/login` 启用基于客户端 IP 的内存限流：�
 
 #### 多实例共享：基于 ICache 的分布式追踪器
 
-v1.2.3 起内置 `CachedFailedLoginTracker`，依赖 `ICache` 抽象（任意实现皆可，最常见是 `SyZero.Redis`）。多实例网关启用后会共享失败计数与锁定状态：
+自 `v9.1.0` 起内置 `CachedFailedLoginTracker`，依赖 `ICache` 抽象（任意实现皆可，最常见是 `SyZero.Redis`）。多实例网关启用后会共享失败计数与锁定状态：
 
 ```csharp
 builder.Services
@@ -142,7 +142,7 @@ builder.Services
 
 #### 验证码（Captcha）
 
-v1.2.3 起当 `Gateway:Admin:RateLimit:CaptchaThreshold > 0`（默认 3）时，单 IP 失败次数达到该阈值后，登录请求必须额外携带 `CaptchaId` + `CaptchaAnswer`：
+自 `v9.1.0` 起，当 `Gateway:Admin:RateLimit:CaptchaThreshold > 0`（默认 3）时，单 IP 失败次数达到该阈值后，登录请求必须额外携带 `CaptchaId` + `CaptchaAnswer`：
 
 | 端点 | 用途 |
 |---|---|
@@ -150,7 +150,7 @@ v1.2.3 起当 `Gateway:Admin:RateLimit:CaptchaThreshold > 0`（默认 3）时，
 
 服务端用 `ICaptchaStore` 抽象保存挑战（默认 `MemoryCaptchaStore`，5 分钟过期；可被宿主替换为 Redis 等分布式版本）。校验成功后立即销毁，不可重用。 `CaptchaThreshold=0` 时关闭验证码。
 
-### IP 黑白名单（v1.2.3 新增）
+### IP 黑白名单（`v9.1.0` 提供）
 
 在 Auth 之前由 `AdminIpFilterMiddleware` 拦截 `/admin*` 与 `/admin-api*` 请求：
 
@@ -193,11 +193,11 @@ v1.2.3 起当 `Gateway:Admin:RateLimit:CaptchaThreshold > 0`（默认 3）时，
 | `GET /admin/raw-editor` | 原生 JSON 编辑器（导入 / 导出 / 全量替换） |
 | `GET /admin/diff` | 磁盘 vs 运行时配置的行级 Diff |
 | `GET /admin/audit` | 审计日志查看器 |
-| `GET /admin/users` | **v1.5.0 新增** 用户与角色管理（仅 Admin 可写） |
-| `GET /admin/rate-limiting` | **v1.5.0 新增** 全局 + 单路由限流配置 |
-| `GET /admin/load-balancing` | **v1.5.0 新增** 单路由负载均衡器类型管理 |
+| `GET /admin/users` | **`v9.1.0` 提供** 用户与角色管理（仅 Admin 可写） |
+| `GET /admin/rate-limiting` | **`v9.1.0` 提供** 全局 + 单路由限流配置 |
+| `GET /admin/load-balancing` | **`v9.1.0` 提供** 单路由负载均衡器类型管理 |
 | `GET /admin/tester` | 浏览器侧路由测试器（直发 fetch，不经管理 API），支持 URL 查询参数 `?method=&url=&headers=&body=` 预填表单，自动保存最近 20 条历史到 localStorage；Routes 页操作列「▶」一键发送；同时提供「收藏夹」（按分组列表，一键回填 / 转 cURL）以及 cURL 命令双向互转、收藏夹 JSON 导入导出 |
-| `GET /admin/login` | **v1.2.3 新增** 美化登录页（玻璃拟态 + 渐变背景，支持「记住我 7 天」） |
+| `GET /admin/login` | **`v9.1.0` 提供** 美化登录页（玻璃拟态 + 渐变背景，支持「记住我 7 天」） |
 | `GET /admin/logout` | 清除登录 cookie 并跳转登录页 |
 
 ### 管理 REST 接口（`/admin-api/*`）
@@ -228,15 +228,15 @@ v1.2.3 起当 `Gateway:Admin:RateLimit:CaptchaThreshold > 0`（默认 3）时，
 | `POST /admin-api/backups/{id}/restore` | 用备份覆盖当前配置（写入前再次自动备份） |
 | `DELETE /admin-api/backups/{id}` | 删除指定备份 |
 | `GET /admin-api/audit?take=200&user=&action=&from=&to=` | 读取最近 N 条审计记录，支持按用户名（精确）、动作前缀（如 `route.`）、时间范围（ISO 8601）过滤 |
-| `GET /admin-api/audit/export.csv?user=&action=&from=&to=` | **v1.2.3 新增** 按相同过滤条件导出 CSV（最多 20000 行 / UTF-8 BOM，Excel 兼容） |
-| `GET /admin-api/events` | **v1.2.3 新增** SSE 长连接，广播写操作事件（`route.*` / `swagger.*` / `config.*` / `backup.*`），用于多面板实时同步；每 15s 心跳 |
-| `GET/PUT/DELETE /admin-api/routes/{index}/rate-limit` | **v1.5.0 新增** 单路由限流（Ocelot RateLimitOptions：`EnableRateLimiting` / `Period`（如 `1s`/`5m`/`1h`/`1d`）/ `PeriodTimespan` / `Limit` / `ClientWhitelist[]`） |
-| `GET/PUT/DELETE /admin-api/rate-limit/global` | **v1.5.0 新增** 全局限流（`GlobalConfiguration.RateLimitOptions`：`DisableRateLimitHeaders` / `HttpStatusCode`（100–599）/ `QuotaExceededMessage` / `ClientIdHeader`） |
-| `GET/PUT /admin-api/routes/{index}/load-balancer` | **v1.5.0 新增** 单路由负载均衡（`{ "type": "RoundRobin\|LeastConnection\|NoLoadBalance" }`） |
-| `GET /admin-api/load-balancer/types` | **v1.5.0 新增** 返回支持的负载均衡器类型字符串数组 |
-| `POST /admin-api/auth/login` | **v1.2.3 新增** Body：`{ "username", "password", "remember", "captchaId?", "captchaAnswer?" }`；成功写入 `syz_admin_auth` cookie（HttpOnly + Lax，HTTPS 自动 Secure），`remember=true` 时 7 天过期；连续失败达到 `CaptchaThreshold` 后必须携带验证码字段 |
-| `POST /admin-api/auth/logout` | **v1.2.3 新增** 清除登录 cookie |
-| `GET /admin-api/auth/captcha` | **v1.2.3 新增** 颁发新算术验证码，返回 `{ id, question }` |
+| `GET /admin-api/audit/export.csv?user=&action=&from=&to=` | **`v9.1.0` 提供** 按相同过滤条件导出 CSV（最多 20000 行 / UTF-8 BOM，Excel 兼容） |
+| `GET /admin-api/events` | **`v9.1.0` 提供** SSE 长连接，广播写操作事件（`route.*` / `swagger.*` / `config.*` / `backup.*`），用于多面板实时同步；每 15s 心跳 |
+| `GET/PUT/DELETE /admin-api/routes/{index}/rate-limit` | **`v9.1.0` 提供** 单路由限流（Ocelot RateLimitOptions：`EnableRateLimiting` / `Period`（如 `1s`/`5m`/`1h`/`1d`）/ `PeriodTimespan` / `Limit` / `ClientWhitelist[]`） |
+| `GET/PUT/DELETE /admin-api/rate-limit/global` | **`v9.1.0` 提供** 全局限流（`GlobalConfiguration.RateLimitOptions`：`DisableRateLimitHeaders` / `HttpStatusCode`（100–599）/ `QuotaExceededMessage` / `ClientIdHeader`） |
+| `GET/PUT /admin-api/routes/{index}/load-balancer` | **`v9.1.0` 提供** 单路由负载均衡（`{ "type": "RoundRobin\|LeastConnection\|NoLoadBalance" }`） |
+| `GET /admin-api/load-balancer/types` | **`v9.1.0` 提供** 返回支持的负载均衡器类型字符串数组 |
+| `POST /admin-api/auth/login` | **`v9.1.0` 提供** Body：`{ "username", "password", "remember", "captchaId?", "captchaAnswer?" }`；成功写入 `syz_admin_auth` cookie（HttpOnly + Lax，HTTPS 自动 Secure），`remember=true` 时 7 天过期；连续失败达到 `CaptchaThreshold` 后必须携带验证码字段 |
+| `POST /admin-api/auth/logout` | **`v9.1.0` 提供** 清除登录 cookie |
+| `GET /admin-api/auth/captcha` | **`v9.1.0` 提供** 颁发新算术验证码，返回 `{ id, question }` |
 
 > 备份/审计的可选能力由 `IGatewayConfigurationStore` 的默认接口方法承载（详见下文「抽象扩展」），不支持的实现会返回 `501 Not Supported`。
 

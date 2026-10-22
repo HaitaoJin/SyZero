@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -26,23 +26,23 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SyZero.Module\SyZero.AutoMapper\SyZero.AutoMapper.csproj" />
-    <ProjectReference Include="..\SyZero.Module\SyZero.Mapster\SyZero.Mapster.csproj" />
+    <ProjectReference Include="..\SyZero.Module\SyZero.ObjectMapping.AutoMapper\SyZero.ObjectMapping.AutoMapper.csproj" />
+    <ProjectReference Include="..\SyZero.Module\SyZero.ObjectMapping.Mapster\SyZero.ObjectMapping.Mapster.csproj" />
     <ProjectReference Include="..\SyZero.Module\SyZero.AspNetCore\SyZero.AspNetCore.csproj" />
     <ProjectReference Include="..\SyZero.Module\SyZero.AspNetCore.SpaProxy\SyZero.AspNetCore.SpaProxy.csproj" />
     <ProjectReference Include="..\SyZero.Module\SyZero.Gateway.Abstractions\SyZero.Gateway.Abstractions.csproj" />
     <ProjectReference Include="..\SyZero.Module\SyZero.Gateway.Ocelot\SyZero.Gateway.Ocelot.csproj" />
     <ProjectReference Include="..\SyZero.Module\SyZero.Gateway.Admin\SyZero.Gateway.Admin.csproj" />
-    <ProjectReference Include="..\SyZero.Module\SyZero.Consul\SyZero.Consul.csproj" />
+    <ProjectReference Include="..\SyZero.Module\SyZero.ServiceDiscovery.Consul\SyZero.ServiceDiscovery.Consul.csproj" />
     <ProjectReference Include="..\SyZero.Module\SyZero.DynamicWebApi\SyZero.DynamicWebApi.csproj" />
     <ProjectReference Include="..\SyZero.Module\SyZero.Feign\SyZero.Feign.csproj" />
-    <ProjectReference Include="..\SyZero.Module\SyZero.Log4Net\SyZero.Log4Net.csproj" />
+    <ProjectReference Include="..\SyZero.Module\SyZero.Logging.Log4Net\SyZero.Logging.Log4Net.csproj" />
     <ProjectReference Include="..\SyZero.Module\SyZero.EntityFrameworkCore\SyZero.EntityFrameworkCore.csproj" />
     <ProjectReference Include="..\SyZero.Module\SyZero.DynamicGrpc\SyZero.DynamicGrpc.csproj" />
     <ProjectReference Include="..\SyZero.Module\SyZero.MongoDB\SyZero.MongoDB.csproj" />
-    <ProjectReference Include="..\SyZero.Module\SyZero.OpenTelemetry\SyZero.OpenTelemetry.csproj" />
-    <ProjectReference Include="..\SyZero.Module\SyZero.Nacos\SyZero.Nacos.csproj" />
-    <ProjectReference Include="..\SyZero.Module\SyZero.RabbitMQ\SyZero.RabbitMQ.csproj" />
+    <ProjectReference Include="..\SyZero.Module\SyZero.Observability.OpenTelemetry\SyZero.Observability.OpenTelemetry.csproj" />
+    <ProjectReference Include="..\SyZero.Module\SyZero.ServiceDiscovery.Nacos\SyZero.ServiceDiscovery.Nacos.csproj" />
+    <ProjectReference Include="..\SyZero.Module\SyZero.EventBus.RabbitMQ\SyZero.EventBus.RabbitMQ.csproj" />
     <ProjectReference Include="..\SyZero.Module\SyZero.Redis\SyZero.Redis.csproj" />
     <ProjectReference Include="..\SyZero.Module\SyZero.Swagger\SyZero.Swagger.csproj" />
     <ProjectReference Include="..\SyZero.Module\SyZero.SqlSugar\SyZero.SqlSugar.csproj" />
@@ -51,11 +51,8 @@
     <ProjectReference Include="..\SyZero.Module\SyZero.Authorization\SyZero.Authorization.csproj" />
     <ProjectReference Include="..\SyZero.Module\SyZero.MultiTenancy\SyZero.MultiTenancy.csproj" />
     <ProjectReference Include="..\SyZero.Module\SyZero.BackgroundJobs\SyZero.BackgroundJobs.csproj" />
-    <ProjectReference Include="..\SyZero.Module\SyZero.DistributedLock\SyZero.DistributedLock.csproj" />
     <ProjectReference Include="..\SyZero.Module\SyZero.HealthChecks\SyZero.HealthChecks.csproj" />
-    <ProjectReference Include="..\SyZero.Module\SyZero.Audit\SyZero.Audit.csproj" />
     <ProjectReference Include="..\SyZero.Module\SyZero.RateLimiting\SyZero.RateLimiting.csproj" />
-    <ProjectReference Include="..\SyZero.Module\SyZero.Validation\SyZero.Validation.csproj" />
     <ProjectReference Include="..\SyZero.Module\SyZero.DataProtection\SyZero.DataProtection.csproj" />
     <ProjectReference Include="..\SyZero.Module\SyZero.Idempotency\SyZero.Idempotency.csproj" />
     <ProjectReference Include="..\SyZero.Module\SyZero.DistributedTransaction\SyZero.DistributedTransaction.csproj" />
@@ -80,3 +77,4 @@
     <ProjectReference Include="..\SyZero.Core\SyZero.Core.csproj" />
   </ItemGroup>
 </Project>
+

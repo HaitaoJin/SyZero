@@ -1,6 +1,6 @@
-using Mapster;
+﻿using Mapster;
 using Microsoft.Extensions.DependencyInjection;
-using SyZero.Mapster;
+using SyZero.ObjectMapping.Mapster;
 using SyZero.ObjectMapper;
 using Xunit;
 
@@ -99,3 +99,4 @@ public class MapsterTests
         public List<string>? Values { get; set; }
     }
 }
+

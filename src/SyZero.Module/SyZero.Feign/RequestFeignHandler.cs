@@ -13,11 +13,9 @@ namespace SyZero.Feign
 {
     public class RequestFeignHandler : DelegatingHandler
     {
-        private readonly string _serverName;
-
         public RequestFeignHandler(string serverName, HttpMessageHandler innerHandler = null) : base(innerHandler ?? new HttpClientHandler())
         {
-            _serverName = serverName;
+            _ = serverName;
         }
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -34,7 +32,7 @@ namespace SyZero.Feign
             {
                 var controllerName = GetControllerName(request);
                 var relativePath = TrimSlashes(RemoveApiPrefix(originalPath));
-                var segments = new List<string> { "api", _serverName };
+                var segments = new List<string> { "api" };
 
                 if (!string.IsNullOrWhiteSpace(controllerName))
                 {
@@ -78,6 +76,12 @@ namespace SyZero.Feign
             }
 
             if (path.StartsWith($"{RoutingHelper.ApiUrlPre}/", StringComparison.OrdinalIgnoreCase))
+            {
+                return path.Substring(RoutingHelper.ApiUrlPre.Length);
+            }
+
+            // 兼容自定义 [Get("Action")] 等特性生成的 "/APIAction" 历史路径格式。
+            if (path.StartsWith(RoutingHelper.ApiUrlPre, StringComparison.OrdinalIgnoreCase))
             {
                 return path.Substring(RoutingHelper.ApiUrlPre.Length);
             }

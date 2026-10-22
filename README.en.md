@@ -11,7 +11,7 @@
 <p align="center">
   <a href="https://github.com/HaitaoJin/SyZero"><img src="https://img.shields.io/github/stars/HaitaoJin/SyZero?style=flat-square" alt="GitHub Stars"/></a>
   <a href="https://github.com/HaitaoJin/SyZero/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License"/></a>
-  <a href="https://www.nuget.org/packages/SyZero"><img src="https://img.shields.io/nuget/v/SyZero?style=flat-square" alt="NuGet"/></a>
+  <a href="https://www.nuget.org/packages/SyZero.Core"><img src="https://img.shields.io/nuget/v/SyZero.Core?style=flat-square" alt="NuGet"/></a>
   <a href="https://docs.syzero.com/"><img src="https://img.shields.io/badge/docs-docs.syzero.com-green?style=flat-square" alt="Documentation"/></a>
 </p>
 
@@ -38,7 +38,7 @@ SyZero is a modular microservice framework for .NET. It provides rich components
 
 | Module | NuGet | Description |
 |------|------|------|
-| **SyZero** | [![NuGet](https://img.shields.io/nuget/v/SyZero?style=flat-square)](https://www.nuget.org/packages/SyZero) | Core module for base infrastructure and DI |
+| **SyZero.Core** | [![NuGet](https://img.shields.io/nuget/v/SyZero.Core?style=flat-square)](https://www.nuget.org/packages/SyZero.Core) | Core module for base infrastructure and DI |
 | **SyZero.AspNetCore** | [![NuGet](https://img.shields.io/nuget/v/SyZero.AspNetCore?style=flat-square)](https://www.nuget.org/packages/SyZero.AspNetCore) | ASP.NET Core integration |
 | **SyZero.AspNetCore.SpaProxy** | [![NuGet](https://img.shields.io/nuget/v/SyZero.AspNetCore.SpaProxy?style=flat-square)](https://www.nuget.org/packages/SyZero.AspNetCore.SpaProxy) | SPA proxy support for local frontend-backend integration |
 | **SyZero.DynamicWebApi** | [![NuGet](https://img.shields.io/nuget/v/SyZero.DynamicWebApi?style=flat-square)](https://www.nuget.org/packages/SyZero.DynamicWebApi) | Dynamic Web API generation |
@@ -58,7 +58,7 @@ SyZero is a modular microservice framework for .NET. It provides rich components
 | Module | NuGet | Description |
 |------|------|------|
 | **SyZero.Redis** | [![NuGet](https://img.shields.io/nuget/v/SyZero.Redis?style=flat-square)](https://www.nuget.org/packages/SyZero.Redis) | Redis cache, service management, and Redis event bus |
-| **SyZero.RabbitMQ** | [![NuGet](https://img.shields.io/nuget/v/SyZero.RabbitMQ?style=flat-square)](https://www.nuget.org/packages/SyZero.RabbitMQ) | RabbitMQ messaging and event bus |
+| **SyZero.EventBus.RabbitMQ** | [![NuGet](https://img.shields.io/nuget/v/SyZero.EventBus.RabbitMQ?style=flat-square)](https://www.nuget.org/packages/SyZero.EventBus.RabbitMQ) | RabbitMQ messaging and event bus |
 
 > Built-in lightweight event buses are also available in core: `LocalEventBus` (in-memory) and `DBEventBus` (database-backed).
 
@@ -66,8 +66,8 @@ SyZero is a modular microservice framework for .NET. It provides rich components
 
 | Module | NuGet | Description |
 |------|------|------|
-| **SyZero.Consul** | [![NuGet](https://img.shields.io/nuget/v/SyZero.Consul?style=flat-square)](https://www.nuget.org/packages/SyZero.Consul) | Consul registration and discovery |
-| **SyZero.Nacos** | [![NuGet](https://img.shields.io/nuget/v/SyZero.Nacos?style=flat-square)](https://www.nuget.org/packages/SyZero.Nacos) | Nacos registration and configuration |
+| **SyZero.ServiceDiscovery.Consul** | [![NuGet](https://img.shields.io/nuget/v/SyZero.ServiceDiscovery.Consul?style=flat-square)](https://www.nuget.org/packages/SyZero.ServiceDiscovery.Consul) | Consul registration and discovery |
+| **SyZero.ServiceDiscovery.Nacos** | [![NuGet](https://img.shields.io/nuget/v/SyZero.ServiceDiscovery.Nacos?style=flat-square)](https://www.nuget.org/packages/SyZero.ServiceDiscovery.Nacos) | Nacos registration and configuration |
 | **SyZero.Gateway.Abstractions** | [![NuGet](https://img.shields.io/nuget/v/SyZero.Gateway.Abstractions?style=flat-square)](https://www.nuget.org/packages/SyZero.Gateway.Abstractions) | Gateway abstraction layer (`IGateway` / `IGatewayConfigurationStore` / `GatewayConfiguration`, ...) |
 | **SyZero.Gateway.Ocelot** | [![NuGet](https://img.shields.io/nuget/v/SyZero.Gateway.Ocelot?style=flat-square)](https://www.nuget.org/packages/SyZero.Gateway.Ocelot) | Ocelot-backed `IGateway` implementation |
 | **SyZero.Gateway.YARP** | [![NuGet](https://img.shields.io/nuget/v/SyZero.Gateway.YARP?style=flat-square)](https://www.nuget.org/packages/SyZero.Gateway.YARP) | YARP-backed `IGateway` implementation (peer of Ocelot) |
@@ -78,12 +78,14 @@ SyZero is a modular microservice framework for .NET. It provides rich components
 
 | Module | NuGet | Description |
 |------|------|------|
-| **SyZero.AutoMapper** | [![NuGet](https://img.shields.io/nuget/v/SyZero.AutoMapper?style=flat-square)](https://www.nuget.org/packages/SyZero.AutoMapper) | AutoMapper integration |
-| **SyZero.Log4Net** | [![NuGet](https://img.shields.io/nuget/v/SyZero.Log4Net?style=flat-square)](https://www.nuget.org/packages/SyZero.Log4Net) | Log4Net support |
-| **SyZero.OpenTelemetry** | [![NuGet](https://img.shields.io/nuget/v/SyZero.OpenTelemetry?style=flat-square)](https://www.nuget.org/packages/SyZero.OpenTelemetry) | OpenTelemetry distributed tracing |
+| **SyZero.ObjectMapping.AutoMapper** | [![NuGet](https://img.shields.io/nuget/v/SyZero.ObjectMapping.AutoMapper?style=flat-square)](https://www.nuget.org/packages/SyZero.ObjectMapping.AutoMapper) | AutoMapper integration |
+| **SyZero.Logging.Log4Net** | [![NuGet](https://img.shields.io/nuget/v/SyZero.Logging.Log4Net?style=flat-square)](https://www.nuget.org/packages/SyZero.Logging.Log4Net) | Log4Net support |
+| **SyZero.Observability.OpenTelemetry** | [![NuGet](https://img.shields.io/nuget/v/SyZero.Observability.OpenTelemetry?style=flat-square)](https://www.nuget.org/packages/SyZero.Observability.OpenTelemetry) | OpenTelemetry distributed tracing |
 | **SyZero.Web.Common** | [![NuGet](https://img.shields.io/nuget/v/SyZero.Web.Common?style=flat-square)](https://www.nuget.org/packages/SyZero.Web.Common) | Common web components and shared capabilities |
 
 ## Quick Start
+
+> Current stable release: `v9.1.0`. The interim changes between `v1.2.0` and `v1.6.0` were never published as separate packages and are now shipped together in `v9.1.0`. See [docs/en/release-notes.md](docs/en/release-notes.md) for upgrade notes and breaking changes.
 
 ### Install
 
@@ -219,17 +221,17 @@ SyZero/
 │   ├── SyZero.Core/                    # Core library (NuGet package: SyZero.Core)
 │   ├── SyZero.Module/                  # Pluggable framework modules
 │   │   ├── SyZero.AspNetCore/          # ASP.NET Core integration
-│   │   ├── SyZero.AutoMapper/          # AutoMapper support
-│   │   ├── SyZero.Consul/              # Consul discovery
+│   │   ├── SyZero.ObjectMapping.AutoMapper/          # AutoMapper support
+│   │   ├── SyZero.ServiceDiscovery.Consul/              # Consul discovery
 │   │   ├── SyZero.DynamicGrpc/         # Dynamic gRPC
 │   │   ├── SyZero.DynamicWebApi/       # Dynamic Web API
 │   │   ├── SyZero.EntityFrameworkCore/ # EF Core support
 │   │   ├── SyZero.Feign/               # Declarative HTTP client
-│   │   ├── SyZero.Log4Net/             # Log4Net logging
+│   │   ├── SyZero.Logging.Log4Net/             # Log4Net logging
 │   │   ├── SyZero.MongoDB/             # MongoDB support
-│   │   ├── SyZero.Nacos/               # Nacos support
-│   │   ├── SyZero.OpenTelemetry/       # Distributed tracing
-│   │   ├── SyZero.RabbitMQ/            # RabbitMQ messaging
+│   │   ├── SyZero.ServiceDiscovery.Nacos/               # Nacos support
+│   │   ├── SyZero.Observability.OpenTelemetry/       # Distributed tracing
+│   │   ├── SyZero.EventBus.RabbitMQ/            # RabbitMQ messaging
 │   │   ├── SyZero.Redis/               # Redis caching
 │   │   ├── SyZero.SqlSugar/            # SqlSugar ORM
 │   │   ├── SyZero.Swagger/             # Swagger docs
@@ -244,7 +246,7 @@ SyZero/
 
 ## Tech Stack
 
-- .NET 9.0+ and .NET Standard 2.1+
+- Runtime modules require .NET 9 SDK / Runtime; only `SyZero.SourceGenerator` remains `netstandard2.0` as an analyzer
 - Visual Studio 2022, VS Code, Rider
 - SQL Server, MySQL, MongoDB, PostgreSQL (optional)
 - Redis (optional)
@@ -259,7 +261,7 @@ SyZero/
 
 ## Changelog
 
-See [release notes](docs/en/release-notes.md).
+See [release notes](docs/en/release-notes.md) for the `v9.1.0` consolidated release and upgrade notes.
 
 ## Contributing
 
@@ -284,3 +286,4 @@ This project is licensed under [MIT License](LICENSE).
 ---
 
 <p align="center">Made with love by HaitaoJin</p>
+

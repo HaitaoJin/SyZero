@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -14,8 +14,8 @@
     <ProjectReference Include="..\SyZero.Module\SyZero.Gateway.Abstractions\SyZero.Gateway.Abstractions.csproj" />
     <ProjectReference Include="..\SyZero.Module\SyZero.Gateway.Ocelot\SyZero.Gateway.Ocelot.csproj" />
     <ProjectReference Include="..\SyZero.Module\SyZero.Gateway.Admin\SyZero.Gateway.Admin.csproj" />
-    <ProjectReference Include="..\SyZero.Module\SyZero.Log4Net\SyZero.Log4Net.csproj" />
-    <ProjectReference Include="..\SyZero.Module\SyZero.OpenTelemetry\SyZero.OpenTelemetry.csproj" />
+    <ProjectReference Include="..\SyZero.Module\SyZero.Logging.Log4Net\SyZero.Logging.Log4Net.csproj" />
+    <ProjectReference Include="..\SyZero.Module\SyZero.Observability.OpenTelemetry\SyZero.Observability.OpenTelemetry.csproj" />
     <ProjectReference Include="..\SyZero.Module\SyZero.Redis\SyZero.Redis.csproj" />
   </ItemGroup>
 
@@ -25,3 +25,4 @@
     </None>
   </ItemGroup>
 </Project>
+

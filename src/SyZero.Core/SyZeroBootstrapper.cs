@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -67,6 +68,7 @@ namespace SyZero
                         ["environment"] = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"
                     }
                 };
+                AppendApiEndpointMetadata(serviceInfo);
 
                 await serviceManagement.RegisterService(serviceInfo).ConfigureAwait(false);
                 _registeredServiceId = serviceId;
@@ -101,6 +103,18 @@ namespace SyZero
             {
                 _logger.LogError(ex, "SyZero: 服务注销失败");
             }
+        }
+
+        private void AppendApiEndpointMetadata(ServiceInfo serviceInfo)
+        {
+            var endpoints = ServiceEndpointMetadataCollector.Collect(_serviceProvider);
+            if (endpoints.Count == 0)
+            {
+                return;
+            }
+
+            serviceInfo.Metadata[ServiceMetadataKeys.ApiEndpoints] = JsonSerializer.Serialize(endpoints);
+            serviceInfo.Metadata[ServiceMetadataKeys.ApiEndpointCount] = endpoints.Count.ToString();
         }
     }
 }

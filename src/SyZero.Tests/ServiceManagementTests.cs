@@ -6,6 +6,9 @@ using SyZero.Service.DBServiceManagement;
 using SyZero.Service.DBServiceManagement.Entity;
 using SyZero.Service.DBServiceManagement.Repository;
 using SyZero.Service.LocalServiceManagement;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace SyZero.Tests;
@@ -154,6 +157,114 @@ public class ServiceManagementTests
         Assert.Equal("127.0.0.1", secondRead[0].ServiceAddress);
         Assert.Equal(new[] { "v1" }, secondRead[0].Tags);
         Assert.Equal("test", secondRead[0].Metadata["env"]);
+    }
+
+    [Fact]
+    public async Task LocalServiceManagement_SeedsConfiguredServices()
+    {
+        using var serviceManagement = new LocalServiceManagement(new LocalServiceManagementOptions
+        {
+            EnableFilePersistence = false,
+            EnableFileWatcher = false,
+            EnableHealthCheck = false,
+            AutoCleanExpiredServices = false,
+            EnableLeaderElection = false,
+            Services =
+            [
+                new ServiceInfo
+                {
+                    ServiceName = "svc-a",
+                    ServiceAddress = "localhost",
+                    ServicePort = 5001,
+                    ServiceProtocol = ProtocolType.HTTP
+                },
+                new ServiceInfo
+                {
+                    ServiceName = "svc-b",
+                    ServiceAddress = "127.0.0.1",
+                    ServicePort = 5002,
+                    ServiceProtocol = ProtocolType.HTTPS,
+                    HealthCheckUrl = "https://127.0.0.1:5002/healthz"
+                }
+            ]
+        });
+
+        var serviceA = await serviceManagement.GetServiceInstance("svc-a");
+        var serviceB = await serviceManagement.GetServiceInstance("svc-b");
+
+        Assert.Equal("svc-a-localhost-5001", serviceA.ServiceID);
+        Assert.Equal("http://localhost:5001/health", serviceA.HealthCheckUrl);
+        Assert.Equal("https://127.0.0.1:5002/healthz", serviceB.HealthCheckUrl);
+    }
+
+    [Fact]
+    public async Task LocalServiceManagement_FoldsConfiguredAndRuntimeLocalDuplicates()
+    {
+        using var serviceManagement = new LocalServiceManagement(new LocalServiceManagementOptions
+        {
+            EnableFilePersistence = false,
+            EnableFileWatcher = false,
+            EnableHealthCheck = false,
+            AutoCleanExpiredServices = false,
+            EnableLeaderElection = false,
+            Services =
+            [
+                new ServiceInfo
+                {
+                    ServiceID = "configured-node",
+                    ServiceName = "svc",
+                    ServiceAddress = "localhost",
+                    ServicePort = 5002,
+                    ServiceProtocol = ProtocolType.HTTP,
+                    HealthCheckUrl = "http://localhost:5002/health"
+                }
+            ]
+        });
+
+        await serviceManagement.RegisterService(new ServiceInfo
+        {
+            ServiceID = "runtime-node",
+            ServiceName = "svc",
+            ServiceAddress = "127.0.0.1",
+            ServicePort = 5002,
+            ServiceProtocol = ProtocolType.HTTP,
+            HealthCheckUrl = "http://127.0.0.1:5002/health",
+            Metadata = new Dictionary<string, string>
+            {
+                [ServiceMetadataKeys.ApiEndpoints] = "[]"
+            }
+        });
+
+        var services = await serviceManagement.GetService("svc");
+        var healthyServices = await serviceManagement.GetHealthyServices("svc");
+
+        var instance = Assert.Single(services);
+        Assert.Single(healthyServices);
+        Assert.Equal("runtime-node", instance.ServiceID);
+        Assert.Equal("127.0.0.1", instance.ServiceAddress);
+    }
+
+    [Fact]
+    public void ServiceEndpointMetadataCollector_CollectsControllerRoutes()
+    {
+        var builder = WebApplication.CreateBuilder();
+        builder.Services.AddControllers().AddApplicationPart(typeof(TestServiceInterfacesController).Assembly);
+
+        var app = builder.Build();
+        app.MapControllers();
+
+        var endpoints = ServiceEndpointMetadataCollector.Collect(app.Services);
+
+        Assert.Contains(endpoints, endpoint =>
+            endpoint.Method == "GET"
+            && endpoint.Path == "/api/test-service/ping"
+            && endpoint.Controller == "TestServiceInterfaces"
+            && endpoint.Action == "Ping");
+        Assert.Contains(endpoints, endpoint =>
+            endpoint.Method == "POST"
+            && endpoint.Path == "/api/test-service/submit"
+            && endpoint.Controller == "TestServiceInterfaces"
+            && endpoint.Action == "Submit");
     }
 
     private static ServiceRegistryEntity CreateEntity(string serviceName, string serviceId, double weight)
@@ -338,4 +449,16 @@ public class ServiceManagementTests
             return Task.CompletedTask;
         }
     }
+
+}
+
+[ApiController]
+[Route("api/test-service")]
+public sealed class TestServiceInterfacesController : ControllerBase
+{
+    [HttpGet("ping")]
+    public IActionResult Ping() => Ok();
+
+    [HttpPost("submit")]
+    public IActionResult Submit() => Ok();
 }

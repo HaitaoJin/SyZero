@@ -6,6 +6,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SyZero.Gateway;
 using SyZero.Gateway.Ocelot;
+using System;
 using System.Threading.Tasks;
 
 namespace SyZero.Gateway
@@ -27,9 +28,13 @@ namespace SyZero.Gateway
             }).AddSyZeroLog4Net();
 
             builder.Services.AddSyZeroOpenTelemetry();
+            builder.Services.AddLocalServiceManagement();
             builder.Services.AddSyZeroOcelot(options =>
             {
                 options.SwaggerTitle = AppConfig.GetSection("SyZero:Name") ?? "SyZero.Gateway";
+                options.EnableConsul = false;
+                options.EnableConfigStoredInConsul = false;
+                options.EnableSyZeroServiceDiscovery = true;
             }, builder.Configuration);
             builder.Services.AddSyZeroGatewayAdmin();
 
@@ -44,11 +49,22 @@ namespace SyZero.Gateway
 
             app.UseRouting();
             app.UseCors(gatewayOptions.CorsPolicyName);
-            app.UseStaticFiles();
+            if (!string.IsNullOrWhiteSpace(app.Environment.WebRootPath)
+                && System.IO.Directory.Exists(app.Environment.WebRootPath))
+            {
+                app.UseStaticFiles();
+            }
 
             // 网关管理面板的 Basic Auth 仅作用于 /admin、/admin-api，必须在 Ocelot 之前。
             app.UseSyZeroGatewayAdmin();
 
+            // 网关自身健康检查端点，供 SyZeroBootstrapper / LocalServiceManagement 使用。
+            app.MapGet("/health", () => new
+            {
+                status = "Healthy",
+                service = AppConfig.ServerOptions.Name,
+                timestamp = DateTimeOffset.Now
+            });
             app.MapControllers();
             app.MapRazorPages();
 
@@ -56,6 +72,7 @@ namespace SyZero.Gateway
             // 其他请求才进入 Ocelot 网关分支。
             app.MapWhen(
                 ctx => !ctx.Request.Path.StartsWithSegments("/admin")
+                       && !ctx.Request.Path.StartsWithSegments("/health")
                        && !ctx.Request.Path.StartsWithSegments("/admin-api"),
                 branch => branch.UseSyZeroOcelotAsync().GetAwaiter().GetResult());
 

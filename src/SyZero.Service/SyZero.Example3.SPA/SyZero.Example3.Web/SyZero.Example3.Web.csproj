@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -35,7 +35,7 @@
     <ProjectReference Include="..\..\..\SyZero.Module\SyZero.AspNetCore\SyZero.AspNetCore.csproj" />
     <ProjectReference Include="..\..\..\SyZero.Module\SyZero.AspNetCore.SpaProxy\SyZero.AspNetCore.SpaProxy.csproj" />
     <ProjectReference Include="..\..\..\SyZero.Module\SyZero.DynamicWebApi\SyZero.DynamicWebApi.csproj" />
-    <ProjectReference Include="..\..\..\SyZero.Module\SyZero.Log4Net\SyZero.Log4Net.csproj" />
+    <ProjectReference Include="..\..\..\SyZero.Module\SyZero.Logging.Log4Net\SyZero.Logging.Log4Net.csproj" />
     <ProjectReference Include="..\..\..\SyZero.Module\SyZero.Swagger\SyZero.Swagger.csproj" />
     <ProjectReference Include="..\SyZero.Example3.Application\SyZero.Example3.Application.csproj" />
   </ItemGroup>
@@ -73,3 +73,4 @@
   </Target>
 
 </Project>
+

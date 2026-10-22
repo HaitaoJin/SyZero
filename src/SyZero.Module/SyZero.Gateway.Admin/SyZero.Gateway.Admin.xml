@@ -429,6 +429,11 @@
             限流管理页面：管理 GlobalConfiguration.RateLimitOptions 与每条路由的 RateLimitOptions。
             </summary>
         </member>
+        <member name="T:SyZero.Gateway.Admin.Pages.Admin.ServiceInterfacesModel">
+            <summary>
+            下游服务接口总览页：从服务注册中心读取服务上报的接口清单。
+            </summary>
+        </member>
         <member name="T:SyZero.Gateway.Admin.Pages.Admin.UsersModel">
             <summary>
             用户管理页面：列出 appsettings 内置账号 + users.json 文件账号；

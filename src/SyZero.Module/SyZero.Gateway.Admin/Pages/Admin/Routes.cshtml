@@ -269,6 +269,19 @@
                 el.textContent = (sortKey === k) ? (sortAsc ? ' ▲' : ' ▼') : '';
             });
         }
+        function formatDownstreamDisplay(route) {
+            const scheme = String(route.downstreamScheme || '').trim();
+            const path = String(route.downstreamPathTemplate || '').trim();
+            const serviceName = String(route.serviceName || '').trim();
+            const normalizedPath = path
+                ? (path.startsWith('/') ? path : '/' + path)
+                : '';
+
+            if (!scheme) return normalizedPath;
+            if (serviceName) return `${scheme}://${serviceName}${normalizedPath}`;
+            if (!normalizedPath) return `${scheme}://`;
+            return `${scheme}://${normalizedPath.replace(/^\/+/, '')}`;
+        }
 
         async function loadRoutes() {
             const tbody = document.getElementById('routes-tbody');
@@ -350,8 +363,8 @@
             tbody.innerHTML = view.map(({ r, i }) => {
                 const checked = selected.has(i) ? 'checked' : '';
                 const statusBadge = r.disabled
-                    ? '<span class="badge badge-warning">禁用</span>'
-                    : '<span class="badge badge-success">启用</span>';
+                    ? '<span class="badge badge-warning badge-sm whitespace-nowrap min-w-[3.5rem] justify-center">禁用</span>'
+                    : '<span class="badge badge-success badge-sm whitespace-nowrap min-w-[3.5rem] justify-center">启用</span>';
                 const rowCls = r.disabled ? 'opacity-50' : '';
                 const tagsHtml = (r.tags || []).map(t => `<span class="badge badge-outline badge-sm mr-1">${escapeHtml(t)}</span>`).join('');
                 return `
@@ -362,7 +375,7 @@
                         <td data-col="status">${statusBadge}</td>
                         <td data-col="upstream" title="${escapeHtml(r.description || '')}"><code>${escapeHtml(r.upstreamPathTemplate || '')}</code>${r.description ? ` <button class="btn btn-ghost btn-xs" title="查看 Markdown 描述" onclick="showDescription(${i})">ⓘ</button>` : ''}</td>
                         <td data-col="methods">${(r.upstreamHttpMethod || []).map(m => `<span class='badge badge-ghost'>${m}</span>`).join(' ')}</td>
-                        <td data-col="downstream"><code>${escapeHtml(r.downstreamScheme || '')}://${escapeHtml(r.downstreamPathTemplate || '')}</code></td>
+                        <td data-col="downstream"><code>${escapeHtml(formatDownstreamDisplay(r))}</code></td>
                         <td data-col="service">${escapeHtml(r.serviceName || '')}</td>
                         <td data-col="tags">${tagsHtml}</td>
                         <td data-col="swagger">${escapeHtml(r.swaggerKey || '')}</td>

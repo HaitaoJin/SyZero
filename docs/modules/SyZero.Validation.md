@@ -1,11 +1,15 @@
 # SyZero.Validation
 
+> ⚠️ **v9.1.0 起已并入 [SyZero.Core](./SyZero.Core.md)**：无需单独安装 `SyZero.Validation`，引用 `SyZero.Core` 即可使用。命名空间已合并到 `SyZero`，原 `using SyZero.Validation;` 直接删除。
+
 校验框架：定义 `ISyValidator<T>` 抽象与 `ISyValidatorRunner` 入口，默认基于 `System.ComponentModel.DataAnnotations` 提供兜底实现，业务可注册任意 `ISyValidator<T>` 适配 FluentValidation 等库。
 
 ## 📦 安装
 
+本能力随 `SyZero.Core` 发布，无需独立安装：
+
 ```bash
-dotnet add package SyZero.Validation
+dotnet add package SyZero.Core
 ```
 
 ## ✨ 特性

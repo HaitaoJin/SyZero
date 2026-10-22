@@ -17,8 +17,8 @@
         <label class="text-sm opacity-60">自动刷新</label>
         <select id="poll-interval" class="select select-bordered select-xs">
             <option value="0">关闭</option>
-            <option value="5" selected>5 秒</option>
-            <option value="15">15 秒</option>
+            <option value="5">5 秒</option>
+            <option value="15" selected>15 秒</option>
             <option value="30">30 秒</option>
             <option value="60">60 秒</option>
         </select>
@@ -74,36 +74,53 @@
 @section Scripts {
     <script>
         let pollTimer = null;
-        async function loadHealth() {
+        let refreshInFlight = null;
+        let refreshQueued = false;
+        let lastDiffKey = null;
+
+        async function loadHealth(silent) {
             try {
-                const data = await adminFetch('/admin-api/health');
+                const data = await adminFetch('/admin-api/health', { timeoutMs: 8000 });
                 document.getElementById('stat-routes').textContent = data.routeCount;
                 document.getElementById('stat-swagger').textContent = data.swaggerEndPointCount;
                 document.getElementById('stat-version').textContent = data.version || '-';
                 document.getElementById('info-path').textContent = data.configPath;
                 document.getElementById('info-backup').textContent = data.lastBackupTime || '（无）';
                 document.getElementById('info-audit').textContent = data.auditEnabled ? '已启用' : '已禁用';
-            } catch (e) { adminToast(e.message, 'error'); }
+                return data;
+            } catch (e) {
+                if (!silent) adminToast(e.message, 'error');
+                return null;
+            }
         }
-        async function loadRuntime() {
+        async function loadRuntime(silent) {
             try {
-                const data = await adminFetch('/admin-api/runtime');
+                const data = await adminFetch('/admin-api/runtime', { timeoutMs: 12000 });
                 document.getElementById('stat-provider').textContent = data.providerName || '（无）';
                 document.getElementById('info-stored-hash').textContent = (data.storedHash || '-').substring(0, 16) + '…';
                 document.getElementById('info-runtime-hash').textContent = data.runtimeHash ? data.runtimeHash.substring(0, 16) + '…' : '（无）';
                 const banner = document.getElementById('diverged-banner');
+                const diffKey = data.diverged ? `${data.storedHash || ''}|${data.runtimeHash || ''}` : null;
                 if (data.diverged) {
                     banner.classList.remove('hidden');
-                    await loadDiffSummary();
+                    if (diffKey && diffKey !== lastDiffKey) {
+                        await loadDiffSummary(true);
+                        lastDiffKey = diffKey;
+                    }
                 } else {
                     banner.classList.add('hidden');
                     document.getElementById('diff-summary').textContent = '';
+                    lastDiffKey = null;
                 }
-            } catch (e) { /* 静默：未注册 IGateway 时 runtime 为空也是合理的 */ }
+                return data;
+            } catch (e) {
+                if (!silent) adminToast(e.message, 'error');
+                return null;
+            }
         }
-        async function loadDiffSummary() {
+        async function loadDiffSummary(silent) {
             try {
-                const d = await adminFetch('/admin-api/runtime/diff');
+                const d = await adminFetch('/admin-api/runtime/diff', { timeoutMs: 15000 });
                 const stored = (d.stored || '').split('\n');
                 const runtime = (d.runtime || '').split('\n');
                 // 简单的 LCS 计数：使用 Set 行模式（不严格，但足以粗略反映出入）
@@ -128,24 +145,51 @@
                 } else {
                     document.getElementById('diff-summary').textContent = '';
                 }
-            } catch { /* 不支持时静默 */ }
+            } catch (e) {
+                if (!silent) adminToast(e.message, 'error');
+            }
         }
         async function reloadConfig() {
             try { await adminFetch('/admin-api/reload', { method: 'POST' }); adminToast('已重新从磁盘加载', 'success'); await refreshAll(); }
             catch (e) { adminToast(e.message, 'error'); }
         }
-        async function refreshAll() {
-            await Promise.all([loadHealth(), loadRuntime()]);
-            const now = new Date();
-            document.getElementById('last-refresh').textContent = '最后刷新：' + now.toLocaleTimeString();
+        async function refreshAll(options) {
+            options = options || {};
+            if (document.hidden) return refreshInFlight || Promise.resolve();
+            if (refreshInFlight) {
+                refreshQueued = true;
+                return refreshInFlight;
+            }
+            const silent = !!options.silent;
+            refreshInFlight = (async function () {
+                await Promise.all([loadHealth(silent), loadRuntime(silent)]);
+                const now = new Date();
+                document.getElementById('last-refresh').textContent = '最后刷新：' + now.toLocaleTimeString();
+            })();
+            try {
+                await refreshInFlight;
+            } finally {
+                refreshInFlight = null;
+                if (refreshQueued && !document.hidden) {
+                    refreshQueued = false;
+                    setTimeout(function () { refreshAll({ silent: true }); }, 0);
+                }
+            }
         }
         function applyPoll() {
             if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
             const sec = Number(document.getElementById('poll-interval').value);
             if (sec > 0) {
-                pollTimer = setInterval(refreshAll, sec * 1000);
+                pollTimer = setInterval(function () {
+                    if (!document.hidden) refreshAll({ silent: true });
+                }, sec * 1000);
             }
             try { localStorage.setItem('gw-overview-poll', String(sec)); } catch { }
+        }
+        function handleVisibilityChange() {
+            if (!document.hidden) {
+                refreshAll({ silent: true });
+            }
         }
         // 初始化：从 localStorage 还原选择
         try {
@@ -153,7 +197,14 @@
             if (saved !== null) document.getElementById('poll-interval').value = saved;
         } catch { }
         document.getElementById('poll-interval').addEventListener('change', applyPoll);
-        refreshAll().then(applyPoll);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        if (window.registerAdminCleanup) {
+            window.registerAdminCleanup(function () {
+                if (pollTimer) clearInterval(pollTimer);
+                document.removeEventListener('visibilitychange', handleVisibilityChange);
+            });
+        }
+        refreshAll({ silent: false }).finally(applyPoll);
     </script>
 }
 

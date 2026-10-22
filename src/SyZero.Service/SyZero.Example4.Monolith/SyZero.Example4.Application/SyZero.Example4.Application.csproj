@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <AssemblyName>SyZero.Example4.Application</AssemblyName>
+    <RootNamespace>SyZero.Example4.Application</RootNamespace>
+    <DocumentationFile></DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SyZero.Example4.Core\SyZero.Example4.Core.csproj" />
+    <ProjectReference Include="..\SyZero.Example4.IApplication\SyZero.Example4.IApplication.csproj" />
+  </ItemGroup>
+
+</Project>

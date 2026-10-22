@@ -1,6 +1,6 @@
 # SyZero.Feign
 
-SyZero.Feign is a declarative HTTP client module based on Refit. Since v1.2.2 it is implemented as a concrete `IRemoteServiceProvider` defined in `SyZero.Core`, so the same `RemoteServiceOptions` configuration can be reused by future remote-call providers.
+SyZero.Feign is a declarative HTTP client module based on Refit. Since `v9.1.0` it is implemented as a concrete `IRemoteServiceProvider` defined in `SyZero.Core`, so the same `RemoteServiceOptions` configuration can be reused by future remote-call providers.
 
 ## Install
 
@@ -63,7 +63,7 @@ builder.Services.AddSyZeroFeign(new RemoteServiceOptions
 }
 ```
 
-> ⚠️ **Breaking change in v1.2.2**: `FeignOptions` / `FeignService` / `FeignProtocol` / `IFeignProxyFactory` were moved into `SyZero.Core` and renamed to `RemoteServiceOptions` / `RemoteServiceItem` / `RemoteServiceProtocol` / `IRemoteServiceProxyFactory`. The service item field `DllName` was renamed to `AssemblyName`. The `AddSyZeroFeign(...)` extension shape is preserved (only the parameter type changes).
+> ⚠️ **Breaking change included in the consolidated `v9.1.0` release**: `FeignOptions` / `FeignService` / `FeignProtocol` / `IFeignProxyFactory` were moved into `SyZero.Core` and renamed to `RemoteServiceOptions` / `RemoteServiceItem` / `RemoteServiceProtocol` / `IRemoteServiceProxyFactory`. The service item field `DllName` was renamed to `AssemblyName`. The `AddSyZeroFeign(...)` extension shape is preserved (only the parameter type changes).
 
 ## References
 

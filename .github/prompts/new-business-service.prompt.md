@@ -1,4 +1,4 @@
----
+﻿---
 description: 在 src/SyZero.Service/ 下创建一个新业务服务（Web/Application/IApplication/Core 四层）
 mode: agent
 ---
@@ -22,7 +22,7 @@ mode: agent
    |---|---|---|
    | `SyZero.<Biz>.Core` | （仅核心 SyZero） | `Entities/` 实体、`DbContext/` 或 `Repository/`、领域服务 |
    | `SyZero.<Biz>.IApplication` | `Core` | `I<X>Service : IApplicationService` 接口、DTO |
-   | `SyZero.<Biz>.Application` | `IApplication` + `SyZero.AutoMapper` + 选定数据访问模块 | `<X>Service : SyZeroServiceBase, I<X>Service, IScopedDependency`、`MapProfile/<Entity>Profile.cs` |
+   | `SyZero.<Biz>.Application` | `IApplication` + `SyZero.ObjectMapping.AutoMapper` + 选定数据访问模块 | `<X>Service : SyZeroServiceBase, I<X>Service, IScopedDependency`、`MapProfile/<Entity>Profile.cs` |
    | `SyZero.<Biz>.Web` | `Application` + `SyZero.AspNetCore` + `SyZero.DynamicWebApi` + `SyZero.Swagger` | `Program.cs`、`Controllers/`、`appsettings.json`（含 `SyZero` 节点）、`Dockerfile`、`log4net.config` |
 
 3. **`Program.cs` 模板**（最小可用）：
@@ -64,3 +64,4 @@ mode: agent
 - 不要把领域逻辑写进 `Web` 控制器；不要让 `IApplication` / `Core` 引用 EF/SqlSugar/MongoDB 客户端类型。
 - 不要为业务服务在 [Directory.Build.props](../../Directory.Build.props) 设 `<IsPackable>true</IsPackable>` —— 业务服务不发布 NuGet。
 - 不要为单业务服务建独立 `Tests` 项目——业务服务测试可放在 `src/SyZero.Tests/<Biz>ServiceTests.cs`，或在该业务下新增 `Tests/` 目录但**不要**污染框架测试项目。
+

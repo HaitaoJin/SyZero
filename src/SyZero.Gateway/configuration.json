@@ -1,115 +1,74 @@
-﻿//*****************************单地址多实例负载均衡+Consul********************************
 {
   "Routes": [
     {
-      "UpstreamPathTemplate": "/api/SyZero.AI/{url}", //网关地址--url变量
-      "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete", "Patch" ],
+      "UpstreamPathTemplate": "/api/example1/{everything}",
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE",
+        "PATCH"
+      ],
       "UseServiceDiscovery": true,
-      "DownstreamPathTemplate": "/api/SyZero.AI/{url}", //服务地址--url变量
+      "DownstreamPathTemplate": "/api/example1/{everything}",
       "DownstreamScheme": "http",
-      "ServiceName": "SyZero.AI", //consul服务名称
+      "ServiceName": "SyZero.Example1",
       "LoadBalancerOptions": {
-        "Type": "RoundRobin" //轮询      LeastConnection-最少连接数的服务器   NoLoadBalance不负载均衡
+        "Type": "LeastConnection"
       },
-      "SwaggerKey": "SyZero.AI"
+      "SwaggerKey": "SyZero.Example1"
     },
     {
-      "UpstreamPathTemplate": "/api/SyZero.Authorization/{url}",
-      "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete", "Patch" ],
+      "UpstreamPathTemplate": "/api/example2/{everything}",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Post",
+        "Put",
+        "Delete",
+        "Patch"
+      ],
       "UseServiceDiscovery": true,
-      "DownstreamPathTemplate": "/api/SyZero.Authorization/{url}",
+      "DownstreamPathTemplate": "/api/example2/{everything}",
       "DownstreamScheme": "http",
-      "ServiceName": "SyZero.Authorization",
-      "LoadBalancerOptions": {
-        "Type": "RoundRobin"
-      },
-      "SwaggerKey": "SyZero.Authorization"
-    },
-    {
-      "UpstreamPathTemplate": "/api/SyZero.FileStore/{url}",
-      "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete", "Patch" ],
-      "UseServiceDiscovery": true,
-      "DownstreamPathTemplate": "/api/SyZero.FileStore/{url}",
-      "DownstreamScheme": "http",
-      "ServiceName": "SyZero.FileStore",
-      "LoadBalancerOptions": {
-        "Type": "RoundRobin"
-      },
-      "SwaggerKey": "SyZero.FileStore"
-    },
-    {
-      "UpstreamPathTemplate": "/api/SyZero.Blog/{url}",
-      "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete", "Patch" ],
-      "UseServiceDiscovery": true,
-      "DownstreamPathTemplate": "/api/SyZero.Blog/{url}",
-      "DownstreamScheme": "http",
-      "ServiceName": "SyZero.Blog",
+      "ServiceName": "SyZero.Example2",
       "LoadBalancerOptions": {
         "Type": "RoundRobin"
       },
-      "SwaggerKey": "SyZero.Blog"
-    },
-    {
-      "UpstreamPathTemplate": "/{url}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ],
-      "UseServiceDiscovery": true,
-      "DownstreamPathTemplate": "/{url}",
-      "DownstreamScheme": "ws",
-      "ServiceName": "SyZero.AI"
+      "SwaggerKey": "SyZero.Example2"
     }
   ],
   "SwaggerEndPoints": [
     {
-      "Key": "SyZero.AI",
+      "Key": "SyZero.Example1",
       "Config": [
         {
-          "Name": "SyZero.AI API",
+          "Name": "SyZero.Example1 API",
           "Version": "v1",
           "Service": {
-            "Name": "SyZero.AI",
+            "Name": "SyZero.Example1",
             "Path": "/swagger/v1/swagger.json"
           }
         }
       ]
     },
     {
-      "Key": "SyZero.Authorization",
+      "Key": "SyZero.Example2",
       "Config": [
         {
-          "Name": "SyZero.Authorization API",
+          "Name": "SyZero.Example2 API",
           "Version": "v1",
           "Service": {
-            "Name": "SyZero.Authorization",
-            "Path": "/swagger/v1/swagger.json"
-          }
-        }
-      ]
-    },
-    {
-      "Key": "SyZero.FileStore",
-      "Config": [
-        {
-          "Name": "SyZero.FileStore API",
-          "Version": "v1",
-          "Service": {
-            "Name": "SyZero.FileStore",
-            "Path": "/swagger/v1/swagger.json"
-          }
-        }
-      ]
-    },
-    {
-      "Key": "SyZero.Blog",
-      "Config": [
-        {
-          "Name": "SyZero.Blog API",
-          "Version": "v1",
-          "Service": {
-            "Name": "SyZero.Blog",
+            "Name": "SyZero.Example2",
             "Path": "/swagger/v1/swagger.json"
           }
         }
       ]
     }
-  ]
+  ],
+  "GlobalConfiguration": {
+    "BaseUrl": "http://127.0.0.1:5000",
+    "ServiceDiscoveryProvider": {
+      "Type": "SyZeroDiscovery"
+    }
+  }
 }

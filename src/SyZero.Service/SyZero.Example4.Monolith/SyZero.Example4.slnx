@@ -1,0 +1,10 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+  </Configurations>
+  <Project Path="SyZero.Example4.Core/SyZero.Example4.Core.csproj" />
+  <Project Path="SyZero.Example4.IApplication/SyZero.Example4.IApplication.csproj" />
+  <Project Path="SyZero.Example4.Application/SyZero.Example4.Application.csproj" />
+  <Project Path="SyZero.Example4.Web/SyZero.Example4.Web.csproj" />
+</Solution>

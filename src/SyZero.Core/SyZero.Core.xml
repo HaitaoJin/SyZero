@@ -353,6 +353,144 @@
             <param name="totalCount">数据总数</param>
             <param name="items">列表数据</param>
         </member>
+        <member name="T:SyZero.AuditLogEntry">
+            <summary>
+            审计日志条目。
+            </summary>
+        </member>
+        <member name="P:SyZero.AuditLogEntry.Id">
+            <summary>
+            全局唯一 ID。
+            </summary>
+        </member>
+        <member name="P:SyZero.AuditLogEntry.Timestamp">
+            <summary>
+            操作发生的时间（UTC）。
+            </summary>
+        </member>
+        <member name="P:SyZero.AuditLogEntry.UserId">
+            <summary>
+            操作的用户 ID（可为空，表示匿名）。
+            </summary>
+        </member>
+        <member name="P:SyZero.AuditLogEntry.UserName">
+            <summary>
+            用户名（冗余字段，便于查询）。
+            </summary>
+        </member>
+        <member name="P:SyZero.AuditLogEntry.TenantId">
+            <summary>
+            租户 ID（可为空）。
+            </summary>
+        </member>
+        <member name="P:SyZero.AuditLogEntry.Action">
+            <summary>
+            操作名称，例如方法全名或业务动作标识。
+            </summary>
+        </member>
+        <member name="P:SyZero.AuditLogEntry.Resource">
+            <summary>
+            目标资源类型，例如实体类型名或 API 路径。
+            </summary>
+        </member>
+        <member name="P:SyZero.AuditLogEntry.ResourceId">
+            <summary>
+            目标资源 ID。
+            </summary>
+        </member>
+        <member name="P:SyZero.AuditLogEntry.ClientIp">
+            <summary>
+            客户端 IP。
+            </summary>
+        </member>
+        <member name="P:SyZero.AuditLogEntry.DurationMs">
+            <summary>
+            操作耗时（毫秒）。
+            </summary>
+        </member>
+        <member name="P:SyZero.AuditLogEntry.Success">
+            <summary>
+            是否成功（false 时通常配合 <see cref="P:SyZero.AuditLogEntry.ExceptionMessage"/>）。
+            </summary>
+        </member>
+        <member name="P:SyZero.AuditLogEntry.ExceptionMessage">
+            <summary>
+            异常信息（失败时）。
+            </summary>
+        </member>
+        <member name="P:SyZero.AuditLogEntry.Extras">
+            <summary>
+            附加上下文键值（已脱敏）。
+            </summary>
+        </member>
+        <member name="T:SyZero.IAuditDataMasker">
+            <summary>
+            数据脱敏器：对包含 <see cref="T:SyZero.SensitiveAttribute"/> 标记的字段值进行替换。
+            </summary>
+        </member>
+        <member name="M:SyZero.IAuditDataMasker.Serialize(System.Object)">
+            <summary>
+            序列化对象为 JSON 字符串，并将带有 <see cref="T:SyZero.SensitiveAttribute"/> 的属性脱敏。
+            </summary>
+        </member>
+        <member name="T:SyZero.DefaultAuditDataMasker">
+            <summary>
+            默认实现：基于反射检查属性的 <see cref="T:SyZero.SensitiveAttribute"/>，替换为占位字符串后再 JSON 序列化。
+            仅对顶层对象与一层嵌套字典生效，复杂对象树请实现自定义 IAuditDataMasker。
+            </summary>
+        </member>
+        <member name="M:SyZero.DefaultAuditDataMasker.Serialize(System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="T:SyZero.IAuditLogStore">
+            <summary>
+            审计日志存储抽象，业务可实现 DB / ES / 文件等持久化方案。
+            默认实现 <see cref="T:SyZero.MemoryAuditLogStore"/> 仅适合开发与测试。
+            </summary>
+        </member>
+        <member name="M:SyZero.IAuditLogStore.SaveAsync(SyZero.AuditLogEntry,System.Threading.CancellationToken)">
+            <summary>
+            写入一条审计日志。
+            </summary>
+        </member>
+        <member name="M:SyZero.IAuditLogStore.QueryAsync(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            查询审计日志（按时间倒序）。仅供测试/演示，生产实现按需自定义查询接口。
+            </summary>
+        </member>
+        <member name="T:SyZero.MemoryAuditLogStore">
+            <summary>
+            内存审计日志存储，仅供开发/测试使用，不持久化。
+            </summary>
+        </member>
+        <member name="M:SyZero.MemoryAuditLogStore.SaveAsync(SyZero.AuditLogEntry,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:SyZero.MemoryAuditLogStore.QueryAsync(System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="T:SyZero.SensitiveAttribute">
+            <summary>
+            标记字段/属性为敏感数据，写入审计日志时会被脱敏。
+            默认脱敏方式由 <see cref="T:SyZero.IAuditDataMasker"/> 实现决定。
+            </summary>
+        </member>
+        <member name="P:SyZero.SensitiveAttribute.Placeholder">
+            <summary>
+            脱敏后的占位字符串，默认 "***"。
+            </summary>
+        </member>
+        <member name="T:SyZero.SyZeroAuditExtension">
+            <summary>
+            SyZero.Audit 扩展方法。
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroAuditExtension.AddSyZeroAudit(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            注册 SyZero 审计日志服务（默认使用内存存储 <see cref="T:SyZero.MemoryAuditLogStore"/>）。
+            如需替换为持久化存储，可在调用本方法后用 <c>services.AddSingleton&lt;IAuditLogStore, MyStore&gt;()</c> 覆盖。
+            </summary>
+        </member>
         <member name="M:SyZero.Cache.ICache.Exist(System.String)">
             <summary>
             是否存在
@@ -912,6 +1050,32 @@
             <summary>
             实现此接口的所有类都自动注册到依赖项
             作为瞬变物体注入
+            </summary>
+        </member>
+        <member name="T:SyZero.IDistributedLockProvider">
+            <summary>
+            分布式锁提供者。<see cref="M:SyZero.IDistributedLockProvider.AcquireAsync(System.String,System.TimeSpan,System.TimeSpan,System.Threading.CancellationToken)"/> 成功返回一个 <see cref="T:System.IAsyncDisposable"/>，
+            Dispose 时释放锁；获取超时返回 <c>null</c>（调用方按业务决定 fail-fast 还是重试）。
+            </summary>
+        </member>
+        <member name="M:SyZero.IDistributedLockProvider.AcquireAsync(System.String,System.TimeSpan,System.TimeSpan,System.Threading.CancellationToken)">
+            <param name="key">锁名（建议带业务前缀，如 <c>order:1001</c>）。</param>
+            <param name="expiration">锁的过期时间，进程崩溃时由后端自动释放。</param>
+            <param name="waitTimeout">获取锁的最长等待时间。<see cref="F:System.TimeSpan.Zero"/> 表示不等待，直接尝试一次。</param>
+        </member>
+        <member name="T:SyZero.LocalDistributedLockProvider">
+            <summary>
+            进程内默认实现：基于 <see cref="T:System.Threading.SemaphoreSlim"/> 的 Local 锁。仅适用于单实例部署 / 测试。
+            多实例请替换为基于 Redis / DB 的分布式实现。
+            </summary>
+        </member>
+        <member name="T:SyZero.SyZeroDistributedLockExtension">
+            <summary>SyZero.DistributedLock 注册扩展。</summary>
+        </member>
+        <member name="M:SyZero.SyZeroDistributedLockExtension.AddSyZeroDistributedLock(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            注册 <see cref="T:SyZero.LocalDistributedLockProvider"/> 为默认实现。
+            多实例部署请改注册基于 Redis / DB 的实现（覆盖即可）。
             </summary>
         </member>
         <member name="T:SyZero.Domain.Entities.Entity`1">
@@ -2985,6 +3149,12 @@
             <para>默认值: 10，应小于 LeaderLockExpireSeconds</para>
             </summary>
         </member>
+        <member name="P:SyZero.Service.LocalServiceManagement.LocalServiceManagementOptions.Services">
+            <summary>
+            预置的服务实例列表。
+            适用于本地联调时静态声明下游实例，避免依赖运行时注册同步。
+            </summary>
+        </member>
         <member name="M:SyZero.Service.LocalServiceManagement.LocalServiceManagementOptions.GetDataFilePath">
             <summary>
             获取实际的数据文件路径
@@ -2994,6 +3164,41 @@
         <member name="M:SyZero.Service.LocalServiceManagement.LocalServiceManagementOptions.Validate">
             <summary>
             验证配置
+            </summary>
+        </member>
+        <member name="T:SyZero.Service.ServiceApiEndpointInfo">
+            <summary>
+            服务注册时上报的接口摘要。
+            </summary>
+        </member>
+        <member name="P:SyZero.Service.ServiceApiEndpointInfo.Method">
+            <summary>
+            HTTP 方法。
+            </summary>
+        </member>
+        <member name="P:SyZero.Service.ServiceApiEndpointInfo.Path">
+            <summary>
+            路径模板。
+            </summary>
+        </member>
+        <member name="P:SyZero.Service.ServiceApiEndpointInfo.GroupName">
+            <summary>
+            分组名。
+            </summary>
+        </member>
+        <member name="P:SyZero.Service.ServiceApiEndpointInfo.Controller">
+            <summary>
+            控制器名。
+            </summary>
+        </member>
+        <member name="P:SyZero.Service.ServiceApiEndpointInfo.Action">
+            <summary>
+            Action 名。
+            </summary>
+        </member>
+        <member name="P:SyZero.Service.ServiceApiEndpointInfo.DisplayName">
+            <summary>
+            路由显示名。
             </summary>
         </member>
         <member name="P:SyZero.Service.ServiceInfo.ServiceID">
@@ -3089,6 +3294,21 @@
         <member name="P:SyZero.Service.ServiceInfo.Zone">
             <summary>
             可用区
+            </summary>
+        </member>
+        <member name="T:SyZero.Service.ServiceMetadataKeys">
+            <summary>
+            服务注册中心元数据键。
+            </summary>
+        </member>
+        <member name="F:SyZero.Service.ServiceMetadataKeys.ApiEndpoints">
+            <summary>
+            服务接口清单 JSON。
+            </summary>
+        </member>
+        <member name="F:SyZero.Service.ServiceMetadataKeys.ApiEndpointCount">
+            <summary>
+            服务接口数量。
             </summary>
         </member>
         <member name="T:SyZero.DBServiceManagementExtension">
@@ -3373,6 +3593,118 @@
             </summary>
             <typeparam name="T">接口类型</typeparam>
             <returns></returns>
+        </member>
+        <member name="T:SyZero.DataAnnotationsValidator">
+            <summary>
+            基于 <c>System.ComponentModel.DataAnnotations</c> 的兜底校验器。
+            不依赖任何第三方校验库，对包含 <see cref="T:System.ComponentModel.DataAnnotations.ValidationAttribute"/> 标注的属性进行检查。
+            </summary>
+        </member>
+        <member name="M:SyZero.DataAnnotationsValidator.Validate(System.Object)">
+            <summary>
+            同步校验对象。
+            </summary>
+        </member>
+        <member name="M:SyZero.DataAnnotationsValidator.ValidateAsync(System.Object,System.Threading.CancellationToken)">
+            <summary>
+            异步入口（仅包装同步实现）。
+            </summary>
+        </member>
+        <member name="T:SyZero.ISyValidator`1">
+            <summary>
+            SyZero 校验器抽象。业务可基于此适配 FluentValidation 等任意校验库。
+            </summary>
+            <typeparam name="T">被校验的对象类型。</typeparam>
+        </member>
+        <member name="M:SyZero.ISyValidator`1.ValidateAsync(`0,System.Threading.CancellationToken)">
+            <summary>
+            校验对象，返回结果（<see cref="T:SyZero.SyValidationResult"/>）。
+            </summary>
+        </member>
+        <member name="T:SyZero.ISyValidatorRunner">
+            <summary>
+            非泛型校验器入口，基于运行时类型分派。
+            </summary>
+        </member>
+        <member name="M:SyZero.ISyValidatorRunner.ValidateAsync(System.Object,System.Threading.CancellationToken)">
+            <summary>
+            校验任意对象，自动定位 <see cref="T:SyZero.ISyValidator`1"/> 实现。
+            若未注册对应校验器，则使用内置 <see cref="T:SyZero.DataAnnotationsValidator"/> 兜底。
+            </summary>
+        </member>
+        <member name="T:SyZero.SyValidationError">
+            <summary>
+            单条校验错误。
+            </summary>
+        </member>
+        <member name="P:SyZero.SyValidationError.Field">
+            <summary>
+            错误所属字段名。可能为空（对象级错误）。
+            </summary>
+        </member>
+        <member name="P:SyZero.SyValidationError.Message">
+            <summary>
+            错误描述。
+            </summary>
+        </member>
+        <member name="M:SyZero.SyValidationError.#ctor(System.String,System.String)">
+            <summary>
+            创建一个校验错误。
+            </summary>
+        </member>
+        <member name="T:SyZero.SyValidationResult">
+            <summary>
+            校验结果聚合。
+            </summary>
+        </member>
+        <member name="P:SyZero.SyValidationResult.Errors">
+            <summary>
+            错误列表。<see cref="P:SyZero.SyValidationResult.IsValid"/> 为 true 时为空集合。
+            </summary>
+        </member>
+        <member name="P:SyZero.SyValidationResult.IsValid">
+            <summary>
+            是否校验通过。
+            </summary>
+        </member>
+        <member name="P:SyZero.SyValidationResult.Valid">
+            <summary>
+            校验通过的结果。
+            </summary>
+        </member>
+        <member name="M:SyZero.SyValidationResult.Invalid(System.Collections.Generic.IEnumerable{SyZero.SyValidationError})">
+            <summary>
+            创建一个包含若干错误的校验结果。
+            </summary>
+        </member>
+        <member name="M:SyZero.SyValidationResult.Invalid(System.String,System.String)">
+            <summary>
+            便捷构造：单条错误。
+            </summary>
+        </member>
+        <member name="T:SyZero.SyValidatorRunner">
+            <summary>
+            <see cref="T:SyZero.ISyValidatorRunner"/> 默认实现：先尝试解析 <see cref="T:SyZero.ISyValidator`1"/>，否则回退到 DataAnnotations。
+            </summary>
+        </member>
+        <member name="M:SyZero.SyValidatorRunner.#ctor(System.IServiceProvider,SyZero.DataAnnotationsValidator)">
+            <summary>
+            构造校验执行器。
+            </summary>
+        </member>
+        <member name="M:SyZero.SyValidatorRunner.ValidateAsync(System.Object,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="T:SyZero.SyZeroValidationExtension">
+            <summary>
+            SyZero.Validation 扩展方法。
+            </summary>
+        </member>
+        <member name="M:SyZero.SyZeroValidationExtension.AddSyZeroValidation(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            注册 SyZero 校验框架（默认包含 DataAnnotations 兜底）。
+            业务可通过 <c>services.AddTransient&lt;ISyValidator&lt;MyDto&gt;, MyDtoValidator&gt;()</c> 注册具体校验器。
+            </summary>
         </member>
         <member name="T:Refit.Implementation.Generated">
             <inheritdoc />

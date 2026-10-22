@@ -89,6 +89,11 @@ namespace SyZero.Feign.Proxy
                 ),
                 ExceptionFactory = async (httpResponse) =>
                 {
+                    if (httpResponse.IsSuccessStatusCode)
+                    {
+                        return null;
+                    }
+
                     var jsonString = httpResponse.Content == null
                         ? string.Empty
                         : await httpResponse.Content.ReadAsStringAsync();

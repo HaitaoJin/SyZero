@@ -1,6 +1,6 @@
 # SyZero.Feign
 
-SyZero 框架的声明式 HTTP 客户端模块，基于 Refit 实现类似 Spring Cloud OpenFeign 的功能。自 v1.2.2 起，`SyZero.Feign` 是 [`IRemoteServiceProvider`](./SyZero.Core) 抽象的一个具体实现（Provider）—— 同一份 `RemoteServiceOptions` 配置可被未来的其它 Provider（如 WebApiClient 等）复用。
+SyZero 框架的声明式 HTTP 客户端模块，基于 Refit 实现类似 Spring Cloud OpenFeign 的功能。自 `v9.1.0` 起，`SyZero.Feign` 是 [`IRemoteServiceProvider`](./SyZero.Core) 抽象的一个具体实现（Provider）—— 同一份 `RemoteServiceOptions` 配置可被未来的其它 Provider（如 WebApiClient 等）复用。
 
 ## 📦 安装
 
@@ -44,7 +44,7 @@ dotnet add package SyZero.Feign
 }
 ```
 
-> ⚠️ **v1.2.2 破坏性变更**：原 `FeignOptions` / `FeignService` / `FeignProtocol` / `IFeignProxyFactory` 等类型被下沉到 `SyZero.Core` 并改名为 `RemoteServiceOptions` / `RemoteServiceItem` / `RemoteServiceProtocol` / `IRemoteServiceProxyFactory`；服务条目字段 `DllName` 改名为 `AssemblyName`。`AddSyZeroFeign(...)` API 形态保持不变（参数类型由 `FeignOptions` 改为 `RemoteServiceOptions`）。
+> ⚠️ **`v9.1.0` 统一发布时纳入的破坏性变更**：原 `FeignOptions` / `FeignService` / `FeignProtocol` / `IFeignProxyFactory` 等类型被下沉到 `SyZero.Core` 并改名为 `RemoteServiceOptions` / `RemoteServiceItem` / `RemoteServiceProtocol` / `IRemoteServiceProxyFactory`；服务条目字段 `DllName` 改名为 `AssemblyName`。`AddSyZeroFeign(...)` API 形态保持不变（参数类型由 `FeignOptions` 改为 `RemoteServiceOptions`）。
 
 ### 2. 注册服务
 
@@ -183,4 +183,3 @@ public interface IUserGrpcClient
 ## 📄 许可证
 
 MIT License - 详见 [LICENSE](../../LICENSE)
-

@@ -1,4 +1,4 @@
-<Solution>
+﻿<Solution>
   <Configurations>
     <Platform Name="Any CPU" />
     <Platform Name="x64" />
@@ -10,14 +10,13 @@
   <Folder Name="/SyZero.Module/">
     <Project Path="src/SyZero.Module/SyZero.AspNetCore.SpaProxy/SyZero.AspNetCore.SpaProxy.csproj" />
     <Project Path="src/SyZero.Module/SyZero.AspNetCore/SyZero.AspNetCore.csproj" />
-    <Project Path="src/SyZero.Module/SyZero.AutoMapper/SyZero.AutoMapper.csproj" />
+    <Project Path="src/SyZero.Module/SyZero.ObjectMapping.AutoMapper/SyZero.ObjectMapping.AutoMapper.csproj" />
     <Project Path="src/SyZero.Module/SyZero.Authorization/SyZero.Authorization.csproj" />
     <Project Path="src/SyZero.Module/SyZero.Authentication.ApiKey/SyZero.Authentication.ApiKey.csproj" />
     <Project Path="src/SyZero.Module/SyZero.Authorization.AspNetCore/SyZero.Authorization.AspNetCore.csproj" />
     <Project Path="src/SyZero.Module/SyZero.BackgroundJobs/SyZero.BackgroundJobs.csproj" />
     <Project Path="src/SyZero.Module/SyZero.BackgroundJobs.Quartz/SyZero.BackgroundJobs.Quartz.csproj" />
-    <Project Path="src/SyZero.Module/SyZero.Consul/SyZero.Consul.csproj" />
-    <Project Path="src/SyZero.Module/SyZero.DistributedLock/SyZero.DistributedLock.csproj" />
+    <Project Path="src/SyZero.Module/SyZero.ServiceDiscovery.Consul/SyZero.ServiceDiscovery.Consul.csproj" />
     <Project Path="src/SyZero.Module/SyZero.DistributedTransaction/SyZero.DistributedTransaction.csproj" />
     <Project Path="src/SyZero.Module/SyZero.DistributedTransaction.EntityFrameworkCore/SyZero.DistributedTransaction.EntityFrameworkCore.csproj" />
     <Project Path="src/SyZero.Module/SyZero.Diagnostics/SyZero.Diagnostics.csproj" />
@@ -26,7 +25,6 @@
     <Project Path="src/SyZero.Module/SyZero.EntityFrameworkCore/SyZero.EntityFrameworkCore.csproj" />
     <Project Path="src/SyZero.Module/SyZero.EventBus.Kafka/SyZero.EventBus.Kafka.csproj" />
     <Project Path="src/SyZero.Module/SyZero.Feign/SyZero.Feign.csproj" />
-    <Project Path="src/SyZero.Module/SyZero.Audit/SyZero.Audit.csproj" />
     <Project Path="src/SyZero.Module/SyZero.DataProtection/SyZero.DataProtection.csproj" />
     <Project Path="src/SyZero.Module/SyZero.HealthChecks/SyZero.HealthChecks.csproj" />
     <Project Path="src/SyZero.Module/SyZero.FeatureManagement/SyZero.FeatureManagement.csproj" />
@@ -35,18 +33,18 @@
     <Project Path="src/SyZero.Module/SyZero.AI/SyZero.AI.csproj" />
     <Project Path="src/SyZero.Module/SyZero.Idempotency/SyZero.Idempotency.csproj" />
     <Project Path="src/SyZero.Module/SyZero.Localization/SyZero.Localization.csproj" />
-    <Project Path="src/SyZero.Module/SyZero.Log4Net/SyZero.Log4Net.csproj" />
+    <Project Path="src/SyZero.Module/SyZero.Logging.Log4Net/SyZero.Logging.Log4Net.csproj" />
     <Project Path="src/SyZero.Module/SyZero.Mail/SyZero.Mail.csproj" />
-    <Project Path="src/SyZero.Module/SyZero.Mapster/SyZero.Mapster.csproj" />
+    <Project Path="src/SyZero.Module/SyZero.ObjectMapping.Mapster/SyZero.ObjectMapping.Mapster.csproj" />
     <Project Path="src/SyZero.Module/SyZero.MongoDB/SyZero.MongoDB.csproj" />
     <Project Path="src/SyZero.Module/SyZero.MultiTenancy/SyZero.MultiTenancy.csproj" />
     <Project Path="src/SyZero.Module/SyZero.MultiTenancy.EntityFrameworkCore/SyZero.MultiTenancy.EntityFrameworkCore.csproj" />
-    <Project Path="src/SyZero.Module/SyZero.Nacos/SyZero.Nacos.csproj" />
+    <Project Path="src/SyZero.Module/SyZero.ServiceDiscovery.Nacos/SyZero.ServiceDiscovery.Nacos.csproj" />
     <Project Path="src/SyZero.Module/SyZero.Gateway.Abstractions/SyZero.Gateway.Abstractions.csproj" />
     <Project Path="src/SyZero.Module/SyZero.Gateway.Ocelot/SyZero.Gateway.Ocelot.csproj" />
     <Project Path="src/SyZero.Module/SyZero.Gateway.Admin/SyZero.Gateway.Admin.csproj" />
-    <Project Path="src/SyZero.Module/SyZero.OpenTelemetry/SyZero.OpenTelemetry.csproj" />
-    <Project Path="src/SyZero.Module/SyZero.RabbitMQ/SyZero.RabbitMQ.csproj" />
+    <Project Path="src/SyZero.Module/SyZero.Observability.OpenTelemetry/SyZero.Observability.OpenTelemetry.csproj" />
+    <Project Path="src/SyZero.Module/SyZero.EventBus.RabbitMQ/SyZero.EventBus.RabbitMQ.csproj" />
     <Project Path="src/SyZero.Module/SyZero.RateLimiting/SyZero.RateLimiting.csproj" />
     <Project Path="src/SyZero.Module/SyZero.Realtime/SyZero.Realtime.csproj" />
     <Project Path="src/SyZero.Module/SyZero.Redis/SyZero.Redis.csproj" />
@@ -56,7 +54,6 @@
     <Project Path="src/SyZero.Module/SyZero.SourceGenerator/SyZero.SourceGenerator.csproj" />
     <Project Path="src/SyZero.Module/SyZero.SqlSugar/SyZero.SqlSugar.csproj" />
     <Project Path="src/SyZero.Module/SyZero.Swagger/SyZero.Swagger.csproj" />
-    <Project Path="src/SyZero.Module/SyZero.Validation/SyZero.Validation.csproj" />
     <Project Path="src/SyZero.Module/SyZero.Web.Common/SyZero.Web.Common.csproj" />
     <Project Path="src/SyZero.Module/SyZero.Gateway.YARP/SyZero.Gateway.YARP.csproj" />
   </Folder>
@@ -94,7 +91,14 @@
     <Project Path="src/SyZero.Service/SyZero.Example3.SPA/SyZero.Example3.IApplication/SyZero.Example3.IApplication.csproj" />
     <Project Path="src/SyZero.Service/SyZero.Example3.SPA/SyZero.Example3.Web/SyZero.Example3.Web.csproj" />
   </Folder>
+  <Folder Name="/SyZero.Service/SyZero.Example4.Monolith/">
+    <Project Path="src/SyZero.Service/SyZero.Example4.Monolith/SyZero.Example4.Application/SyZero.Example4.Application.csproj" />
+    <Project Path="src/SyZero.Service/SyZero.Example4.Monolith/SyZero.Example4.Core/SyZero.Example4.Core.csproj" />
+    <Project Path="src/SyZero.Service/SyZero.Example4.Monolith/SyZero.Example4.IApplication/SyZero.Example4.IApplication.csproj" />
+    <Project Path="src/SyZero.Service/SyZero.Example4.Monolith/SyZero.Example4.Web/SyZero.Example4.Web.csproj" />
+  </Folder>
   <Folder Name="/SyZero.Tests/">
     <Project Path="src/SyZero.Tests/SyZero.Tests.csproj" />
   </Folder>
 </Solution>
+
