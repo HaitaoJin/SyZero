@@ -20,33 +20,23 @@ namespace SyZero
             "System.Net.Http"
         };
 
-        public static IServiceCollection AddSyZeroOpenTelemetry(this IServiceCollection services)
-        {
-            return services.AddSyZeroOpenTelemetry(configuration: null);
-        }
-
         public static IServiceCollection AddSyZeroOpenTelemetry(this IServiceCollection services, IConfiguration configuration)
         {
             return services.AddSyZeroOpenTelemetry(configureOptions: null, configuration);
         }
 
-        public static IServiceCollection AddSyZeroOpenTelemetry(this IServiceCollection services, Action<SyZeroOpenTelemetryOptions> configureOptions)
-        {
-            return services.AddSyZeroOpenTelemetry(configureOptions, configuration: null);
-        }
-
         public static IServiceCollection AddSyZeroOpenTelemetry(
             this IServiceCollection services,
             Action<SyZeroOpenTelemetryOptions> configureOptions,
-            IConfiguration configuration = null)
+            IConfiguration configuration)
         {
             if (services == null)
             {
                 throw new ArgumentNullException(nameof(services));
             }
 
-            var config = configuration ?? AppConfig.Configuration;
-            var options = SyZeroOpenTelemetryOptions.CreateDefault(config);
+            ArgumentNullException.ThrowIfNull(configuration);
+            var options = SyZeroOpenTelemetryOptions.CreateDefault(configuration);
             configureOptions?.Invoke(options);
             options.Validate();
 

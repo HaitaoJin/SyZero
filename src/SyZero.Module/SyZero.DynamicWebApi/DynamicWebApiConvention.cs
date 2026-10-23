@@ -297,7 +297,9 @@ namespace SyZero.DynamicWebApi
                 controller.Selectors.Add(new SelectorModel());
             }
 
-            var areaName = controllerAttr?.Module ?? _options.DefaultAreaName ?? string.Empty;
+            var areaName = !string.IsNullOrEmpty(controllerAttr?.Module)
+                ? controllerAttr.Module
+                : _options.DefaultAreaName ?? string.Empty;
             var customApiName = DynamicApiAttributeCache.GetTypeAttributeOrNull<ApiAttribute>(controller.ControllerType);
             var controllerName = customApiName?.Name ?? controller.ControllerName;
 

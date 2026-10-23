@@ -32,7 +32,7 @@ namespace SyZero
         /// </summary>
         public static IServiceCollection AddRemoteService<TProvider>(
             this IServiceCollection services,
-            IConfiguration? configuration = null,
+            IConfiguration configuration,
             string sectionName = RemoteServiceOptions.SectionName)
             where TProvider : IRemoteServiceProvider, new()
         {
@@ -45,14 +45,13 @@ namespace SyZero
         public static IServiceCollection AddRemoteService(
             this IServiceCollection services,
             IRemoteServiceProvider provider,
-            IConfiguration? configuration = null,
+            IConfiguration configuration,
             string sectionName = RemoteServiceOptions.SectionName)
         {
             if (services == null) throw new ArgumentNullException(nameof(services));
             if (provider == null) throw new ArgumentNullException(nameof(provider));
 
-            var config = configuration ?? AppConfig.Configuration
-                ?? throw new InvalidOperationException("未找到远程服务配置源（IConfiguration 为空，且 AppConfig.Configuration 未初始化）。");
+            var config = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
             var options = new RemoteServiceOptions();
             config.GetSection(sectionName).Bind(options);
@@ -65,7 +64,7 @@ namespace SyZero
         public static IServiceCollection AddRemoteService<TProvider>(
             this IServiceCollection services,
             Action<RemoteServiceOptions> optionsAction,
-            IConfiguration? configuration = null,
+            IConfiguration configuration,
             string sectionName = RemoteServiceOptions.SectionName)
             where TProvider : IRemoteServiceProvider, new()
         {
@@ -79,14 +78,13 @@ namespace SyZero
             this IServiceCollection services,
             IRemoteServiceProvider provider,
             Action<RemoteServiceOptions> optionsAction,
-            IConfiguration? configuration = null,
+            IConfiguration configuration,
             string sectionName = RemoteServiceOptions.SectionName)
         {
             if (services == null) throw new ArgumentNullException(nameof(services));
             if (provider == null) throw new ArgumentNullException(nameof(provider));
 
-            var config = configuration ?? AppConfig.Configuration
-                ?? throw new InvalidOperationException("未找到远程服务配置源（IConfiguration 为空，且 AppConfig.Configuration 未初始化）。");
+            var config = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
             var options = new RemoteServiceOptions();
             config.GetSection(sectionName).Bind(options);

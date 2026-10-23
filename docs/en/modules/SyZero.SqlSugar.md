@@ -19,7 +19,7 @@ dotnet add package SyZero.SqlSugar
 ## Quick Start
 
 ```csharp
-builder.Services.AddSyZeroSqlSugar();
+builder.Services.AddSyZeroSqlSugar(builder.Configuration);
 // Optional typed registration:
 // builder.Services.AddSyZeroSqlSugar<MyDbContext>();
 // app.InitTables();

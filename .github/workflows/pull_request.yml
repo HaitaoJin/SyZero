@@ -10,6 +10,7 @@ on:
 env:
   GB_NUGET_TOKEN: ${{secrets.GB_NUGET_TOKEN}}
   MS_NUGET_TOKEN: ${{secrets.MS_NUGET_TOKEN}}
+  DOTNET_CLI_UI_LANGUAGE: en
 
 jobs:
   build:
@@ -22,21 +23,33 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 9.0.x
+        dotnet-version: 10.0.x
 
     - name: Restore dependencies
       run: dotnet restore ./SyZero.slnx
 
+    - name: Audit dependencies
+      shell: bash
+      run: |
+        audit_output="$(dotnet list ./SyZero.slnx package --vulnerable --include-transitive)"
+        echo "$audit_output"
+        if grep -q "has the following vulnerable packages" <<< "$audit_output"; then
+          echo "Dependency vulnerability gate failed."
+          exit 1
+        fi
+
     - name: Build
-      run: dotnet build --configuration Release ./SyZero.slnx --no-restore
+      run: dotnet build --configuration Release ./SyZero.slnx --no-restore --warnaserror
 
     - name: Test
-      run: dotnet test ./src/SyZero.Tests/SyZero.Tests.csproj --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
+      run: dotnet test ./src/SyZero.Tests/SyZero.Tests.csproj --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx" --collect:"XPlat Code Coverage"
 
     - name: Upload test results
       if: always()
       uses: actions/upload-artifact@v4
       with:
         name: pr-test-results
-        path: '**/TestResults/*.trx'
+        path: |
+          **/TestResults/*.trx
+          **/TestResults/**/coverage.cobertura.xml
         if-no-files-found: ignore

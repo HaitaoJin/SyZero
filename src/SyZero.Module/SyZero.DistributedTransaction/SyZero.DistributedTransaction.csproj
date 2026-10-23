@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Description>SyZero 分布式事务：Outbox 投递 + 简易 Saga 编排（基于 IEventBus）</Description>
     <IsPackable>true</IsPackable>
     <Nullable>enable</Nullable>

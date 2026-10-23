@@ -55,19 +55,19 @@ namespace SyZero
         /// 添加 Consul 服务到依赖注入容器（从配置读取）
         /// </summary>
         /// <param name="services">服务集合</param>
-        /// <param name="configuration">配置，为 null 时使用 AppConfig.Configuration</param>
+        /// <param name="configuration">配置</param>
         /// <param name="sectionName">配置节名称，默认为 "Consul"</param>
         /// <returns>服务集合</returns>
-        public static IServiceCollection AddConsul(this IServiceCollection services, IConfiguration configuration = null, string sectionName = ConsulServiceOptions.SectionName)
+        public static IServiceCollection AddConsul(this IServiceCollection services, IConfiguration configuration, string sectionName = ConsulServiceOptions.SectionName)
         {
             if (services == null)
             {
                 throw new ArgumentNullException(nameof(services));
             }
 
-            var config = configuration ?? AppConfig.Configuration;
+            ArgumentNullException.ThrowIfNull(configuration);
             var options = new ConsulServiceOptions();
-            config.GetSection(sectionName).Bind(options);
+            configuration.GetSection(sectionName).Bind(options);
             return AddConsul(services, options);
         }
 
@@ -76,19 +76,19 @@ namespace SyZero
         /// </summary>
         /// <param name="services">服务集合</param>
         /// <param name="optionsAction">额外配置委托（在配置文件配置之后执行）</param>
-        /// <param name="configuration">配置，为 null 时使用 AppConfig.Configuration</param>
+        /// <param name="configuration">配置</param>
         /// <param name="sectionName">配置节名称，默认为 "Consul"</param>
         /// <returns>服务集合</returns>
-        public static IServiceCollection AddConsul(this IServiceCollection services, Action<ConsulServiceOptions> optionsAction, IConfiguration configuration = null, string sectionName = ConsulServiceOptions.SectionName)
+        public static IServiceCollection AddConsul(this IServiceCollection services, IConfiguration configuration, Action<ConsulServiceOptions> optionsAction, string sectionName = ConsulServiceOptions.SectionName)
         {
             if (services == null)
             {
                 throw new ArgumentNullException(nameof(services));
             }
 
-            var config = configuration ?? AppConfig.Configuration;
+            ArgumentNullException.ThrowIfNull(configuration);
             var options = new ConsulServiceOptions();
-            config.GetSection(sectionName).Bind(options);
+            configuration.GetSection(sectionName).Bind(options);
             optionsAction?.Invoke(options);
             return AddConsul(services, options);
         }

@@ -21,7 +21,7 @@ namespace SyZero.Web.Common
         /// <returns></returns> 
         public string Encrypt(string Text, string sKey)
         {
-            using (DESCryptoServiceProvider des = new DESCryptoServiceProvider())
+            using (DES des = DES.Create())
             {
                 byte[] inputByteArray = Encoding.UTF8.GetBytes(Text);
                 des.Key = ASCIIEncoding.ASCII.GetBytes(sKey);
@@ -53,7 +53,7 @@ namespace SyZero.Web.Common
         public string Decrypt(string Text, string sKey)
         {
             byte[] inputByteArray = Convert.FromBase64String(Text);
-            using (DESCryptoServiceProvider des = new DESCryptoServiceProvider())
+            using (DES des = DES.Create())
             {
                 des.Key = ASCIIEncoding.ASCII.GetBytes(sKey);
                 des.IV = ASCIIEncoding.ASCII.GetBytes(sKey);

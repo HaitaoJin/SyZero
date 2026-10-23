@@ -19,7 +19,6 @@ using SyZero.Runtime.Session;
 using Xunit;
 namespace SyZero.Tests;
 
-[Collection("AppConfig")]
 public class AuthorizationTests
 {
     [Fact]

@@ -1,6 +1,8 @@
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using System;
 
 namespace SyZero.Files;
 
@@ -22,4 +24,14 @@ public interface ISyFileStorage
     Task<bool> ExistsAsync(string path, CancellationToken cancellationToken = default);
 
     Task DeleteAsync(string path, CancellationToken cancellationToken = default);
+
+    Task<FileStorageObject?> GetMetadataAsync(string path, CancellationToken cancellationToken = default);
+    IAsyncEnumerable<FileStorageObject> ListAsync(string? prefix = null, CancellationToken cancellationToken = default);
+}
+
+public sealed record FileStorageObject(string Path, long Length, string? ContentType, DateTimeOffset? LastModified);
+
+public interface IFileUrlProvider
+{
+    Task<Uri> CreateDownloadUrlAsync(string path, TimeSpan lifetime, CancellationToken cancellationToken = default);
 }

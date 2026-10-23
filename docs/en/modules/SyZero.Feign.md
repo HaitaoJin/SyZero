@@ -19,7 +19,7 @@ dotnet add package SyZero.Feign
 
 ```csharp
 // Register from "Feign" section in appsettings.json
-builder.Services.AddSyZeroFeign();
+builder.Services.AddSyZeroFeign(builder.Configuration);
 
 // Or pass options inline
 builder.Services.AddSyZeroFeign(new RemoteServiceOptions

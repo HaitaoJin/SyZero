@@ -35,5 +35,6 @@ features:
 3. Read [Data Access and Repositories](/en/guide/data-access).
 4. Read [Service Registration and Discovery](/en/guide/service-discovery).
 5. Read [Event Bus and Integration Events](/en/guide/event-bus).
-6. Browse [Module Index](/en/modules/index).
-7. Review [Release Notes](/en/release-notes).
+6. Use [AppHost Local Orchestration and Observability](/en/guide/apphost-observability) to validate gateway routing, service calls, logs, traces, and metrics together.
+7. Browse [Module Index](/en/modules/index).
+8. Review [Release Notes](/en/release-notes).

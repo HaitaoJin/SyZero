@@ -154,7 +154,7 @@ public class ServiceManagementTests
 
         var secondRead = await serviceManagement.GetService("svc");
 
-        Assert.Equal("127.0.0.1", secondRead[0].ServiceAddress);
+        Assert.Equal("localhost", secondRead[0].ServiceAddress);
         Assert.Equal(new[] { "v1" }, secondRead[0].Tags);
         Assert.Equal("test", secondRead[0].Metadata["env"]);
     }
@@ -194,7 +194,7 @@ public class ServiceManagementTests
 
         Assert.Equal("svc-a-localhost-5001", serviceA.ServiceID);
         Assert.Equal("http://localhost:5001/health", serviceA.HealthCheckUrl);
-        Assert.Equal("https://127.0.0.1:5002/healthz", serviceB.HealthCheckUrl);
+        Assert.Equal("https://localhost:5002/healthz", serviceB.HealthCheckUrl);
     }
 
     [Fact]
@@ -241,7 +241,8 @@ public class ServiceManagementTests
         var instance = Assert.Single(services);
         Assert.Single(healthyServices);
         Assert.Equal("runtime-node", instance.ServiceID);
-        Assert.Equal("127.0.0.1", instance.ServiceAddress);
+        Assert.Equal("localhost", instance.ServiceAddress);
+        Assert.Equal("http://localhost:5002/health", instance.HealthCheckUrl);
     }
 
     [Fact]
@@ -318,11 +319,11 @@ public class ServiceManagementTests
             }
         }
 
-        public Task<ServiceRegistryEntity?> GetByServiceIdAsync(string serviceId)
+        public Task<ServiceRegistryEntity> GetByServiceIdAsync(string serviceId)
         {
             lock (_syncRoot)
             {
-                return Task.FromResult(_entities.Where(entity => entity.ServiceID == serviceId).Select(Clone).FirstOrDefault());
+                return Task.FromResult(_entities.Where(entity => entity.ServiceID == serviceId).Select(Clone).FirstOrDefault()!);
             }
         }
 

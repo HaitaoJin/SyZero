@@ -25,10 +25,17 @@ namespace SyZero.Application.DynamicApi
         /// <param name="extraExclude">额外的排除谓词；返回 true 表示该程序集应被排除。</param>
         public static IEnumerable<Assembly> GetAssemblies(Func<Assembly, bool>? extraExclude = null)
         {
-            return AppDomain.CurrentDomain.GetAssemblies()
+            // 仅遍历 AppDomain 中“已经加载”的程序集会遗漏尚未被运行时代码触发的
+            // Application 层程序集，导致动态应用服务没有进入 MVC ApplicationParts。
+            // ReflectionHelper 会根据 DependencyContext 主动加载所有项目程序集；再与
+            // AppDomain 合并，兼顾普通宿主、测试宿主以及单文件等特殊运行场景。
+            return ReflectionHelper.GetAssemblies()
+                .Concat(AppDomain.CurrentDomain.GetAssemblies())
+                .Distinct()
                 .Where(assembly => !assembly.IsDynamic
                     && !IsSystemAssembly(assembly)
-                    && (extraExclude == null || !extraExclude(assembly)));
+                    && (extraExclude == null || !extraExclude(assembly)))
+                .ToArray();
         }
 
         /// <summary>

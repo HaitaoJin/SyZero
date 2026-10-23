@@ -89,7 +89,7 @@ public class ShardingTenantConnectionResolver : ITenantConnectionResolver
 
 ## Compatibility
 
-- Target framework: `net9.0`
+- Target framework: `net10.0`
 - Dependencies: `SyZero.Core`, `Microsoft.AspNetCore.App` (FrameworkReference)
 - `ICurrentTenant.Change` flows across `await` thanks to `AsyncLocal<T>`.
 

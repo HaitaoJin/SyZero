@@ -27,7 +27,7 @@ namespace SyZero
         /// <summary>
         /// 添加 Feign 到依赖注入容器（从配置读取）
         /// </summary>
-        public static IServiceCollection AddSyZeroFeign(this IServiceCollection services, IConfiguration configuration = null, string sectionName = FeignSectionName)
+        public static IServiceCollection AddSyZeroFeign(this IServiceCollection services, IConfiguration configuration, string sectionName = FeignSectionName)
         {
             return services.AddRemoteService(new FeignRemoteServiceProvider(), configuration, sectionName);
         }
@@ -35,7 +35,7 @@ namespace SyZero
         /// <summary>
         /// 添加 Feign 到依赖注入容器（从配置读取，并支持额外配置）
         /// </summary>
-        public static IServiceCollection AddSyZeroFeign(this IServiceCollection services, Action<RemoteServiceOptions> optionsAction, IConfiguration configuration = null, string sectionName = FeignSectionName)
+        public static IServiceCollection AddSyZeroFeign(this IServiceCollection services, Action<RemoteServiceOptions> optionsAction, IConfiguration configuration, string sectionName = FeignSectionName)
         {
             return services.AddRemoteService(new FeignRemoteServiceProvider(), optionsAction, configuration, sectionName);
         }

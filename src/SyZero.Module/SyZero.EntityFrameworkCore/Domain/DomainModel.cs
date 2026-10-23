@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using SyZero.Domain.Entities;
 using SyZero.Domain.Model;
 using SyZero.EntityFrameworkCore.Repositories;
-using SyZero.Util;
 
 namespace SyZero.EntityFrameworkCore.Domain
 {
@@ -16,8 +15,8 @@ namespace SyZero.EntityFrameworkCore.Domain
         where TEntity : class, IEntity
         where TDbContext : DbContext
     {
-        public DomainModel()
-            : base(SyZeroUtil.GetScopeService<TDbContext>() ?? throw new InvalidOperationException($"未能解析 {typeof(TDbContext).FullName}。"))
+        public DomainModel(TDbContext dbContext)
+            : base(dbContext)
         {
         }
     }

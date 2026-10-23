@@ -5,19 +5,20 @@ using System.Threading;
 using SyZero.Dependency;
 using SyZero.Runtime.Security;
 using SyZero.Serialization;
-using SyZero.Util;
 
 namespace SyZero.Runtime.Session
 {
     public class SySession : ISySession
     {
         private readonly IJsonSerialize _jsonSerialize;
+        private readonly IToken _token;
 
         public ClaimsPrincipal? Principal { get; private set; }
 
-        public SySession(IJsonSerialize jsonSerialize)
+        public SySession(IJsonSerialize jsonSerialize, IToken token)
         {
             _jsonSerialize = jsonSerialize;
+            _token = token;
         }
 
         public long? UserId
@@ -87,7 +88,7 @@ namespace SyZero.Runtime.Session
 
         public ISySession Parse(string token)
         {
-            Principal = SyZeroUtil.GetService<IToken>()!.GetPrincipal(token);
+            Principal = _token.GetPrincipal(token);
             return this;
         }
 

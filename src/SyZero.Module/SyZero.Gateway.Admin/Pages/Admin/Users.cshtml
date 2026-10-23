@@ -3,7 +3,7 @@
 @{
     ViewData["Title"] = "用户管理";
     ViewData["Subtitle"] = "管理 appsettings 内置账号与 users.json 文件账号";
-    bool isAdmin = ViewData["IsAdmin"] is bool b && b;
+    bool isAdmin = Model.User?.IsInRole("Admin") == true;
 }
 
 <div class="alert alert-info mb-4">

@@ -104,7 +104,7 @@ await store.WriteAsync(dto); // 自动备份 + 热加载
 | 路由 / 负载均衡 | ✅ | ✅ |
 | Consul 服务发现 | ✅（内置 `AddConsul`） | ⚠️ 不内置，需要外部配合 `IDestinationResolver` |
 | Polly 熔断 | ✅ | ⚠️ 通过 YARP `HttpClient` 配置 |
-| Swagger 聚合 | ✅（MMLib.SwaggerForOcelot） | ❌ 不支持 |
+| OpenAPI 聚合 | ❌ v10 不内置 | ❌ 不内置 |
 | 性能 | 中 | 高（基于 Kestrel + 反向代理优化） |
 | 动态热更新 | ✅（写文件 + `IFileConfigurationSetter`） | ✅（`IChangeToken`） |
 | 与 SyZero.Gateway.Admin 兼容 | ✅ | ✅（共享 `IGatewayConfigurationStore`） |
@@ -187,7 +187,7 @@ SyZero 的健康过滤集中在 **服务发现源头**：`IServiceManagement.Get
 ## ⚠️ 注意事项
 
 1. **集群目标解析** —— SyZero 中性路由只携带 `ServiceName`，本模块按 `ServiceName` 聚合 cluster；推荐启用 [服务发现集成](#-服务发现集成-consul--nacos--redis--local--db) 由 `IServiceManagement` 自动展开真实实例；也可在 `appsettings.json` 的 `ReverseProxy` 段补齐 `Clusters[*].Destinations`，并将 `LoadFromReverseProxySection` 设为 `true`。2. **catch-all 模板** —— Ocelot 的 `{everything}` 会自动转写为 YARP 风格的 `{**catchAll}`；其余 `{id}` 单段占位符语义一致，无需改动。
-3. **Swagger 聚合** —— YARP 没有等价于 `MMLib.SwaggerForOcelot` 的中间件；如需聚合下游 Swagger 请改用 `SyZero.Gateway.Ocelot` 或自行实现。
+3. **OpenAPI 聚合** —— v10 的 Ocelot 与 YARP Provider 均不内置聚合 UI；可在网关应用中基于各服务原生 OpenAPI 文档自行实现。
 4. **配置注释** —— 与 Ocelot 实现一致，`System.Text.Json` 写回时不保留 `//` 注释（备份保留原文）。
 
 ---

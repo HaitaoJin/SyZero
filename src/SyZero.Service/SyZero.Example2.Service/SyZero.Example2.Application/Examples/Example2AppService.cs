@@ -7,6 +7,10 @@ using SyZero.Example2.Core.Entities;
 using SyZero.Example2.Core.Repository;
 using SyZero.Example2.IApplication.Examples;
 using SyZero.Example2.IApplication.Examples.Dto;
+using SyZero.Dependency;
+using SyZero.Runtime.Session;
+using Microsoft.Extensions.Options;
+using SyZero.Configurations;
 
 namespace SyZero.Example2.Application.Examples
 {
@@ -14,13 +18,18 @@ namespace SyZero.Example2.Application.Examples
     {
         private readonly IExampleRepository _exampleRepository;
         private readonly IExample1AppService _example1Service;
+        private readonly SyZeroServerOptions _serverOptions;
 
         public Example2AppService(
             IExampleRepository exampleRepository,
-            IExample1AppService example1Service) : base(exampleRepository)
+            IExample1AppService example1Service,
+            SyZeroServiceDependencies dependencies,
+            ISySession sySession,
+            IOptions<SyZeroServerOptions> serverOptions) : base(exampleRepository, dependencies, sySession)
         {
             _exampleRepository = exampleRepository;
             _example1Service = example1Service;
+            _serverOptions = serverOptions.Value;
         }
 
         protected override void CheckPermission(string permissionName)
@@ -58,9 +67,9 @@ namespace SyZero.Example2.Application.Examples
         {
             return Task.FromResult(new Example2.IApplication.Examples.ServiceInfoDto
             {
-                ServiceName = AppConfig.ServerOptions.Name,
+                ServiceName = _serverOptions.Name,
                 Version = "1.0.0",
-                Port = AppConfig.ServerOptions.Port,
+                Port = _serverOptions.Port,
                 Timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
             });
         }
@@ -75,7 +84,7 @@ namespace SyZero.Example2.Application.Examples
                 var remoteInfo = await _example1Service.GetServiceInfo();
                 return new Example2.IApplication.Examples.RemoteServiceResultDto
                 {
-                    LocalService = AppConfig.ServerOptions.Name,
+                    LocalService = _serverOptions.Name,
                     RemoteService = remoteInfo.ServiceName,
                     RemoteVersion = remoteInfo.Version,
                     RemotePort = remoteInfo.Port,
@@ -88,7 +97,7 @@ namespace SyZero.Example2.Application.Examples
             {
                 return new Example2.IApplication.Examples.RemoteServiceResultDto
                 {
-                    LocalService = AppConfig.ServerOptions.Name,
+                    LocalService = _serverOptions.Name,
                     RemoteService = "SyZero.Example1",
                     CallTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
                     Success = false,
@@ -107,7 +116,7 @@ namespace SyZero.Example2.Application.Examples
                 var remoteExample = await _example1Service.GetExample(id);
                 return new Example2.IApplication.Examples.RemoteExampleResultDto
                 {
-                    LocalService = AppConfig.ServerOptions.Name,
+                    LocalService = _serverOptions.Name,
                     RemoteService = "SyZero.Example1",
                     Id = remoteExample.Id,
                     Name = remoteExample.Name,
@@ -120,7 +129,7 @@ namespace SyZero.Example2.Application.Examples
             {
                 return new Example2.IApplication.Examples.RemoteExampleResultDto
                 {
-                    LocalService = AppConfig.ServerOptions.Name,
+                    LocalService = _serverOptions.Name,
                     RemoteService = "SyZero.Example1",
                     Success = false,
                     Message = $"获取 Example1 数据失败: {ex.Message}"

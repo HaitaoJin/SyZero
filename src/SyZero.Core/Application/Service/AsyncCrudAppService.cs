@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using SyZero.Application.Service.Dto;
 using SyZero.Domain.Entities;
 using SyZero.Domain.Repository;
+using SyZero.Dependency;
+using SyZero.Runtime.Session;
 
 namespace SyZero.Application.Service
 {
@@ -12,8 +14,8 @@ namespace SyZero.Application.Service
         where TEntity : class, IEntity
         where TEntityDto : IEntityDto
     {
-        protected AsyncCrudAppService(IRepository<TEntity> repository)
-            : base(repository)
+        protected AsyncCrudAppService(IRepository<TEntity> repository, SyZeroServiceDependencies dependencies, ISySession sySession)
+            : base(repository, dependencies, sySession)
         {
 
         }
@@ -24,8 +26,8 @@ namespace SyZero.Application.Service
         where TEntity : class, IEntity
         where TEntityDto : IEntityDto
     {
-        protected AsyncCrudAppService(IRepository<TEntity> repository)
-            : base(repository)
+        protected AsyncCrudAppService(IRepository<TEntity> repository, SyZeroServiceDependencies dependencies, ISySession sySession)
+            : base(repository, dependencies, sySession)
         {
 
         }
@@ -37,8 +39,8 @@ namespace SyZero.Application.Service
         where TEntityDto : IEntityDto
         where TCreateInput : IEntityDto
     {
-        protected AsyncCrudAppService(IRepository<TEntity> repository)
-            : base(repository)
+        protected AsyncCrudAppService(IRepository<TEntity> repository, SyZeroServiceDependencies dependencies, ISySession sySession)
+            : base(repository, dependencies, sySession)
         {
 
         }
@@ -51,8 +53,8 @@ namespace SyZero.Application.Service
            where TEntityDto : IEntityDto
            where TUpdateInput : IEntityDto
     {
-        protected AsyncCrudAppService(IRepository<TEntity> repository)
-            : base(repository)
+        protected AsyncCrudAppService(IRepository<TEntity> repository, SyZeroServiceDependencies dependencies, ISySession sySession)
+            : base(repository, dependencies, sySession)
         {
 
         }

@@ -1,47 +1,35 @@
 # SyZero.Swagger
 
-SyZero.Swagger provides API documentation integration with JWT support and XML comment support.
-
-## Install
+Native .NET 10 OpenAPI integration for SyZero. Since v10 this package uses `Microsoft.AspNetCore.OpenApi` and no longer depends on Swashbuckle.
 
 ```bash
 dotnet add package SyZero.Swagger
 ```
 
-## Key Features
+```csharp
+using SyZero.Swagger;
 
-- Automatic OpenAPI/Swagger generation
-- JWT authorization integration
-- XML comment loading
-- Multi-version documentation support
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddControllers();
+builder.Services.AddSyZeroOpenApi();
 
-## Quick Start
+var app = builder.Build();
+app.MapControllers();
+app.MapSyZeroOpenApi();
+app.Run();
+```
+
+The default document URL is `/openapi/v1.json`. A custom document name and route pattern can be supplied:
 
 ```csharp
-builder.Services.AddSwagger();
-
-app.UseSwagger();
-app.UseSwaggerUI();
+builder.Services.AddSyZeroOpenApi("internal");
+app.MapSyZeroOpenApi("/docs/{documentName}.json");
 ```
 
-## Configuration Example (appsettings.json)
+The module generates a standards-based OpenAPI document and does not bundle a UI. Applications can add Scalar, Swagger UI, or another frontend separately and protect the production document endpoint as needed.
 
-```json
-{
-	"Swagger": {
-		"Title": "SyZero API",
-		"Version": "v1"
-	}
-}
-```
+## v10 migration
 
-## Common Configuration
-
-- Swagger.Title
-- Swagger.Version
-
-## References
-
-- Chinese documentation: [/modules/SyZero.Swagger](/modules/SyZero.Swagger)
-
-
+- `AddSwagger(...)` → `AddSyZeroOpenApi(...)`
+- `UseSwagger()` / `UseSwaggerUI()` → `MapSyZeroOpenApi()`; choose a UI in the application
+- Legacy XML operation filters, build-time Swagger export, and Swashbuckle-specific options were removed

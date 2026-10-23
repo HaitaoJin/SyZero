@@ -24,10 +24,10 @@ namespace SyZero.MongoDB
 
             if (!string.IsNullOrWhiteSpace(options.Value.UserName) || !string.IsNullOrWhiteSpace(options.Value.Password))
             {
-                settings.Credentials = new[]
-                {
-                    MongoCredential.CreateCredential(options.Value.DataBase, options.Value.UserName ?? string.Empty, options.Value.Password ?? string.Empty)
-                };
+                settings.Credential = MongoCredential.CreateCredential(
+                    options.Value.DataBase,
+                    options.Value.UserName ?? string.Empty,
+                    options.Value.Password ?? string.Empty);
             }
 
             var _mongoClient = new MongoClient(settings);

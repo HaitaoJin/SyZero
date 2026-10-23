@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Description>SyZero 网关模块的 YARP（Yet Another Reverse Proxy）实现，提供 IGateway / IGatewayConfigurationStore / IGatewayConfigurationApplier 的 YARP 后端，与 SyZero.Gateway.Ocelot 同级互斥。原名 SyZero.YARP，自 v1.6.0 起改名为 SyZero.Gateway.YARP。</Description>
     <PackageTags>SyZero;Gateway;YARP;ReverseProxy</PackageTags>
     <IsPackable>true</IsPackable>

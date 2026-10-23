@@ -21,13 +21,13 @@ namespace SyZero
         /// </summary>
         public static IServiceCollection AddSyZeroRateLimiting(
             this IServiceCollection services,
-            IConfiguration? configuration = null,
+            IConfiguration configuration,
             Action<SyZeroRateLimitingOptions>? configure = null,
             string sectionName = SyZeroRateLimitingOptions.SectionName)
         {
-            var config = configuration ?? AppConfig.Configuration;
+            ArgumentNullException.ThrowIfNull(configuration);
             var options = new SyZeroRateLimitingOptions();
-            config?.GetSection(sectionName)?.Bind(options);
+            configuration.GetSection(sectionName).Bind(options);
             configure?.Invoke(options);
             services.AddSingleton(options);
 

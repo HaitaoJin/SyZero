@@ -19,7 +19,7 @@ namespace SyZero.ObjectMapping.AutoMapper
         }
 
         /// <inheritdoc />
-        public TDestination Map<TDestination>(object source)
+        public TDestination? Map<TDestination>(object? source)
         {
             return _mapper.Map<TDestination>(source);
         }

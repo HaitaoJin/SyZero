@@ -6,16 +6,23 @@ using SyZero.Example3.Core.Entities;
 using SyZero.Example3.Core.Repository;
 using SyZero.Example3.IApplication.Examples;
 using SyZero.Example3.IApplication.Examples.Dto;
+using SyZero.Dependency;
+using SyZero.Runtime.Session;
+using Microsoft.Extensions.Options;
+using SyZero.Configurations;
 
 namespace SyZero.Example3.Application.Examples
 {
     public class Example3AppService : AsyncCrudAppService<Example, Example3Dto, PageAndSortQueryDto, CreateExample3Dto>, IExample3AppService
     {
         private readonly IExampleRepository _exampleRepository;
+        private readonly SyZeroServerOptions _serverOptions;
 
-        public Example3AppService(IExampleRepository exampleRepository) : base(exampleRepository)
+        public Example3AppService(IExampleRepository exampleRepository, SyZeroServiceDependencies dependencies, ISySession sySession, IOptions<SyZeroServerOptions> serverOptions)
+            : base(exampleRepository, dependencies, sySession)
         {
             _exampleRepository = exampleRepository;
+            _serverOptions = serverOptions.Value;
         }
 
         protected override void CheckPermission(string permissionName)
@@ -53,9 +60,9 @@ namespace SyZero.Example3.Application.Examples
         {
             return Task.FromResult(new ServiceInfoDto
             {
-                ServiceName = AppConfig.ServerOptions.Name,
+                ServiceName = _serverOptions.Name,
                 Version = "1.0.0",
-                Port = AppConfig.ServerOptions.Port,
+                Port = _serverOptions.Port,
                 Timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
             });
         }

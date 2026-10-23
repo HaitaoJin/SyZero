@@ -18,7 +18,7 @@ dotnet add package SyZero.MongoDB
 ## Quick Start
 
 ```csharp
-builder.Services.AddSyZeroMongoDB();
+builder.Services.AddSyZeroMongoDB(builder.Configuration);
 ```
 
 ## Configuration Example (appsettings.json)

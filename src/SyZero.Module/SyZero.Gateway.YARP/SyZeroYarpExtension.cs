@@ -20,7 +20,7 @@ namespace SyZero
     /// </summary>
     public static class SyZeroYarpExtension
     {
-        public static IServiceCollection AddSyZeroYarp(this IServiceCollection services, IConfiguration? configuration = null)
+        public static IServiceCollection AddSyZeroYarp(this IServiceCollection services, IConfiguration configuration)
         {
             return AddSyZeroYarp(services, _ => { }, configuration);
         }
@@ -28,13 +28,12 @@ namespace SyZero
         public static IServiceCollection AddSyZeroYarp(
             this IServiceCollection services,
             Action<SyZeroYarpOptions> optionsAction,
-            IConfiguration? configuration = null)
+            IConfiguration configuration)
         {
             if (services is null) throw new ArgumentNullException(nameof(services));
 
-            var config = configuration
-                ?? AppConfig.Configuration
-                ?? throw new InvalidOperationException("Configuration is required before registering SyZero.Gateway.YARP.");
+            ArgumentNullException.ThrowIfNull(configuration);
+            var config = configuration;
 
             var options = SyZeroYarpOptions.CreateDefault(config);
             optionsAction?.Invoke(options);

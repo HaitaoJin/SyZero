@@ -1,6 +1,52 @@
 ﻿# 发布说明
 
 
+## v10.0.0
+
+> v10 是面向 .NET 10 的大版本升级，不提供 v9 公共 API 兼容层。升级时请按编译错误迁移，并先在预发布环境完成数据表变更与消息投递验证。
+
+### 运行时、安全与工程质量
+
+- 除 `SyZero.SourceGenerator`（`netstandard2.0` Analyzer）外，运行时、示例、网关与测试统一升级到 `net10.0`；CI 使用 .NET 10，开启 Nullable、最新分析器、确定性构建、NuGet 包验证、测试结果与覆盖率产物。
+- 全面更新 ASP.NET Core / EF Core / OpenTelemetry / HotChocolate / MongoDB / Ocelot / AutoMapper 等依赖，并通过中央包管理固定易受攻击的传递依赖；CI 新增直接与传递依赖漏洞门禁。
+- 本地文件存储增加根路径约束、绝对路径拒绝与规范化校验，阻断 `../`、混合分隔符和前缀碰撞造成的目录穿越。
+- 幂等中间件增加租户、用户、HTTP 方法与路径作用域、请求指纹冲突检测、请求/响应体上限，以及异常后的占位释放；Redis 提供跨实例原子幂等存储。
+
+### 破坏性 API 调整
+
+- `SyZeroServiceBase`、`ApplicationService` 与 CRUD 基类改为构造函数注入 `SyZeroServiceDependencies`，删除无参构造与静态 Service Locator 降级路径；业务服务必须显式传入依赖。
+- 删除静态 `AppConfig` 与 `SyZeroUtil`。模块注册统一显式接收 `builder.Configuration`，运行时服务统一通过构造函数注入或 `IOptions<T>` 获取；JWT 配置也改为强类型 `JwtTokenOptions` 并要求至少 32 字节密钥。
+- `IOutboxStore.ClaimPendingAsync` 成为必实现契约，不再默认退化到非原子查询；自定义 Outbox Provider 必须实现带租约的原子认领。
+- `SyZero.Swagger` 改为基于 .NET 10 `Microsoft.AspNetCore.OpenApi` 的原生 OpenAPI：使用 `AddSyZeroOpenApi()` / `MapSyZeroOpenApi()`；删除 `AddSwagger()`、`UseSwagger()`、Swagger UI 与构建期导出兼容 API。
+- Ocelot 升级到 v25，并移除不兼容的 MMLib Swagger 聚合、Ocelot Consul Provider 与 Polly Provider 接入；服务发现继续使用 SyZero 自身 Provider，HTTP 客户端韧性由 `SyZero.Resilience` 提供。
+
+### 可靠消息、数据与分布式能力
+
+- Outbox 新增 `LockOwner` / `LockedUntilUtc` 租约与多实例安全认领；EF Core Provider 使用条件更新完成竞争控制。
+- 新增 Inbox 消费去重：`IInboxStore`、`InboxExecutor`、内存与 EF Core 实现，支持处理租约、成功封存、失败释放与重试计数。
+- Redis 新增 Lua 原子滑动窗口 `IDistributedRateLimiter` 与分布式 `IIdempotencyStore`，注册 Redis 模块后自动替换本地实现。
+- EF Core 新增 PostgreSQL Provider；`SyZero.Resilience` 接入标准 HTTP 韧性处理器，`SyZero.Sdk` typed client 默认启用。
+- `SyZero.Authorization.AspNetCore` 新增严格校验 issuer / audience / lifetime / signature 的 OIDC JWT Bearer 注册入口。
+
+### 框架能力扩展
+
+- 新增领域模型基元：`AggregateRoot<TKey>`、领域事件、软删除、审计字段与并发戳接口。
+- 多租户支持必选租户、版本/属性元数据与出站 HTTP 租户头传播；Feature Management 支持上下文化特性判断。
+- `SyZero.Files` 增加元数据、列表、URL 能力与阿里云 OSS Provider；`SyZero.AI` 增加流式响应。
+- 新增 `SyZero.Notifications`，统一编排邮件、短信与自定义通知通道，并返回逐通道投递结果。
+- 后台任务新增失败重试、延迟、运行状态、成功记录与死信状态；持久化调度继续由 `SyZero.BackgroundJobs.Quartz` 承担。
+- 新增 Aspire AppHost，统一编排网关与示例服务；解决方案与文档同步加入 v10 模块。
+
+### 迁移检查清单
+
+1. 安装 .NET 10 SDK / Runtime，将应用 TFM 更新为 `net10.0`。
+2. 修改所有应用服务构造函数，向基类传入 `SyZeroServiceDependencies` 与所需会话。
+3. 将所有配置型模块注册改为显式传入 `builder.Configuration`，并把业务代码中的 `AppConfig` / `SyZeroUtil` 访问迁到 `IOptions<T>` 或构造函数注入。
+4. 将 Swagger 注册/映射迁移到原生 OpenAPI，并单独选择需要的文档 UI。
+5. 自定义 Outbox Provider 实现原子 `ClaimPendingAsync`；EF 用户为 Outbox/Inbox 新字段与表生成迁移。
+6. 检查 Ocelot 配置，移除旧 Swagger 聚合、Consul/Polly Provider 专属配置。
+7. 执行完整测试、依赖漏洞审计，并验证多实例消息消费和幂等冲突行为。
+
 ## v9.1.0
 
 ### 运行时与构建

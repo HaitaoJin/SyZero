@@ -12,17 +12,17 @@ namespace SyZero.Gateway.Ocelot
 {
     /// <summary>
     /// 基于 SyZero <see cref="IServiceManagement"/> 抽象的 Ocelot 服务发现提供者。
-    /// 与 <see cref="SyZeroConsulServiceBuilder"/> 不同，本实现完全脱离具体后端，
-    /// 凡是注册了 <c>IServiceManagement</c>（Consul / Nacos / Redis / Local / DB）即可直接使用。
+    /// 本实现完全脱离具体后端，凡是注册了 <c>IServiceManagement</c>
+    /// （Consul / Nacos / Redis / Local / DB）即可直接使用。
     /// 通过 <c>ocelot.json</c> 中
     /// <c>GlobalConfiguration.ServiceDiscoveryProvider.Type = "SyZeroDiscovery"</c> 启用
-    /// （Ocelot 23 工厂以 provider 类的 <c>Type.Name</c> 与 <c>Type</c> 字段做大小写不敏感比较）。
+    /// （Ocelot 25 工厂以 provider 类的 <c>Type.Name</c> 与 <c>Type</c> 字段做大小写不敏感比较）。
     /// </summary>
     public sealed class SyZeroDiscovery : IServiceDiscoveryProvider
     {
         /// <summary>
         /// 在 <c>ocelot.json</c> 中识别此 Provider 的 <c>Type</c> 名称。
-        /// 必须与本类的简单类型名一致（Ocelot 23 工厂硬编码做名称匹配）。
+        /// 必须与本类的简单类型名一致（Ocelot 工厂按名称匹配）。
         /// </summary>
         public const string ProviderType = nameof(SyZeroDiscovery);
 

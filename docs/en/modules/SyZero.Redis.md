@@ -20,13 +20,13 @@ dotnet add package SyZero.Redis
 
 ```csharp
 // Required for Redis cache and lock features.
-builder.Services.AddSyZeroRedis();
+builder.Services.AddSyZeroRedis(builder.Configuration);
 
 // Optional: Redis-based service management.
-builder.Services.AddRedisServiceManagement();
+builder.Services.AddRedisServiceManagement(builder.Configuration);
 
 // Optional: Redis pub/sub event bus.
-builder.Services.AddRedisEventBus();
+builder.Services.AddRedisEventBus(builder.Configuration);
 ```
 
 ## Configuration Example (appsettings.json)

@@ -68,7 +68,12 @@ namespace SyZero.DistributedTransaction
                 return;
             }
 
-            var pending = await store.FetchPendingAsync(_options.BatchSize, ct).ConfigureAwait(false);
+            var owner = $"{Environment.MachineName}:{Environment.ProcessId}:{Guid.NewGuid():N}";
+            var pending = await store.ClaimPendingAsync(
+                _options.BatchSize,
+                owner,
+                TimeSpan.FromSeconds(Math.Max(10, _options.LeaseSeconds)),
+                ct).ConfigureAwait(false);
             foreach (var msg in pending)
             {
                 ct.ThrowIfCancellationRequested();

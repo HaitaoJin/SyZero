@@ -5,7 +5,7 @@ namespace SyZero.Gateway.Ocelot
 {
     /// <summary>
     /// SyZero.Gateway.Ocelot 模块的选项。包含 <see cref="GatewayOptions"/> 中的通用配置，
-    /// 以及 Ocelot 专属的 Consul / Polly / CacheManager 等开关。
+    /// 以及 Ocelot 专属的 CacheManager 与 SyZero 服务发现开关。
     /// </summary>
     public sealed class SyZeroOcelotOptions : GatewayOptions
     {
@@ -15,15 +15,7 @@ namespace SyZero.Gateway.Ocelot
             SwaggerTitle = "SyZero API Gateway";
         }
 
-        public bool EnableConsul { get; set; } = true;
-
-        public bool UseConsulServiceAddress { get; set; } = true;
-
-        public bool EnableConfigStoredInConsul { get; set; } = true;
-
         public bool EnableCacheManager { get; set; } = true;
-
-        public bool EnablePolly { get; set; } = true;
 
         /// <summary>
         /// 是否启用基于 <see cref="Service.IServiceManagement"/> 的统一服务发现 Provider；

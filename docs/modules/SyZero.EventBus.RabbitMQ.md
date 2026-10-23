@@ -44,10 +44,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddSyZero();
 
 // 注册服务方式1 - 使用配置文件
-builder.Services.AddRabbitMQEventBus();
+builder.Services.AddRabbitMQEventBus(builder.Configuration);
 
 // 注册服务方式2 - 使用委托配置
-builder.Services.AddRabbitMQEventBus(options =>
+builder.Services.AddRabbitMQEventBus(builder.Configuration, options =>
 {
     options.HostName = "localhost";
     options.Port = 5672;
@@ -150,7 +150,7 @@ await _eventBus.PublishAsync(new OrderTimeoutEvent
 ### 死信队列
 
 ```csharp
-builder.Services.AddRabbitMQEventBus(options =>
+builder.Services.AddRabbitMQEventBus(builder.Configuration, options =>
 {
     options.DeadLetterExchange = "dead_letter_exchange";
     options.DeadLetterQueue = "dead_letter_queue";

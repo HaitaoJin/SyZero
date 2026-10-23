@@ -3,7 +3,7 @@
 @{
     ViewData["Title"] = "负载均衡";
     ViewData["Subtitle"] = "为每条路由配置负载均衡策略";
-    bool isAdmin = ViewData["IsAdmin"] is bool b && b;
+    bool isAdmin = Model.User?.IsInRole("Admin") == true;
 }
 
 <div class="alert alert-info mb-4">

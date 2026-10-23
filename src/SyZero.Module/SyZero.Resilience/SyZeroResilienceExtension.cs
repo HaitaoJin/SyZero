@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Polly;
 using Polly.Registry;
 using System;
+using Microsoft.Extensions.Http.Resilience;
 
 namespace SyZero.Resilience;
 
@@ -31,5 +32,16 @@ public static class SyZeroResilienceExtension
         });
 
         return services;
+    }
+
+    /// <summary>为 HttpClient 接入官方标准韧性处理器（限流、总超时、重试、熔断、单次超时）。</summary>
+    public static IHttpStandardResiliencePipelineBuilder AddSyZeroStandardResilience(
+        this IHttpClientBuilder builder,
+        Action<HttpStandardResilienceOptions>? configure = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        return configure is null
+            ? builder.AddStandardResilienceHandler()
+            : builder.AddStandardResilienceHandler(configure);
     }
 }

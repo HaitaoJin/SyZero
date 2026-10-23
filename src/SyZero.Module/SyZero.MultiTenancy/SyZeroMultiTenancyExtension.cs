@@ -23,6 +23,7 @@ namespace SyZero.MultiTenancy
             if (configure != null) services.Configure(configure);
 
             services.AddHttpContextAccessor();
+            services.AddTransient<TenantPropagationHandler>();
 
             // 三个内置 Resolver 按「Header → Domain → Claim」顺序解析，命中即停。
             services.AddScoped<ITenantResolver, HeaderTenantResolver>();
@@ -38,5 +39,8 @@ namespace SyZero.MultiTenancy
         /// </summary>
         public static IApplicationBuilder UseSyZeroMultiTenancy(this IApplicationBuilder app)
             => app.UseMiddleware<MultiTenancyMiddleware>();
+
+        public static IHttpClientBuilder AddTenantPropagation(this IHttpClientBuilder builder)
+            => builder.AddHttpMessageHandler<TenantPropagationHandler>();
     }
 }

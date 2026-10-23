@@ -94,7 +94,7 @@ builder.Services.AddLocalServiceManagement(options =>
 {
     options.EnableHealthCheck = true;
     options.EnableLeaderElection = false;
-});
+}, builder.Configuration);
 ```
 
 ---
@@ -113,7 +113,7 @@ SyZero 核心包内置两种事件总线实现：
 ```csharp
 using SyZero.EventBus;
 
-builder.Services.AddLocalEventBus();
+builder.Services.AddLocalEventBus(builder.Configuration);
 
 public class OrderCreatedEvent : EventBase
 {
@@ -166,5 +166,4 @@ public class OrderService
 ## 📄 许可证
 
 MIT License - 详见 [LICENSE](../../LICENSE)
-
 

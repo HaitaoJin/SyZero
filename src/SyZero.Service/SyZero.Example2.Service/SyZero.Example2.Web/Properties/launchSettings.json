@@ -19,7 +19,7 @@
     "SyZero.Example2.Web": {
       "commandName": "Project",
       "launchBrowser": true,
-      "launchUrl": "api/swagger",
+      "launchUrl": "openapi/v1.json",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },

@@ -52,7 +52,7 @@ public class BackgroundJobsTests
 
             var done = await Task.WhenAny(tcs.Task, Task.Delay(TimeSpan.FromSeconds(5)));
             Assert.Same(tcs.Task, done);
-            Assert.Equal(42, tcs.Task.Result);
+            Assert.Equal(42, await tcs.Task);
         }
         finally
         {

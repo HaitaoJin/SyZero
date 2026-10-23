@@ -17,6 +17,7 @@ public static class SyZeroDistributedTransactionEfCoreExtension
     {
         services.AddDbContext<OutboxDbContext>(optionsAction);
         services.Replace(ServiceDescriptor.Scoped<IOutboxStore, EfCoreOutboxStore>());
+        services.Replace(ServiceDescriptor.Scoped<IInboxStore, EfCoreInboxStore>());
         return services;
     }
 }

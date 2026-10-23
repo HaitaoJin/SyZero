@@ -1,5 +1,6 @@
 using System;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using SyZero.Configurations;
@@ -16,10 +17,12 @@ namespace SyZero.EntityFrameworkCore
         /// <typeparam name="TContext"></typeparam>
         /// <param name="services"></param>
         /// <returns></returns>
-        public static IServiceCollection AddSyZeroEntityFramework<TContext>(this IServiceCollection services)
+        public static IServiceCollection AddSyZeroEntityFramework<TContext>(this IServiceCollection services, IConfiguration configuration)
             where TContext : DbContext
         {
-            var connectionOptions = AppConfig.ConnectionOptions ?? throw new InvalidOperationException("未找到 ConnectionString 配置。");
+            ArgumentNullException.ThrowIfNull(configuration);
+            var connectionOptions = configuration.GetSection("ConnectionString").Get<SyZeroConnectionOptions>()
+                ?? throw new InvalidOperationException("未找到 ConnectionString 配置。");
             ValidateProviderConfiguration<TContext>(connectionOptions);
             return services.AddSyZeroEntityFramework<TContext>(optionsBuilder => ConfigureProvider<TContext>(optionsBuilder, connectionOptions));
         }
@@ -70,6 +73,9 @@ namespace SyZero.EntityFrameworkCore
                     break;
                 case DbType.Sqlite:
                     optionsBuilder.UseSqlite(connectionOptions.Master);
+                    break;
+                case DbType.PostgreSQL:
+                    optionsBuilder.UseNpgsql(connectionOptions.Master);
                     break;
                 default:
                     throw new NotSupportedException($"SyZero.EntityFrameworkCore 暂不支持数据库类型: {connectionOptions.Type}。");

@@ -4,6 +4,9 @@
         <name>SyZero.Authorization.AspNetCore</name>
     </assembly>
     <members>
+        <member name="T:SyZero.Authorization.AspNetCore.SyOpenIdConnectOptions">
+            <summary>外部 OpenID Connect/OAuth 2.0 身份提供方的资源服务器配置。</summary>
+        </member>
         <member name="T:SyZero.Authorization.AspNetCore.SyPermissionPolicy">
             <summary>
             把 SyZero 权限作为 ASP.NET Core 授权策略来声明。
@@ -34,6 +37,9 @@
             注册 SyZero 权限到 ASP.NET Core 授权管线的桥接。
             调用前请确保已注册 IPermissionChecker（SyZero.Core 默认提供 DefaultPermissionChecker）。
             </summary>
+        </member>
+        <member name="M:SyZero.Authorization.AspNetCore.SyZeroAuthorizationAspNetCoreExtension.AddSyZeroOpenIdConnect(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,System.String)">
+            <summary>注册标准 OIDC/OAuth 2.0 JWT Bearer 资源服务器，可对接 Keycloak、Entra ID、Auth0 等。</summary>
         </member>
     </members>
 </doc>

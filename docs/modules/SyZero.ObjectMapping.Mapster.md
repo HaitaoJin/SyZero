@@ -18,7 +18,7 @@ dotnet add package SyZero.ObjectMapping.Mapster
 - 🔒 **MIT 许可** - 无商业授权风险（区别于 AutoMapper 14+）
 - 🪶 **极简依赖** - 仅依赖 `Mapster` + `Mapster.DependencyInjection`，零第三方拖累
 - ⚡ **高性能** - Mapster 在编译期生成 IL，无反射开销
-- 🎯 **目标框架** - `net9.0`
+- 🎯 **目标框架** - `net10.0`
 
 ---
 

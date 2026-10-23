@@ -22,7 +22,7 @@ dotnet add package SyZero.ObjectMapping.AutoMapper
 - 💾 **依赖注入** - 无缝集成 Microsoft DI
 - 🔒 **类型安全** - 编译时类型检查
 - 📦 **集合映射** - 内置 AutoMapper.Collection 支持
-- 🎯 **多目标框架** - 支持 net8.0、net9.0
+- 🎯 **目标框架** - `net10.0`
 
 ---
 

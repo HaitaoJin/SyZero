@@ -3,7 +3,7 @@
 @{
     ViewData["Title"] = "限流管理";
     ViewData["Subtitle"] = "管理全局限流策略与单路由限流配置";
-    bool isAdmin = ViewData["IsAdmin"] is bool b && b;
+    bool isAdmin = Model.User?.IsInRole("Admin") == true;
 }
 
 <div class="alert alert-info mb-4">

@@ -71,6 +71,7 @@ All core module docs are available in this section.
 4. [SyZero.Files](/en/modules/SyZero.Files) — file storage abstraction + local-disk default
 5. [SyZero.Mail](/en/modules/SyZero.Mail) — mail abstraction + SMTP / console defaults
 6. [SyZero.Sms](/en/modules/SyZero.Sms) — SMS abstraction + console placeholder
+7. [SyZero.Notifications](/en/modules/SyZero.Notifications) — unified mail, SMS, and custom-channel orchestration
 
 ## Messaging, security & next-gen ecosystem (released in v9.1.0)
 

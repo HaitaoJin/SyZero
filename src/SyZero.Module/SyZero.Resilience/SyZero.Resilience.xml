@@ -27,5 +27,8 @@
             自定义管道请直接调用 <c>services.AddResiliencePipeline("name", b => ...)</c>。
             </summary>
         </member>
+        <member name="M:SyZero.Resilience.SyZeroResilienceExtension.AddSyZeroStandardResilience(Microsoft.Extensions.DependencyInjection.IHttpClientBuilder,System.Action{Microsoft.Extensions.Http.Resilience.HttpStandardResilienceOptions})">
+            <summary>为 HttpClient 接入官方标准韧性处理器（限流、总超时、重试、熔断、单次超时）。</summary>
+        </member>
     </members>
 </doc>

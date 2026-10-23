@@ -95,7 +95,9 @@ Page: `GET /admin/users`
 | `DELETE /admin-api/users/{name}` | Delete a file-backed user |
 | `POST /admin-api/me/password` | Change the current user's own password |
 
-`users.json` is maintained by `FileGatewayAdminUserStore` using temp-file + atomic replace semantics with in-process `SemaphoreSlim` serialization. It is not a cross-instance sync mechanism; for multi-instance deployments, keep users in configuration or replace the store.
+`users.json` is maintained by `FileGatewayAdminUserStore`. Passwords are stored with PBKDF2-SHA256 (random salt, 120,000 iterations); legacy plaintext entries are transparently upgraded after the first successful login. Writes use temp-file + atomic replace semantics with in-process `SemaphoreSlim` serialization. Login cookies are encrypted and authenticated with ASP.NET Core Data Protection instead of exposing Base64-encoded plaintext credentials. It is not a cross-instance sync mechanism; for multi-instance deployments, keep users in configuration or replace the store.
+
+> In multi-instance deployments, share the ASP.NET Core Data Protection key ring and use the same application name if login cookies must work across instances. Otherwise, users need to sign in again after switching instances.
 
 ### Login throttling
 
@@ -179,6 +181,7 @@ Rules:
 | `GET /admin/routes` | Route CRUD, search, clone, drag-reorder, YAML import/export, markdown descriptions, tester handoff |
 | `GET /admin/route-overview` | Aggregated route statistics by `ServiceName`, tags, and methods |
 | `GET /admin/swagger-endpoints` | Swagger endpoint CRUD |
+| `GET /admin/service-interfaces` | Registered downstream HTTP interfaces with service / method / keyword filters; clicking a Path opens it in the route tester with its method and path prefilled |
 | `GET /admin/backups` | Backup list with download / restore / delete |
 | `GET /admin/raw-editor` | Raw JSON editor for import / export / full replace |
 | `GET /admin/diff` | Line-level diff between stored and runtime configuration |
@@ -186,7 +189,7 @@ Rules:
 | `GET /admin/users` | User and role management |
 | `GET /admin/rate-limiting` | Global + per-route rate-limit management |
 | `GET /admin/load-balancing` | Per-route load-balancer management |
-| `GET /admin/tester` | Browser-side route tester with history, favorites, and cURL conversion |
+| `GET /admin/tester` | Browser-side route tester with query-string prefill, history, favorites, and cURL conversion; routes and registered service Paths can be handed off with one click |
 | `GET /admin/login` | Styled login page with "remember me" |
 | `GET /admin/logout` | Clears cookie and redirects to login |
 
@@ -213,6 +216,7 @@ Rules:
 | `GET /admin-api/swagger-endpoints/export?format=json\|yaml` | Export Swagger endpoints only |
 | `POST /admin-api/swagger-endpoints/import?format=json\|yaml&mode=append\|merge\|replace` | Import Swagger endpoint list |
 | `GET /admin-api/services` | Service names from `IServiceManagement` |
+| `GET /admin-api/service-interfaces[?service=service-name]` | Aggregate registered service instances and reported HTTP endpoint metadata; optionally filter by an exact service name |
 | `GET /admin-api/backups` | Backup list |
 | `GET /admin-api/backups/{id}/download` | Download one backup |
 | `POST /admin-api/backups/{id}/restore` | Restore one backup |
@@ -229,6 +233,18 @@ Rules:
 | `GET /admin-api/auth/captcha` | Issue captcha challenge |
 
 > Backup and audit related APIs are optional at the abstraction layer. Implementations that do not support them can return `501 Not Supported`.
+
+### Service interfaces and route tester
+
+When a downstream service starts its registration flow through `app.UseSyZero()`, SyZero automatically collects its ASP.NET Core endpoints and publishes the HTTP method, path template, group, controller, action, and display name as service-instance metadata. The admin panel reads this metadata through `IServiceManagement` and deduplicates endpoints from multiple instances by `Method + Path`.
+
+Clicking a Path on `/admin/service-interfaces` navigates to:
+
+```text
+/admin/tester?method=<HTTP_METHOD>&url=<PATH>
+```
+
+The tester uses a browser-side `fetch`, and the Path link copies the service-reported path template unchanged into a relative URL. If the gateway adds an upstream prefix—for example, the service reports `/api/orders/{id}` while the public route is `/example1/api/orders/{id}`—add that prefix before sending. Also replace template values such as `{id}` and provide any required authentication headers or request body. If a registered service reports no interfaces, make sure it is running a version that supports endpoint metadata publication, then restart it so registration runs again.
 
 ## Abstraction extensions
 
@@ -280,7 +296,7 @@ Default path: `<ContentRoot>/logs/gateway-admin-audit.jsonl`
 
 1. Razor Pages are embedded in the package via `Microsoft.NET.Sdk.Razor`; the host project does not need local `Pages/` files
 2. Register `UseSyZeroGatewayAdmin` and `MapControllers` / `MapRazorPages` before Ocelot takes over the pipeline
-3. `MMLib.SwaggerForOcelot` only reads `SwaggerEndPoints` at startup, so editing them does not hot-reload the aggregator
+3. Since v10 the Ocelot provider no longer includes a Swagger aggregator; `SwaggerEndPoints` remains generic metadata for a custom OpenAPI portal
 4. `System.Text.Json` does not preserve `//` comments when saving `configuration.json`
 5. Production deployments should always use HTTPS because Basic Auth over plain HTTP exposes credentials directly
 

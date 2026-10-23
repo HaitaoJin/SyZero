@@ -1,6 +1,6 @@
 ﻿# SyZero.Gateway.Ocelot
 
-SyZero.Gateway.Ocelot provides API gateway capabilities on top of Ocelot, including dynamic routing, load balancing, and Swagger aggregation.
+SyZero.Gateway.Ocelot is the Ocelot 25 backend for SyZero gateway abstractions, providing dynamic routing, load balancing, caching, hot reload, and unified service discovery.
 
 ## Install
 
@@ -12,8 +12,8 @@ dotnet add package SyZero.Gateway.Ocelot
 
 - Ocelot-based upstream/downstream routing
 - Load balancing support
-- Swagger aggregation for microservices
-- Circuit breaking and retry support
+- Unified discovery through SyZero Consul, Nacos, Redis, Local, or DB backends
+- Composable HTTP resilience through `SyZero.Resilience`
 
 ## Quick Start
 
@@ -47,7 +47,7 @@ await app.UseSyZeroOcelotAsync();
 
 ## Unified Service Discovery (Consul / Nacos / Redis / Local / DB)
 
-In addition to the built-in `Ocelot.Provider.Consul`, this module ships `SyZeroDiscovery` — a generic Ocelot
+This module ships `SyZeroDiscovery` — a generic Ocelot
 service-discovery provider that consumes the `IServiceManagement` abstraction from `SyZero.Core`. Any backend
 that registers `IServiceManagement` (Consul / Nacos / Redis / Local / DB) plugs into Ocelot transparently and
 shares the same abstraction as [SyZero.Gateway.YARP service discovery](/en/modules/SyZero.Gateway.YARP#service-discovery-integration-consul--nacos--redis--local--db).
@@ -56,7 +56,6 @@ shares the same abstraction as [SyZero.Gateway.YARP service discovery](/en/modul
 builder.Services.AddNacos(builder.Configuration);   // or AddConsul / AddRedisServiceManagement / Local / DB
 builder.Services.AddSyZeroOcelot(opts =>
 {
-    opts.EnableConsul = false;                      // disable built-in Ocelot.Provider.Consul if desired
     opts.EnableSyZeroServiceDiscovery = true;       // enable SyZeroDiscovery
 }, builder.Configuration);
 ```
@@ -79,13 +78,13 @@ builder.Services.AddSyZeroOcelot(opts =>
 }
 ```
 
-> Ocelot 23's `ServiceDiscoveryProviderFactory` matches the provider via `provider.GetType().Name` against
+> Ocelot 25's `ServiceDiscoveryProviderFactory` matches the provider via `provider.GetType().Name` against
 > the `Type` field (case-insensitive), so the class is intentionally named `SyZeroDiscovery`.
 
 ### Load balancing & health checks
 
 - Load-balancer types follow Ocelot's native names (`RoundRobin` / `LeastConnection` / `NoLoadBalancer` / `CookieStickySessions`) and map 1:1 to the [SyZero.Gateway.YARP LB table](/en/modules/SyZero.Gateway.YARP#load-balancing--health-checks).
-- Health filtering happens at the discovery source (`IServiceManagement.GetHealthyServices(...)` only returns healthy instances). Ocelot does not run a second active probe, avoiding duplicate health judgments. If you want Ocelot's native `Provider.Consul` active probing, also enable `EnableConsul = true` to use the original Consul path in parallel.
+- Health filtering happens at the discovery source (`IServiceManagement.GetHealthyServices(...)` only returns healthy instances), avoiding duplicate health judgments.
 
 ## References
 

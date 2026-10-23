@@ -67,14 +67,13 @@ builder.AddSyZero();
 
 builder.Services.AddControllers();
 builder.Services.AddDynamicWebApi();
-builder.Services.AddSwagger();
+builder.Services.AddSyZeroOpenApi();
 
 var app = builder.Build();
 
 app.UseSyZero();
 app.MapControllers();
-app.UseSwagger();
-app.UseSwaggerUI();
+app.MapSyZeroOpenApi();
 
 app.Run();
 ```
@@ -230,8 +229,8 @@ SyZero 很多能力都遵循“核心接口 + 多个后端实现”的模式：
 ```csharp
 builder.Services.AddSyZeroRedis(builder.Configuration);
 builder.Services.AddSyZeroSqlSugar<MyDbContext>();
-builder.Services.AddSyZeroFeign();
-builder.Services.AddSyZeroOpenTelemetry();
+builder.Services.AddSyZeroFeign(builder.Configuration);
+builder.Services.AddSyZeroOpenTelemetry(builder.Configuration);
 ```
 
 中间件或终结点通常遵循：

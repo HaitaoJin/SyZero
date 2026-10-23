@@ -1,6 +1,6 @@
 ﻿# SyZero.Gateway.Ocelot
 
-SyZero 网关抽象（`SyZero.Gateway` 命名空间，位于 `SyZero.Core`）的 **Ocelot 实现**：基于 [Ocelot](https://github.com/ThreeMammals/Ocelot) 提供服务路由、负载均衡、熔断（Polly）、Consul 服务发现、配置中心（Consul KV）与 Swagger 文档聚合（MMLib.SwaggerForOcelot）。
+SyZero 网关抽象的 **Ocelot 25 实现**，提供动态路由、负载均衡、缓存、热更新与基于 `IServiceManagement` 的统一服务发现。
 
 > 📐 抽象与实现分层：`SyZero.Core` 暴露 `IGateway` / `IGatewayConfigurationStore` / `IGatewayConfigurationApplier` / `GatewayConfiguration` 等抽象；本模块提供它们的 Ocelot 后端。后续可按相同模式新增其他网关实现包（如 YARP）。
 
@@ -14,8 +14,8 @@ dotnet add package SyZero.Gateway.Ocelot
 
 - 🚀 **服务路由** - 基于 Ocelot 的动态路由配置
 - ⚖️ **负载均衡** - 支持多种负载均衡策略
-- 📖 **Swagger 聚合** - 使用 MMLib.SwaggerForOcelot 聚合下游服务文档
-- 🔄 **熔断降级** - 集成 Polly 实现熔断和重试
+- 🔎 **统一服务发现** - 支持 SyZero 的 Consul / Nacos / Redis / Local / DB 后端
+- 🛡️ **HTTP 韧性** - 可组合 `SyZero.Resilience` 的标准重试、超时与熔断处理器
 
 ---
 
@@ -129,13 +129,13 @@ builder.Services.AddOcelot()
 
 1. **配置文件** - 建议将网关路由单独放在 `ocelot.json` 或 `configuration.json`
 2. **CORS** - `SyZero:CorsOrigins` 会自动注册命名 CORS 策略，未配置时默认退化为匿名跨域
-3. **服务发现** - 启用 Consul 时会优先使用服务实例地址作为下游主机名
+3. **服务发现** - v10 仅保留 SyZero 统一 Provider，不再内置 Ocelot Consul Provider
 
 ---
 
 ## 🌐 统一服务发现（Consul / Nacos / Redis / Local / DB）
 
-除内置的 `Ocelot.Provider.Consul` 外，本模块提供 **基于 SyZero `IServiceManagement` 抽象的通用服务发现 Provider** —— `SyZeroDiscovery`。
+本模块提供 **基于 SyZero `IServiceManagement` 抽象的通用服务发现 Provider** —— `SyZeroDiscovery`。
 凡是注册了 `IServiceManagement` 的后端（Consul / Nacos / Redis / Local / DB）都能直接接入 Ocelot，与 [SyZero.Gateway.YARP 的服务发现集成](/modules/SyZero.Gateway.YARP#-服务发现集成-consul--nacos--redis--local--db) 共用同一抽象。
 
 ### 启用
@@ -144,7 +144,6 @@ builder.Services.AddOcelot()
 builder.Services.AddNacos(builder.Configuration);   // 或 AddConsul / AddRedisServiceManagement / AddLocal/DBServiceManagement
 builder.Services.AddSyZeroOcelot(opts =>
 {
-    opts.EnableConsul = false;                      // 关闭内置 Ocelot.Provider.Consul（按需）
     opts.EnableSyZeroServiceDiscovery = true;       // ★ 启用 SyZeroDiscovery
 }, builder.Configuration);
 ```
@@ -174,15 +173,15 @@ builder.Services.AddSyZeroOcelot(opts =>
 ### 工作原理
 
 1. `AddSyZeroOcelot` 在开启 `EnableSyZeroServiceDiscovery` 后向 DI 注册一个 `ServiceDiscoveryFinderDelegate`。
-2. Ocelot 23 的 `ServiceDiscoveryProviderFactory` 在路由 `UseServiceDiscovery=true` 时调用该委托，得到 `SyZeroDiscovery` 实例（**类的简单类型名必须等于 `ocelot.json` 中的 `Type` 字段**，因此本类显式命名为 `SyZeroDiscovery`）。
+2. Ocelot 25 的 `ServiceDiscoveryProviderFactory` 在路由使用服务发现时调用该委托，得到 `SyZeroDiscovery` 实例（类的简单类型名必须等于 `Type` 字段）。
 3. `SyZeroDiscovery.GetAsync()` 调 `IServiceManagement.GetHealthyServices(route.ServiceName)`，把 `ProtocolType` 映射成 `http` / `https`（gRPC 默认用 `http` 走 H2 透传）。
 
-> 与内置 `Ocelot.Provider.Consul` 的区别：本 Provider **不绑定具体后端**，可在不同部署环境（Consul / Nacos / Redis / 本地）共用同一份 `ocelot.json`，并复用 SyZero 自身的健康状态/权重/Subscribe 能力。
+> 本 Provider **不绑定具体后端**，可在不同部署环境（Consul / Nacos / Redis / 本地）共用同一份 `ocelot.json`，并复用 SyZero 自身的健康状态能力。
 
 ### 负载均衡与健康检查
 
 - LB 策略沿用 Ocelot 原生：`RoundRobin` / `LeastConnection` / `NoLoadBalancer` / `CookieStickySessions`，在路由 `LoadBalancerOptions.Type` 中配置即可，与 [SyZero.Gateway.YARP 的策略表](/modules/SyZero.Gateway.YARP#-负载均衡与健康检查) 一一对应。
-- 健康过滤集中在 `IServiceManagement.GetHealthyServices(...)` —— 只返回已健康实例。Ocelot 不再额外做 active probe，避免与服务注册中心两套健康判定打架；如需 Ocelot 内置的 `Provider.Consul` 主动探活，可同时启用 `EnableConsul = true` 走原生路径。
+- 健康过滤集中在 `IServiceManagement.GetHealthyServices(...)`，避免网关与注册中心产生两套健康判定。
 
 ---
 
@@ -210,7 +209,7 @@ builder.Services.AddSyZeroOcelot(opts =>
 |---|---|
 | `/admin`（概览） | 路由数、Swagger 端点数、配置文件路径、最近备份时间，「从磁盘重载」按钮强制重新读取并下发 Ocelot |
 | `/admin/routes` | 对 `Routes` 增删改查（弹窗表单），保存时自动备份原文件并热加载到 Ocelot，无需重启 |
-| `/admin/swagger-endpoints` | 对 `SwaggerEndPoints` 增删改查（**注意**：受 `MMLib.SwaggerForOcelot` 限制需重启网关后生效） |
+| `/admin/swagger-endpoints` | 维护通用网关配置中的文档端点元数据；v10 Ocelot Provider 不再内置聚合 UI |
 | `/admin-api/*` | 同等能力的 REST API（JSON），可被脚本/CI 调用 |
 
 ### 备份策略

@@ -19,7 +19,7 @@ dotnet add package SyZero.ServiceDiscovery.Consul
 
 ```csharp
 // Required: service registration and discovery.
-builder.Services.AddConsul();
+builder.Services.AddConsul(builder.Configuration);
 
 // Optional: load configuration from Consul KV.
 builder.Configuration.AddConsulConfiguration();

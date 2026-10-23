@@ -7,6 +7,8 @@ using SyZero.EventBus;
 using SyZero.Redis;
 using SyZero.Service;
 using SyZero.Util;
+using SyZero.Idempotency;
+using SyZero.RateLimiting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,28 +20,22 @@ namespace SyZero
         /// <summary>
         /// 注册RedisModule
         /// </summary>
-        public static IServiceCollection AddSyZeroRedis(this IServiceCollection services)
-        {
-            var options = AppConfig.GetSection<RedisOptions>("Redis") ?? new RedisOptions();
-            return services.AddSyZeroRedis(options);
-        }
-
-        /// <summary>
-        /// 使用指定配置注册 Redis
-        /// </summary>
         public static IServiceCollection AddSyZeroRedis(this IServiceCollection services, IConfiguration configuration, string sectionName = "Redis")
         {
+            ArgumentNullException.ThrowIfNull(configuration);
             var options = new RedisOptions();
-            configuration?.GetSection(sectionName)?.Bind(options);
+            configuration.GetSection(sectionName).Bind(options);
             return services.AddSyZeroRedis(options);
         }
 
         /// <summary>
         /// 使用默认配置并允许额外覆盖注册 Redis
         /// </summary>
-        public static IServiceCollection AddSyZeroRedis(this IServiceCollection services, Action<RedisOptions> optionsAction)
+        public static IServiceCollection AddSyZeroRedis(this IServiceCollection services, IConfiguration configuration, Action<RedisOptions> optionsAction, string sectionName = "Redis")
         {
-            var options = AppConfig.GetSection<RedisOptions>("Redis") ?? new RedisOptions();
+            ArgumentNullException.ThrowIfNull(configuration);
+            var options = new RedisOptions();
+            configuration.GetSection(sectionName).Bind(options);
             optionsAction?.Invoke(options);
             return services.AddSyZeroRedis(options);
         }
@@ -47,16 +43,17 @@ namespace SyZero
         /// <summary>
         /// 注册 Redis 服务管理
         /// </summary>
-        public static IServiceCollection AddRedisServiceManagement(this IServiceCollection services, Action<RedisServiceManagementOptions> configureOptions = null)
+        public static IServiceCollection AddRedisServiceManagement(this IServiceCollection services, IConfiguration configuration, Action<RedisServiceManagementOptions> configureOptions = null, string sectionName = RedisServiceManagementOptions.SectionName)
         {
+            ArgumentNullException.ThrowIfNull(configuration);
             var redisDescriptor = services.FirstOrDefault(d => d.ServiceType == typeof(RedisClient));
             if (redisDescriptor == null)
             {
-                services.AddSyZeroRedis();
+                services.AddSyZeroRedis(configuration);
             }
 
-            var options = AppConfig.GetSection<RedisServiceManagementOptions>(RedisServiceManagementOptions.SectionName)
-                          ?? new RedisServiceManagementOptions();
+            var options = new RedisServiceManagementOptions();
+            configuration.GetSection(sectionName).Bind(options);
             configureOptions?.Invoke(options);
             options.Validate();
 
@@ -70,28 +67,7 @@ namespace SyZero
         /// <summary>
         /// 注册 Redis 服务管理（使用配置节）
         /// </summary>
-        public static IServiceCollection AddRedisServiceManagement(this IServiceCollection services, string sectionName)
-        {
-            var redisDescriptor = services.FirstOrDefault(d => d.ServiceType == typeof(RedisClient));
-            if (redisDescriptor == null)
-            {
-                services.AddSyZeroRedis();
-            }
-
-            var options = AppConfig.GetSection<RedisServiceManagementOptions>(sectionName)
-                          ?? new RedisServiceManagementOptions();
-            options.Validate();
-
-            services.AddSingleton(options);
-            services.TryAddSingleton<RedisServiceManagement>();
-            services.TryAddSingleton<IServiceManagement>(sp => sp.GetRequiredService<RedisServiceManagement>());
-
-            return services;
-        }
-
-        /// <summary>
-        /// 注册 Redis 事件总线
-        /// </summary>
+        /// <summary>注册 Redis 事件总线。</summary>
         public static IServiceCollection AddRedisEventBus(this IServiceCollection services, RedisEventBusOptions options)
         {
             if (options == null)
@@ -102,7 +78,7 @@ namespace SyZero
             var redisDescriptor = services.FirstOrDefault(d => d.ServiceType == typeof(RedisClient));
             if (redisDescriptor == null)
             {
-                services.AddSyZeroRedis();
+                throw new InvalidOperationException("注册 Redis 事件总线前必须先调用 AddSyZeroRedis(IConfiguration)。");
             }
 
             options.Validate();
@@ -116,22 +92,30 @@ namespace SyZero
         /// <summary>
         /// 注册 Redis 事件总线（从配置读取）
         /// </summary>
-        public static IServiceCollection AddRedisEventBus(this IServiceCollection services, IConfiguration configuration = null, string sectionName = RedisEventBusOptions.SectionName)
+        public static IServiceCollection AddRedisEventBus(this IServiceCollection services, IConfiguration configuration, string sectionName = RedisEventBusOptions.SectionName)
         {
-            var config = configuration ?? AppConfig.Configuration;
+            ArgumentNullException.ThrowIfNull(configuration);
+            if (!services.Any(d => d.ServiceType == typeof(RedisClient)))
+            {
+                services.AddSyZeroRedis(configuration);
+            }
             var options = new RedisEventBusOptions();
-            config?.GetSection(sectionName)?.Bind(options);
+            configuration.GetSection(sectionName).Bind(options);
             return services.AddRedisEventBus(options);
         }
 
         /// <summary>
         /// 注册 Redis 事件总线（从配置读取并支持额外配置）
         /// </summary>
-        public static IServiceCollection AddRedisEventBus(this IServiceCollection services, Action<RedisEventBusOptions> optionsAction, IConfiguration configuration = null, string sectionName = RedisEventBusOptions.SectionName)
+        public static IServiceCollection AddRedisEventBus(this IServiceCollection services, IConfiguration configuration, Action<RedisEventBusOptions> optionsAction, string sectionName = RedisEventBusOptions.SectionName)
         {
-            var config = configuration ?? AppConfig.Configuration;
+            ArgumentNullException.ThrowIfNull(configuration);
+            if (!services.Any(d => d.ServiceType == typeof(RedisClient)))
+            {
+                services.AddSyZeroRedis(configuration);
+            }
             var options = new RedisEventBusOptions();
-            config?.GetSection(sectionName)?.Bind(options);
+            configuration.GetSection(sectionName).Bind(options);
             optionsAction?.Invoke(options);
             return services.AddRedisEventBus(options);
         }
@@ -176,6 +160,8 @@ namespace SyZero
             services.TryAddSingleton<ILockUtil, LockUtil>();
             services.TryAddSingleton<IDistributedLockProvider, RedisDistributedLockProvider>();
             services.TryAddSingleton<Microsoft.Extensions.Caching.Distributed.IDistributedCache, RedisDistributedCache>();
+            services.Replace(ServiceDescriptor.Singleton<IIdempotencyStore, RedisIdempotencyStore>());
+            services.Replace(ServiceDescriptor.Singleton<IDistributedRateLimiter, RedisDistributedRateLimiter>());
             return services;
         }
     }

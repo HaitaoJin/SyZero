@@ -21,6 +21,7 @@ namespace SyZero.BackgroundJobs
             if (configure != null) services.Configure(configure);
 
             services.AddSingleton<BackgroundJobChannel>();
+            services.AddSingleton<IBackgroundJobStateStore, MemoryBackgroundJobStateStore>();
             services.AddSingleton<IBackgroundJobManager, ChannelBackgroundJobManager>();
             services.AddHostedService<BackgroundJobWorker>();
             return services;

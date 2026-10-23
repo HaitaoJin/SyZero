@@ -4,7 +4,7 @@ This guide starts from an empty ASP.NET Core Web API project, boots a minimal Sy
 
 ## Prerequisites
 
-1. .NET 9 SDK
+1. .NET 10 SDK
 2. A reachable NuGet feed
 3. Local port `5000` available
 
@@ -49,13 +49,12 @@ builder.Services.AddDynamicWebApi(new DynamicWebApiOptions
     DefaultApiPrefix = "/api",
     DefaultAreaName = "MyService"
 });
-builder.Services.AddSwagger();
+builder.Services.AddSyZeroOpenApi();
 
 var app = builder.Build();
 
 app.UseSyZero();
-app.UseSwagger();
-app.UseSwaggerUI();
+app.MapSyZeroOpenApi();
 app.MapControllers();
 
 app.Run();
@@ -138,10 +137,10 @@ The conventions are:
 dotnet run --urls http://localhost:5000
 ```
 
-Open Swagger:
+Open the OpenAPI document:
 
 ```text
-http://localhost:5000/swagger
+http://localhost:5000/openapi/v1.json
 ```
 
 You should see the generated `Hello` endpoints. With the configuration above, the common generated paths look like:
@@ -169,6 +168,7 @@ After the minimal service works, add modules by scenario:
 | Service discovery | `SyZero.ServiceDiscovery.Consul` / `SyZero.ServiceDiscovery.Nacos` / `SyZero.Redis` | [Service Registration and Discovery](/en/guide/service-discovery) |
 | Event bus | `SyZero.EventBus.RabbitMQ` / `SyZero.EventBus.Kafka` / `SyZero.Redis` | [Event Bus and Integration Events](/en/guide/event-bus) |
 | Gateway | `SyZero.Gateway.Ocelot` / `SyZero.Gateway.YARP` / `SyZero.Gateway.Admin` | [SyZero.Gateway Microservice Gateway Demo](/en/guide/gateway-microservice-demo) |
+| Local orchestration and observability | `SyZero.AppHost` / `SyZero.Observability.OpenTelemetry` | [AppHost Local Orchestration and Observability](/en/guide/apphost-observability) |
 
 ## FAQ
 
@@ -191,4 +191,5 @@ Yes, keep it in the host pipeline. It sets the SyZero runtime service provider. 
 3. Read [Data Access and Repositories](/en/guide/data-access)
 4. Read [Service Registration and Discovery](/en/guide/service-discovery)
 5. Read [Event Bus and Integration Events](/en/guide/event-bus)
-6. Explore [Modules](/en/modules/index)
+6. Read [AppHost Local Orchestration and Observability](/en/guide/apphost-observability)
+7. Explore [Modules](/en/modules/index)

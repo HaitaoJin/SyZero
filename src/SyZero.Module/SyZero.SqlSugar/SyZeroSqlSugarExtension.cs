@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using SqlSugar;
 using System;
@@ -21,10 +22,12 @@ namespace SyZero
         /// <summary>
         /// 注册SqlSugar
         /// </summary>
-        public static IServiceCollection AddSyZeroSqlSugar<TContext>(this IServiceCollection services)
+        public static IServiceCollection AddSyZeroSqlSugar<TContext>(this IServiceCollection services, IConfiguration configuration)
             where TContext : SyZeroDbContext
         {
-            var connectionOptions = AppConfig.ConnectionOptions ?? throw new InvalidOperationException("未找到 ConnectionString 配置。");
+            ArgumentNullException.ThrowIfNull(configuration);
+            var connectionOptions = configuration.GetSection("ConnectionString").Get<SyZeroConnectionOptions>()
+                ?? throw new InvalidOperationException("未找到 ConnectionString 配置。");
 
             services.AddSingleton<ConnectionConfig>(_ =>
             {
@@ -105,9 +108,9 @@ namespace SyZero
         /// <summary>
         /// 注册SqlSugar（使用默认的SyZeroDbContext）
         /// </summary>
-        public static IServiceCollection AddSyZeroSqlSugar(this IServiceCollection services)
+        public static IServiceCollection AddSyZeroSqlSugar(this IServiceCollection services, IConfiguration configuration)
         {
-            services.AddSyZeroSqlSugar<SyZeroDbContext>();
+            services.AddSyZeroSqlSugar<SyZeroDbContext>(configuration);
             return services;
         }
 

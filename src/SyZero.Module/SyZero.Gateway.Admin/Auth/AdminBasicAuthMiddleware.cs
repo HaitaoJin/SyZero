@@ -38,10 +38,18 @@ namespace SyZero.Gateway.Admin.Auth
         };
 
         private readonly RequestDelegate _next;
+        private readonly GatewayAdminCookieProtector? _cookieProtector;
 
         public AdminBasicAuthMiddleware(RequestDelegate next)
         {
             _next = next;
+        }
+
+        /// <summary>由依赖注入使用的构造函数，启用受 Data Protection 保护的 Cookie。</summary>
+        public AdminBasicAuthMiddleware(RequestDelegate next, GatewayAdminCookieProtector cookieProtector)
+        {
+            _next = next;
+            _cookieProtector = cookieProtector;
         }
 
         public async Task InvokeAsync(HttpContext context, IUserResolver resolver)
@@ -49,7 +57,7 @@ namespace SyZero.Gateway.Admin.Auth
             var path = context.Request.Path.Value ?? string.Empty;
             foreach (var anon in AnonymousPaths)
             {
-                if (path.StartsWith(anon, StringComparison.OrdinalIgnoreCase))
+                if (PathEquals(path, anon))
                 {
                     await _next(context);
                     return;
@@ -59,7 +67,7 @@ namespace SyZero.Gateway.Admin.Auth
             // 1) 优先尝试 cookie。
             GatewayAdminUser? user = null;
             if (context.Request.Cookies.TryGetValue(AuthCookieName, out var cookieToken)
-                && TryParseToken(cookieToken, out var cu, out var cp))
+                && TryParseCookieToken(cookieToken, out var cu, out var cp))
             {
                 user = await resolver.ValidateAsync(cu, cp, context.RequestAborted);
             }
@@ -114,8 +122,23 @@ namespace SyZero.Gateway.Admin.Auth
             || string.Equals(method, "OPTIONS", StringComparison.OrdinalIgnoreCase);
 
         private static bool IsReaderAllowedWritePath(string path)
-            => path.StartsWith("/admin-api/auth/logout", StringComparison.OrdinalIgnoreCase)
-            || path.StartsWith("/admin-api/me/", StringComparison.OrdinalIgnoreCase);
+            => PathEquals(path, "/admin-api/auth/logout")
+            || PathEquals(path, "/admin-api/me/password");
+
+        private bool TryParseCookieToken(string token, out string user, out string password)
+        {
+            if (_cookieProtector is not null
+                && _cookieProtector.TryUnprotect(token, out user, out password))
+            {
+                return true;
+            }
+
+            // 兼容升级前已经签发的 Base64 Cookie；新 Cookie 一律使用 Data Protection。
+            return TryParseToken(token, out user, out password);
+        }
+
+        private static bool PathEquals(string path, string expected)
+            => string.Equals(path.TrimEnd('/'), expected, StringComparison.OrdinalIgnoreCase);
 
         internal static bool TryParseBasic(string headerValue, out string user, out string password)
         {

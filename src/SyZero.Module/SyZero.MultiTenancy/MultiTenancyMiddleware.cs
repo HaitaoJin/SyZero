@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 
 namespace SyZero.MultiTenancy
 {
@@ -17,7 +18,8 @@ namespace SyZero.MultiTenancy
             HttpContext context,
             ICurrentTenant currentTenant,
             ITenantStore tenantStore,
-            IEnumerable<ITenantResolver> resolvers)
+            IEnumerable<ITenantResolver> resolvers,
+            IOptions<MultiTenancyOptions> options)
         {
             TenantInfo? tenant = null;
             foreach (var r in resolvers)
@@ -32,6 +34,13 @@ namespace SyZero.MultiTenancy
 
                 if (tenant is { IsActive: true }) break;
                 tenant = null;
+            }
+
+            if (options.Value.RequireTenant && tenant is null)
+            {
+                context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                await context.Response.WriteAsJsonAsync(new { error = "tenant_required" }, context.RequestAborted).ConfigureAwait(false);
+                return;
             }
 
             using (currentTenant.Change(tenant))

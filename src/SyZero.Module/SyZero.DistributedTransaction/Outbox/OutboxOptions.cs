@@ -21,5 +21,8 @@ namespace SyZero.DistributedTransaction
         /// 最大重试次数（达到后保留错误状态等待人工处理），默认 5。
         /// </summary>
         public int MaxRetryCount { get; set; } = 5;
+
+        /// <summary>消息认领租约（秒），用于多实例并发投递。</summary>
+        public int LeaseSeconds { get; set; } = 60;
     }
 }

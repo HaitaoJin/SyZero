@@ -26,7 +26,7 @@
             通用 EF 仓储（自定义主键类型）。
             </summary>
         </member>
-        <member name="M:SyZero.EntityFrameworkCore.SyZeroEntityFrameworkExtension.AddSyZeroEntityFramework``1(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+        <member name="M:SyZero.EntityFrameworkCore.SyZeroEntityFrameworkExtension.AddSyZeroEntityFramework``1(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration)">
             <summary>
             注册 EntityFramework。
             </summary>

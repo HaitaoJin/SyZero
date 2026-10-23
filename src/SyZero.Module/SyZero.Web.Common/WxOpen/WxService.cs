@@ -172,7 +172,7 @@ namespace SyZero.Web.Common
                           .Append("url=").Append(url.IndexOf("#") >= 0 ? url.Substring(0, url.IndexOf("#")) : url);
             string string1 = string1Builder.ToString();
 
-            var sha1 = new SHA1Managed();
+            using var sha1 = SHA1.Create();
             var sha1bytes = System.Text.Encoding.GetEncoding("UTF-8").GetBytes(string1);
             byte[] resultHash = sha1.ComputeHash(sha1bytes);
             string sha1String = BitConverter.ToString(resultHash).ToLower();

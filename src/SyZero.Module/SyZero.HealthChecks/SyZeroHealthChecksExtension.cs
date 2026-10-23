@@ -33,13 +33,13 @@ namespace SyZero
         /// </summary>
         public static IHealthChecksBuilder AddSyZeroHealthChecks(
             this IServiceCollection services,
-            IConfiguration? configuration = null,
+            IConfiguration configuration,
             Action<SyZeroHealthChecksOptions>? configure = null,
             string sectionName = SyZeroHealthChecksOptions.SectionName)
         {
-            var config = configuration ?? AppConfig.Configuration;
+            ArgumentNullException.ThrowIfNull(configuration);
             var options = new SyZeroHealthChecksOptions();
-            config?.GetSection(sectionName)?.Bind(options);
+            configuration.GetSection(sectionName).Bind(options);
             configure?.Invoke(options);
             services.AddSingleton(options);
 

@@ -18,10 +18,10 @@ namespace SyZero.Web.Common
                 throw new ArgumentNullException(nameof(encryptString));
             }
 
-            using var rijndaelProvider = new RijndaelManaged();
-            rijndaelProvider.Key = CreateKey(encryptKey);
-            rijndaelProvider.IV = Keys;
-            using var rijndaelEncrypt = rijndaelProvider.CreateEncryptor();
+            using var aes = Aes.Create();
+            aes.Key = CreateKey(encryptKey);
+            aes.IV = Keys;
+            using var rijndaelEncrypt = aes.CreateEncryptor();
 
             byte[] inputData = Encoding.UTF8.GetBytes(encryptString);
             byte[] encryptedData = rijndaelEncrypt.TransformFinalBlock(inputData, 0, inputData.Length);
@@ -33,10 +33,10 @@ namespace SyZero.Web.Common
         {
             try
             {
-                using var rijndaelProvider = new RijndaelManaged();
-                rijndaelProvider.Key = CreateKey(decryptKey);
-                rijndaelProvider.IV = Keys;
-                using var rijndaelDecrypt = rijndaelProvider.CreateDecryptor();
+                using var aes = Aes.Create();
+                aes.Key = CreateKey(decryptKey);
+                aes.IV = Keys;
+                using var rijndaelDecrypt = aes.CreateDecryptor();
 
                 byte[] inputData = Convert.FromBase64String(decryptString);
                 byte[] decryptedData = rijndaelDecrypt.TransformFinalBlock(inputData, 0, inputData.Length);

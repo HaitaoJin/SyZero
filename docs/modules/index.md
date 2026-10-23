@@ -72,6 +72,7 @@ SyZero 模块按职责拆分，以下页面已对应仓库中的全部核心模�
 4. [SyZero.Files](/modules/SyZero.Files) — 文件存储抽象 + 本地磁盘默认实现
 5. [SyZero.Mail](/modules/SyZero.Mail) — 邮件抽象 + SMTP / 控制台默认实现
 6. [SyZero.Sms](/modules/SyZero.Sms) — 短信抽象 + 控制台占位实现
+7. [SyZero.Notifications](/modules/SyZero.Notifications) — 邮件、短信与自定义通道的统一通知编排
 
 ## 消息、安全与下一代生态（v9.1.0 合并发布）
 

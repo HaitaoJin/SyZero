@@ -134,78 +134,6 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="M:SyZero.Web.Common.AliyunOssHelper.UpLoadSingleFile(Microsoft.AspNetCore.Http.IFormFile,System.String,System.String)">
-            <summary>
-            单文件上传，非断点上传
-            </summary>
-            <param name="file">上传文件对象</param>
-            <param name="bucketName">aliyunoss创建的bucketName，一个项目一个bucket</param>
-            <returns></returns>
-        </member>
-        <member name="M:SyZero.Web.Common.AliyunOssHelper.UpLoadMultipleFile(Microsoft.AspNetCore.Http.IFormFileCollection,System.String,System.String)">
-            <summary>
-            批量上传文件，非断点上传
-            </summary>
-            <param name="files">上传文件对象集合</param>
-            <param name="bucketName">aliyunoss创建的bucketName，一个项目一个bucket，如果不传值会上传到默认的bucket下</param>
-            <returns></returns>
-        </member>
-        <member name="M:SyZero.Web.Common.AliyunOssHelper.UploadFileToOSS(Microsoft.AspNetCore.Http.IFormFile,System.String,System.String)">
-            <summary>
-            私有方法  上传到本地并且上传到OSS
-            </summary>
-            <param name="file"></param>
-            <param name="bucketName">系统对应的bucketName，如果不传值会上传到默认的bucket下</param>
-            <returns></returns>
-        </member>
-        <member name="M:SyZero.Web.Common.AliyunOssHelper.FilePonit(System.String,System.String,System.String,System.String)">
-            <summary>
-            私有方法，实际实现断点续传方法
-            </summary>
-            <param name="objectName"></param>
-            <param name="localFilename"></param>
-            <param name="checkpointDir"></param>
-            <param name="bucketName"></param>
-        </member>
-        <member name="M:SyZero.Web.Common.AliyunOssHelper.UploadFilePonit(Microsoft.AspNetCore.Http.IFormFile,System.String,System.String)">
-            <summary>
-            单个文件断点续传，上传到aliyun Oss
-            </summary>
-            <param name="file"></param>
-            <param name="bucketName">所对应系统的bucketName</param>
-            <returns></returns>
-        </member>
-        <member name="M:SyZero.Web.Common.AliyunOssHelper.UploadFilePonitToOSS(Microsoft.AspNetCore.Http.IFormFile,System.String,System.String)">
-            <summary>
-            私有方法，断点续传实际实现方法
-            </summary>
-            <param name="file"></param>
-            <param name="bucketName"></param>
-            <returns></returns>
-        </member>
-        <member name="M:SyZero.Web.Common.AliyunOssHelper.UploadMultipleFilePonit(Microsoft.AspNetCore.Http.IFormFileCollection,System.String,System.String)">
-            <summary>
-            批量断点续传，上传到aliyun Oss
-            </summary>
-            <param name="files">上传的文件集合</param>
-            <param name="bucketName">所对应系统的bucketName</param>
-            <returns></returns>
-        </member>
-        <member name="M:SyZero.Web.Common.AliyunOssHelper.DeleteAlyunOSSFile(System.String,System.String)">
-            <summary>
-            删除系统对应的bucketName所对应的OSS文件
-            </summary>
-            <param name="ossPath">存储到oss的文件地址，如： 20181229/20181229155625123.png</param>
-            <param name="bucketName">系统所对应的bucketName，如果不传值会上传到默认的bucket下</param>
-            <returns></returns>
-        </member>
-        <member name="M:SyZero.Web.Common.AliyunOssHelper.GetFileUrl(System.String,System.String)">
-            <summary>
-              获取文件下载地址
-            </summary>
-            <param name="ossPath">存储到oss的文件地址，如： 20181229/20181229155625123.png</param>
-            <param name="bucketName">系统所对应的bucketName</param>
-        </member>
         <member name="T:SyZero.Web.Common.FileData">
             <summary>
             接收返回的信息
@@ -1839,7 +1767,7 @@
             <param name="xPath">范例: @"Skill/First/SkillItem"</param>
             <returns></returns>
         </member>
-        <member name="M:SyZero.SyZeroCommonExtension.AddSyZeroCommon(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+        <member name="M:SyZero.SyZeroCommonExtension.AddSyZeroCommon(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration)">
             <summary>
             注册CommonModule
             </summary>

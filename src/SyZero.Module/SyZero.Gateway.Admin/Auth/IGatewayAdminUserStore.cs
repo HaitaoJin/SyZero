@@ -39,7 +39,7 @@ namespace SyZero.Gateway.Admin.Auth
         /// <summary>按 Name 查找；未找到返回 null。</summary>
         Task<GatewayAdminUser?> FindAsync(string name, CancellationToken ct);
 
-        /// <summary>校验用户名 + 密码（明文比较，固定时间）。返回匹配到的用户（带 IsBuiltIn / Role），否则 null。</summary>
+        /// <summary>校验用户名 + 密码（支持 PBKDF2 编码与旧版明文的固定时间比较）。返回匹配到的用户（带 IsBuiltIn / Role），否则 null。</summary>
         Task<GatewayAdminUser?> ValidateAsync(string name, string password, CancellationToken ct);
 
         /// <summary>统计 Admin 角色账号数（用于 UI / 业务保护）。</summary>

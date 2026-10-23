@@ -26,12 +26,12 @@ namespace SyZero.Gateway.Ocelot
 
         public async Task<GatewayConfiguration> GetConfigurationAsync(CancellationToken cancellationToken = default)
         {
-            var response = await _repository.Get().ConfigureAwait(false);
-            if (response is null || response.IsError || response.Data is null)
+            var response = await _repository.GetAsync(cancellationToken).ConfigureAwait(false);
+            if (response is null)
             {
                 return new GatewayConfiguration();
             }
-            return MapToGatewayConfiguration(response.Data);
+            return MapToGatewayConfiguration(response);
         }
 
         internal static GatewayConfiguration MapToGatewayConfiguration(FileConfiguration file)

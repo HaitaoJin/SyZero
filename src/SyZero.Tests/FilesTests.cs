@@ -34,4 +34,21 @@ public class FilesTests
 
         Directory.Delete(root, recursive: true);
     }
+
+    [Theory]
+    [InlineData("../outside.txt")]
+    [InlineData("..\\outside.txt")]
+    public async Task Local_storage_rejects_parent_traversal(string path)
+    {
+        var root = Path.Combine(Path.GetTempPath(), "syzero-files-" + System.Guid.NewGuid().ToString("N"));
+        var storage = new LocalFileStorage(root);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        {
+            await using var content = new MemoryStream(new byte[] { 1 });
+            await storage.SaveAsync(path, content);
+        });
+
+        Directory.Delete(root, recursive: true);
+    }
 }

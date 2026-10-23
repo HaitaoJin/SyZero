@@ -7,20 +7,29 @@ using System.Text;
 using SyZero.Runtime.Security;
 using System.Linq;
 using Microsoft.IdentityModel.Logging;
+using Microsoft.Extensions.Options;
 
 namespace SyZero.Web.Common.Jwt
 {
     public class JwtToken : IToken
     {
+        private readonly JwtTokenOptions _options;
+
+        public JwtToken(IOptions<JwtTokenOptions> options)
+        {
+            _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+            _options.Validate();
+        }
+
         public string CreateAccessToken(IEnumerable<Claim> claims)
         {
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(AppConfig.GetSection("JWT:SecurityKey")));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.SecurityKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             var authTime = DateTime.UtcNow;
-            var expiresAt = authTime.AddDays(int.Parse(AppConfig.GetSection("JWT:expires")));
+            var expiresAt = authTime.AddDays(_options.Expires);
             var token = new JwtSecurityToken(
-                issuer: AppConfig.GetSection("JWT:issuer"),
-                audience: AppConfig.GetSection("JWT:audience"),
+                issuer: _options.Issuer,
+                audience: _options.Audience,
                 claims: claims,
                 expires: expiresAt,
                 signingCredentials: creds);
@@ -42,9 +51,9 @@ namespace SyZero.Web.Common.Jwt
                     ValidateAudience = true,//是否验证Audience
                     ValidateLifetime = true,//是否验证失效时间
                     ValidateIssuerSigningKey = true,//是否验证SecurityKey
-                    ValidAudience = AppConfig.GetSection("JWT:audience"),//Audience
-                    ValidIssuer = AppConfig.GetSection("JWT:issuer"),//Issuer，这两项和前面签发jwt的设置一致
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(AppConfig.GetSection("JWT:SecurityKey")))//拿到SecurityKey
+                    ValidAudience = _options.Audience,
+                    ValidIssuer = _options.Issuer,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.SecurityKey))
                 };
                 SecurityToken securityToken; // 接受解码后的token对象
                 var claimsPrincipal = tokenHandler.ValidateToken(token, validationParameters, out securityToken);
@@ -54,6 +63,29 @@ namespace SyZero.Web.Common.Jwt
             catch
             {
                 return null;
+            }
+        }
+    }
+
+    public sealed class JwtTokenOptions
+    {
+        public const string SectionName = "JWT";
+
+        public string SecurityKey { get; set; } = string.Empty;
+        public int Expires { get; set; } = 1;
+        public string Issuer { get; set; } = string.Empty;
+        public string Audience { get; set; } = string.Empty;
+
+        public void Validate()
+        {
+            if (Encoding.UTF8.GetByteCount(SecurityKey) < 32)
+            {
+                throw new InvalidOperationException("JWT:SecurityKey 必须至少为 32 字节。");
+            }
+
+            if (Expires <= 0 || string.IsNullOrWhiteSpace(Issuer) || string.IsNullOrWhiteSpace(Audience))
+            {
+                throw new InvalidOperationException("JWT 配置中的 Expires、Issuer 和 Audience 必须有效。");
             }
         }
     }

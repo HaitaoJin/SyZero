@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <Description>SyZero 网关的可视化管理面板（Routes / SwaggerEndPoints CRUD），含 Razor Pages UI、Basic Auth、配置读写。仅依赖 SyZero.Gateway.Abstractions 暴露的 IGateway / IGatewayConfigurationStore 抽象，不绑定具体网关实现。</Description>
     <IsPackable>true</IsPackable>

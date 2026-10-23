@@ -9,7 +9,6 @@ using Xunit;
 
 namespace SyZero.Tests;
 
-[Collection("AppConfig")]
 public class MongoDbTests
 {
     [Fact]
@@ -42,12 +41,12 @@ public class MongoDbTests
     }
 
     [Fact]
-    public void AddSyZeroMongoDb_WithoutArguments_RegistersContextAndRepository()
+    public void AddSyZeroMongoDb_WithDefaultSection_RegistersContextAndRepository()
     {
         var services = new ServiceCollection();
-        AppConfig.Configuration = CreateConfiguration("MongoDB");
+        var configuration = CreateConfiguration("MongoDB");
 
-        services.AddSyZeroMongoDB();
+        services.AddSyZeroMongoDB(configuration);
 
         using var provider = services.BuildServiceProvider();
         Assert.NotNull(provider.GetService<IMongoContext>());
@@ -71,9 +70,9 @@ public class MongoDbTests
     public void AddSyZeroMongoDb_WithOptionsAction_RegistersContextAndRepository()
     {
         var services = new ServiceCollection();
-        AppConfig.Configuration = new ConfigurationBuilder().Build();
+        var configuration = new ConfigurationBuilder().Build();
 
-        services.AddSyZeroMongoDB(options =>
+        services.AddSyZeroMongoDB(configuration, options =>
         {
             options.DataBase = "syzero";
             options.Services = new List<MongoServers>

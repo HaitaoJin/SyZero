@@ -48,13 +48,13 @@ using SyZero;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddSyZero();
-builder.Services.AddSyZeroRedis();
+builder.Services.AddSyZeroRedis(builder.Configuration);
 
 // 可选：Redis 服务管理
-builder.Services.AddRedisServiceManagement();
+builder.Services.AddRedisServiceManagement(builder.Configuration);
 
 // 可选：Redis 事件总线
-builder.Services.AddRedisEventBus();
+builder.Services.AddRedisEventBus(builder.Configuration);
 
 var app = builder.Build();
 app.UseSyZero();
@@ -113,8 +113,8 @@ public class UserService
 - Redis Pub/Sub 实时通知
 
 ```csharp
-builder.Services.AddSyZeroRedis();
-builder.Services.AddRedisServiceManagement(options =>
+builder.Services.AddSyZeroRedis(builder.Configuration);
+builder.Services.AddRedisServiceManagement(builder.Configuration, options =>
 {
     options.EnableHealthCheck = true;
     options.EnableLeaderElection = true;
@@ -133,8 +133,8 @@ builder.Services.AddRedisServiceManagement(options =>
 ### 注册
 
 ```csharp
-builder.Services.AddSyZeroRedis();
-builder.Services.AddRedisEventBus(options =>
+builder.Services.AddSyZeroRedis(builder.Configuration);
+builder.Services.AddRedisEventBus(builder.Configuration, options =>
 {
     options.ChannelPrefix = "SyZero:EventBus:";
 });

@@ -5,7 +5,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using RestSharp;
 using SyZero.Client;
-using SyZero.Util;
 using SyZero.Web.Common;
 using SyZero.Web.Common.Util;
 using Xunit;
@@ -85,10 +84,9 @@ public class SyZeroWebCommonTests
                 Content = new StringContent(string.Empty)
             }));
 
-        using var provider = CreateProvider(handler);
-        using var scope = SyZeroUtil.BeginScope(provider);
+        using var client = new RestClient(new HttpClient(handler));
 
-        var result = RestHelper.Execute(new RestRequest("https://example.test/ping", Method.Get));
+        var result = RestHelper.Execute(client, new RestRequest("https://example.test/ping", Method.Get));
 
         Assert.Null(result);
     }
@@ -102,9 +100,8 @@ public class SyZeroWebCommonTests
                 Content = new StringContent("{\"code\":1,\"data\":\"ok\"}", Encoding.UTF8, "application/json")
             }));
 
-        using var provider = CreateProvider(handler);
-        using var scope = SyZeroUtil.BeginScope(provider);
-        var client = new HttpRestClient();
+        using var restClient = new RestClient(new HttpClient(handler));
+        var client = new HttpRestClient(restClient);
         var template = new RequestTemplate(HttpMethod.Get, "https://example.test/items")
         {
             Headers = null!,
@@ -127,9 +124,8 @@ public class SyZeroWebCommonTests
                 Content = new StringContent("{\"code\":1,\"data\":\"accepted\"}", Encoding.UTF8, "application/json")
             }));
 
-        using var provider = CreateProvider(handler);
-        using var scope = SyZeroUtil.BeginScope(provider);
-        var client = new HttpRestClient();
+        using var restClient = new RestClient(new HttpClient(handler));
+        var client = new HttpRestClient(restClient);
 
         var response = await client.ExecuteAsync<string>(new RequestTemplate(HttpMethod.Post, "https://example.test/items")
         {
@@ -149,9 +145,8 @@ public class SyZeroWebCommonTests
                 Content = new StringContent(string.Empty)
             }));
 
-        using var provider = CreateProvider(handler);
-        using var scope = SyZeroUtil.BeginScope(provider);
-        var client = new HttpRestClient();
+        using var restClient = new RestClient(new HttpClient(handler));
+        var client = new HttpRestClient(restClient);
 
         var response = await client.ExecuteAsync<object>(new RequestTemplate(HttpMethod.Post, "https://example.test/items")
         {
@@ -169,13 +164,6 @@ public class SyZeroWebCommonTests
         var encoder = new SyEncode();
 
         Assert.Throws<ArgumentOutOfRangeException>(() => encoder.Encrypt("text", "12345678", (EncryptType)999));
-    }
-
-    private static ServiceProvider CreateProvider(HttpMessageHandler handler)
-    {
-        var services = new ServiceCollection();
-        services.AddSingleton(new RestClient(new HttpClient(handler)));
-        return services.BuildServiceProvider();
     }
 
     private sealed class RecordingHttpMessageHandler : HttpMessageHandler

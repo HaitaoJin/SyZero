@@ -4,6 +4,9 @@
         <name>SyZero.Files</name>
     </assembly>
     <members>
+        <member name="T:SyZero.Files.AliyunOssFileStorage">
+            <summary>统一文件抽象的阿里云 OSS 生产实现。</summary>
+        </member>
         <member name="T:SyZero.Files.ISyFileStorage">
             <summary>
             SyZero 文件存储抽象。统一上传、下载、删除、判断存在的接口，

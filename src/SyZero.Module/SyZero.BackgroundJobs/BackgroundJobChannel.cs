@@ -12,8 +12,11 @@ namespace SyZero.BackgroundJobs
     /// </summary>
     public sealed class BackgroundJobItem
     {
+        public string Id { get; init; } = Guid.NewGuid().ToString("N");
         public required string JobTypeName { get; init; }
         public required Func<IServiceProvider, CancellationToken, Task> Invoke { get; init; }
+        public int Attempt { get; set; }
+        public DateTime EnqueuedAtUtc { get; init; } = DateTime.UtcNow;
     }
 
     /// <summary>基于 <see cref="Channel{T}"/> 的内存任务队列（单例）。</summary>

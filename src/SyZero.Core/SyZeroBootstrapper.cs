@@ -8,6 +8,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using SyZero.Service;
+using Microsoft.Extensions.Options;
+using SyZero.Configurations;
 
 namespace SyZero
 {
@@ -20,11 +22,13 @@ namespace SyZero
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<SyZeroBootstrapper> _logger;
+        private readonly SyZeroServerOptions _serverOptions;
         private string? _registeredServiceId;
 
-        public SyZeroBootstrapper(IServiceProvider serviceProvider, ILogger<SyZeroBootstrapper>? logger = null)
+        public SyZeroBootstrapper(IServiceProvider serviceProvider, IOptions<SyZeroServerOptions> serverOptions, ILogger<SyZeroBootstrapper>? logger = null)
         {
             _serviceProvider = serviceProvider;
+            _serverOptions = serverOptions.Value;
             _logger = logger ?? NullLogger<SyZeroBootstrapper>.Instance;
         }
 
@@ -32,7 +36,7 @@ namespace SyZero
         {
             try
             {
-                var serverOptions = AppConfig.ServerOptions;
+                var serverOptions = _serverOptions;
                 if (serverOptions == null || string.IsNullOrEmpty(serverOptions.Name))
                 {
                     _logger.LogInformation("SyZero: 未配置服务信息，跳过服务注册");

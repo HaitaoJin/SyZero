@@ -1,23 +1,27 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using System;
 using SyZero;
 using SyZero.DynamicWebApi;
+using SyZero.Swagger;
+using SyZero.Example4.Application.Todos;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddSyZero();
-
-builder.WebHost.UseUrls($"{AppConfig.ServerOptions.Protocol}://*:{AppConfig.ServerOptions.Port}");
+var serverOptions = builder.Configuration.GetRequiredSection("SyZero").Get<SyZero.Configurations.SyZeroServerOptions>()
+    ?? throw new InvalidOperationException("缺少 SyZero 配置节。");
 
 builder.Services.AddControllers();
 builder.Services.AddDynamicWebApi(new DynamicWebApiOptions
 {
     DefaultApiPrefix = "/api",
-    DefaultAreaName = AppConfig.ServerOptions.Name ?? string.Empty
-});
-builder.Services.AddSwagger();
+    DefaultAreaName = serverOptions.Name ?? string.Empty
+}, typeof(TodoAppService).Assembly);
+builder.Services.AddSyZeroOpenApi();
 
 var app = builder.Build();
 
@@ -33,17 +37,12 @@ app.MapControllers();
 
 app.MapGet("/", () => new
 {
-    Service = AppConfig.ServerOptions.Name,
-    AppConfig.ServerOptions.Port,
-    Swagger = "/api/swagger",
+    Service = serverOptions.Name,
+    serverOptions.Port,
+    OpenApi = "/openapi/v1.json",
     TodoApi = "/api/todo/list"
 });
 
-app.UseSwagger();
-app.UseSwaggerUI(options =>
-{
-    options.SwaggerEndpoint("/swagger/v1/swagger.json", "SyZero.Example4.Web API V1");
-    options.RoutePrefix = "api/swagger";
-});
+app.MapSyZeroOpenApi();
 
 app.Run();

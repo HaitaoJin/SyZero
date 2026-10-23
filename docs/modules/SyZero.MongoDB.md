@@ -38,7 +38,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddSyZero();
 
-builder.Services.AddSyZeroMongoDB();
+builder.Services.AddSyZeroMongoDB(builder.Configuration);
 
 // 或者从指定配置读取
 builder.Services.AddSyZeroMongoDB(builder.Configuration, "MongoDB");

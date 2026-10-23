@@ -24,12 +24,12 @@ SyZero.Example4.Monolith/
 | Web 宿主 | ASP.NET Core 9 |
 | SyZero 核心 | `builder.AddSyZero()` / `app.UseSyZero()` |
 | API 暴露 | `SyZero.DynamicWebApi` 自动发布 `TodoAppService` |
-| 文档 | `SyZero.Swagger`，默认路径 `/api/swagger` |
+| 文档 | `SyZero.Swagger` 原生 OpenAPI，默认路径 `/openapi/v1.json` |
 | 数据 | `InMemoryTodoStore` 进程内内存实现 |
 
 ## 启动示例
 
-```pwsh
+```powershell
 cd src/SyZero.Service/SyZero.Example4.Monolith/SyZero.Example4.Web
 dotnet run
 ```
@@ -37,7 +37,7 @@ dotnet run
 默认端口为 `5005`：
 
 - `http://localhost:5005/`：服务信息
-- `http://localhost:5005/api/swagger`：Swagger UI
+- `http://localhost:5005/openapi/v1.json`：OpenAPI JSON
 - `GET http://localhost:5005/api/todo/list`：查看待办事项列表
 
 ## 关键代码
@@ -52,16 +52,15 @@ builder.Services.AddControllers();
 builder.Services.AddDynamicWebApi(new DynamicWebApiOptions
 {
     DefaultApiPrefix = "/api",
-    DefaultAreaName = AppConfig.ServerOptions.Name
+    DefaultAreaName = builder.Configuration["SyZero:Name"] ?? string.Empty
 });
-builder.Services.AddSwagger();
+builder.Services.AddSyZeroOpenApi();
 
 var app = builder.Build();
 
 app.UseSyZero();
 app.MapControllers();
-app.UseSwagger();
-app.UseSwaggerUI(options => options.RoutePrefix = "api/swagger");
+app.MapSyZeroOpenApi();
 
 app.Run();
 ```

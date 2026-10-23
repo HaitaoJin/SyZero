@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Builder;
+using SyZero.Swagger;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
@@ -8,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using SyZero.DynamicWebApi;
 using SyZero.Example3.Core.DbContext;
+using SyZero.Example3.Application.Examples;
 using SyZero.Example3.Web.Core.Filter;
 using SyZero.Web.Common;
 
@@ -21,10 +24,14 @@ namespace SyZero.Example3.Web
 
             //使用 SyZero
             builder.AddSyZero();
+            var serverOptions = builder.Configuration.GetRequiredSection("SyZero").Get<global::SyZero.Configurations.SyZeroServerOptions>()
+                ?? throw new InvalidOperationException("缺少 SyZero 配置节。");
 
-            builder.WebHost.UseUrls($"{AppConfig.ServerOptions.Protocol}://*:{AppConfig.ServerOptions.Port}");
-
-            builder.Logging.AddSyZeroLog4Net();
+            builder.Logging.AddOpenTelemetry(logging =>
+            {
+                logging.IncludeFormattedMessage = true;
+                logging.IncludeScopes = true;
+            }).AddSyZeroLog4Net();
 
             builder.Services.Replace(ServiceDescriptor.Transient<IControllerActivator, ServiceBasedControllerActivator>());
 
@@ -51,18 +58,20 @@ namespace SyZero.Example3.Web
             builder.Services.AddDynamicWebApi(new DynamicWebApiOptions()
             {
                 DefaultApiPrefix = "/api",
-                DefaultAreaName = AppConfig.ServerOptions.Name
-            });
+                DefaultAreaName = serverOptions.Name
+            }, typeof(Example3AppService).Assembly);
             //Swagger
-            builder.Services.AddSwagger();
+            builder.Services.AddSyZeroOpenApi();
+            //OpenTelemetry 遥测（Aspire 启动时自动使用 Dashboard 的 OTLP 地址）
+            builder.Services.AddSyZeroOpenTelemetry(builder.Configuration);
             //AutoMapper
             builder.Services.AddSyZeroAutoMapper();
             //SqlSugar 仓储
-            builder.Services.AddSyZeroSqlSugar<Example3DbContext>();
+            builder.Services.AddSyZeroSqlSugar<Example3DbContext>(builder.Configuration);
             //注入控制器
             builder.Services.AddSyZeroController();
             //注入公共层
-            builder.Services.AddSyZeroCommon();
+            builder.Services.AddSyZeroCommon(builder.Configuration);
 
             var app = builder.Build();
 
@@ -87,15 +96,10 @@ namespace SyZero.Example3.Web
             app.UseSyAuthMiddleware((sySeesion) => "Token:" + sySeesion.UserId);
             app.MapControllers();
 
-            // SPA 回退：除 /api 与 /swagger 外的请求回退到 index.html
+            // SPA 回退：除 /api 与 /openapi 外的请求回退到 index.html
             app.MapFallbackToFile("/index.html");
 
-            app.UseSwagger();
-            app.UseSwaggerUI(c =>
-            {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "SyZero.Example3.Web API V1");
-                c.RoutePrefix = "api/swagger";
-            });
+            app.MapSyZeroOpenApi();
 
             app.InitTables();
             app.Run();

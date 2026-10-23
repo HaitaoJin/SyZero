@@ -8,16 +8,15 @@ using Xunit;
 
 namespace SyZero.Tests;
 
-[Collection("AppConfig")]
 public class RedisTests
 {
     [Fact]
     public void AddSyZeroRedis_WithoutMasterConfiguration_ThrowsHelpfulException()
     {
-        AppConfig.Configuration = new ConfigurationBuilder().Build();
+        var configuration = new ConfigurationBuilder().Build();
         var services = new ServiceCollection();
 
-        var exception = Assert.Throws<ArgumentException>(() => services.AddSyZeroRedis());
+        var exception = Assert.Throws<ArgumentException>(() => services.AddSyZeroRedis(configuration));
 
         Assert.Contains("Redis Master", exception.Message);
     }
@@ -59,11 +58,11 @@ public class RedisTests
     [Fact]
     public void AddRedisServiceManagement_ResolvesSameInstanceForInterfaceAndConcrete()
     {
-        AppConfig.Configuration = new ConfigurationBuilder().Build();
+        var configuration = new ConfigurationBuilder().Build();
 
         var services = new ServiceCollection();
         services.AddSingleton(CreateUninitializedRedisClient());
-        services.AddRedisServiceManagement(options =>
+        services.AddRedisServiceManagement(configuration, options =>
         {
             options.EnableHealthCheck = false;
             options.AutoCleanExpiredServices = false;

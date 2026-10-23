@@ -98,7 +98,7 @@ namespace SyZero.Gateway.Admin.Auth
                 list.Add(new GatewayAdminUser
                 {
                     Name = user.Name,
-                    Password = user.Password ?? string.Empty,
+                    Password = GatewayAdminPasswordHasher.Hash(user.Password ?? string.Empty),
                     Role = GatewayAdminRoles.Normalize(user.Role),
                 });
                 WriteAllNoLock(list);
@@ -119,7 +119,7 @@ namespace SyZero.Gateway.Admin.Auth
                 var list = ReadAllNoLock();
                 var idx = list.FindIndex(u => string.Equals(u.Name, name, StringComparison.OrdinalIgnoreCase));
                 if (idx < 0) return false;
-                if (newPassword is not null) list[idx].Password = newPassword;
+                if (newPassword is not null) list[idx].Password = GatewayAdminPasswordHasher.Hash(newPassword);
                 if (newRole is not null) list[idx].Role = GatewayAdminRoles.Normalize(newRole);
                 WriteAllNoLock(list);
                 return true;
@@ -178,17 +178,20 @@ namespace SyZero.Gateway.Admin.Auth
             {
                 Directory.CreateDirectory(dir);
             }
-            var tmp = _path + ".tmp";
+            var tmp = _path + "." + Guid.NewGuid().ToString("N") + ".tmp";
             var json = JsonSerializer.Serialize(users, WriteOptions);
-            File.WriteAllText(tmp, json, new UTF8Encoding(false));
-            // File.Move with overwrite 实现 replace；无法跨卷，但 users.json 总在 ContentRoot 下故无影响。
-            if (File.Exists(_path))
+            try
             {
-                File.Replace(tmp, _path, destinationBackupFileName: null);
+                File.WriteAllText(tmp, json, new UTF8Encoding(false));
+                // 临时文件与 users.json 位于同一目录，替换不会跨卷。
+                File.Move(tmp, _path, overwrite: true);
             }
-            else
+            finally
             {
-                File.Move(tmp, _path);
+                if (File.Exists(tmp))
+                {
+                    File.Delete(tmp);
+                }
             }
         }
     }

@@ -12,6 +12,7 @@ namespace SyZero.Idempotency
         public int StatusCode { get; set; }
         public string? ContentType { get; set; }
         public byte[]? Body { get; set; }
+        public string? RequestHash { get; set; }
     }
 
     /// <summary>
@@ -33,5 +34,8 @@ namespace SyZero.Idempotency
         /// 读取响应快照；若仅占位未完成返回 null（中间件应回 409 / 等待）。
         /// </summary>
         Task<IdempotencyEntry?> GetAsync(string key, CancellationToken cancellationToken = default);
+
+        /// <summary>释放尚未完成的占位；请求失败或响应不应缓存时调用。</summary>
+        Task ReleaseAsync(string key, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 }

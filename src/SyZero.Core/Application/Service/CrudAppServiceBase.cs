@@ -5,6 +5,8 @@ using SyZero.Application.Service.Dto;
 using SyZero.Domain.Entities;
 using SyZero.Domain.Repository;
 using SyZero.ObjectMapper;
+using SyZero.Dependency;
+using SyZero.Runtime.Session;
 
 namespace SyZero.Application.Service
 {
@@ -29,7 +31,8 @@ namespace SyZero.Application.Service
 
         protected virtual string? DeletePermissionName { get; set; }
 
-        protected CrudAppServiceBase(IRepository<TEntity> repository)
+        protected CrudAppServiceBase(IRepository<TEntity> repository, SyZeroServiceDependencies dependencies, ISySession sySession)
+            : base(dependencies, sySession)
         {
             Repository = repository;
         }

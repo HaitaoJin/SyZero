@@ -43,10 +43,10 @@ namespace SyZero.Client.RemoteService
         /// <summary>
         /// 创建代理（按服务配置中的协议自动派发到对应工厂）
         /// </summary>
-        public object CreateProxy(Type targetType, string endPoint, RemoteServiceItem service, IJsonSerialize jsonSerialize)
+        public object CreateProxy(Type targetType, string endPoint, RemoteServiceItem service, IJsonSerialize jsonSerialize, IServiceProvider serviceProvider)
         {
             var factory = GetFactory(service.Protocol);
-            return factory.CreateProxy(targetType, endPoint, service, jsonSerialize);
+            return factory.CreateProxy(targetType, endPoint, service, jsonSerialize, serviceProvider);
         }
 
         /// <summary>

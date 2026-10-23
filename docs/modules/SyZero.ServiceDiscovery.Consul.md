@@ -43,10 +43,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddSyZero();
 
 // 注册服务方式1 - 使用配置文件
-builder.Services.AddConsul();
+builder.Services.AddConsul(builder.Configuration);
 
 // 注册服务方式2 - 使用委托配置
-builder.Services.AddConsul(options =>
+builder.Services.AddConsul(builder.Configuration, options =>
 {
     options.ConsulAddress = "http://localhost:8500";
     options.ServiceName = "my-service";

@@ -82,7 +82,7 @@ await _bg.EnqueueAsync<SendEmailJob, SendEmailArgs>(new SendEmailArgs
 
 ## Compatibility
 
-- Target framework: `net9.0`
+- Target framework: `net10.0`
 - Dependencies: `SyZero.Core`, `Microsoft.Extensions.Hosting.Abstractions`
 - On host shutdown `BackgroundService.StopAsync` cancels in-flight jobs — please respect the `CancellationToken` inside your jobs.
 

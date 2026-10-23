@@ -16,7 +16,6 @@ using Yarp.ReverseProxy.Configuration;
 
 namespace SyZero.Tests;
 
-[Collection("AppConfig")]
 public class YarpTests
 {
     [Fact]

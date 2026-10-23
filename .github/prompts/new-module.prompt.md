@@ -16,7 +16,7 @@ mode: agent
 
 1. 校验：`src/SyZero.Module/SyZero.<Module>/` 不存在；`docs/modules/SyZero.<Module>.md` 不存在。
 2. 创建项目 [src/SyZero.Module/SyZero.\<Module\>/SyZero.\<Module\>.csproj](../../src/SyZero.Module)：
-   - `<TargetFramework>net9.0</TargetFramework>`
+   - `<TargetFramework>net10.0</TargetFramework>`
    - `<IsPackable>true</IsPackable>`
    - 描述 / 标签
    - 引用核心 `SyZero.Core` 项目：`<ProjectReference Include="..\..\SyZero.Core\SyZero.Core.csproj" />`

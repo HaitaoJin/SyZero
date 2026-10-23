@@ -1,35 +1,49 @@
 using System.Security.Claims;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using SyZero.Configurations;
 using Moq;
 using SyZero.Runtime.Security;
 using SyZero.Runtime.Session;
 using SyZero.Serialization;
-using SyZero.Util;
 using Xunit;
 
 namespace SyZero.Tests;
 
-[Collection("AppConfig")]
 public class SyZeroCoreTests
 {
     [Fact]
-    public void AppConfig_ServerOptions_ReturnsDefaultInstance_WhenSectionMissing()
+    public void AddSyZero_BindsServerOptions_FromConfiguration()
     {
-        AppConfig.Configuration = new ConfigurationBuilder().Build();
-        ResetAppConfigCache("serverOptions");
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["SyZero:Name"] = "test-service" })
+            .Build();
+        var services = new ServiceCollection();
+        services.AddSyZero(configuration);
 
-        var options = AppConfig.ServerOptions;
+        using var provider = services.BuildServiceProvider();
+        var options = provider.GetRequiredService<IOptions<SyZeroServerOptions>>().Value;
 
-        Assert.NotNull(options);
+        Assert.Equal("test-service", options.Name);
         Assert.Equal(ProtocolType.HTTP, options.Protocol);
-        Assert.Null(options.Name);
+    }
+
+    [Fact]
+    public void AddSyZero_RegistersCoreFallbacks_ForHostsWithoutOptionalModules()
+    {
+        var configuration = new ConfigurationBuilder().Build();
+        var services = new ServiceCollection();
+        services.AddSyZero(configuration);
+
+        Assert.Contains(services, descriptor => descriptor.ServiceType == typeof(IToken));
+        Assert.Contains(services, descriptor => descriptor.ServiceType == typeof(SyZero.Domain.Repository.IUnitOfWork));
     }
 
     [Fact]
     public void SySession_ParseClaimsPrincipal_HandlesMissingIdentity_AndReadsClaims()
     {
-        var session = (ISySession)new SySession(new DefaultJsonSerialize());
+        var session = (ISySession)new SySession(new DefaultJsonSerialize(), Mock.Of<IToken>());
 
         session.Parse(new ClaimsPrincipal());
 
@@ -68,30 +82,12 @@ public class SyZeroCoreTests
         var tokenMock = new Mock<IToken>();
         tokenMock.Setup(token => token.GetPrincipal("access-token")).Returns(principal);
 
-        var services = new ServiceCollection();
-        services.AddSingleton(tokenMock.Object);
+        var session = new SySession(new DefaultJsonSerialize(), tokenMock.Object);
 
-        using var provider = services.BuildServiceProvider();
-        var previousProvider = SyZeroUtil.ServiceProvider;
+        session.Parse("access-token");
 
-        try
-        {
-            SyZeroUtil.ServiceProvider = provider;
-            var session = new SySession(new DefaultJsonSerialize());
-
-            session.Parse("access-token");
-
-            Assert.Equal(7, session.UserId);
-            tokenMock.Verify(token => token.GetPrincipal("access-token"), Times.Once);
-        }
-        finally
-        {
-            SyZeroUtil.ServiceProvider = previousProvider;
-        }
+        Assert.Equal(7, session.UserId);
+        tokenMock.Verify(token => token.GetPrincipal("access-token"), Times.Once);
     }
 
-    private static void ResetAppConfigCache(string fieldName)
-    {
-        AppConfig.ResetCacheForTests(fieldName);
-    }
 }

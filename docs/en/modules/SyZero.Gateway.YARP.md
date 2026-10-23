@@ -85,7 +85,7 @@ app.Run();
 | Routing & load-balancing | ✅ | ✅ |
 | Consul service discovery | ✅ built-in | ⚠️ needs an external `IDestinationResolver` |
 | Polly circuit-breaker | ✅ | ⚠️ via YARP `HttpClient` config |
-| Swagger aggregation | ✅ MMLib.SwaggerForOcelot | ❌ |
+| OpenAPI aggregation | Not built in since v10 | Not built in |
 | Performance | medium | high |
 | Hot reload | ✅ | ✅ |
 | Compatible with SyZero.Gateway.Admin | ✅ | ✅ (shared `IGatewayConfigurationStore`) |

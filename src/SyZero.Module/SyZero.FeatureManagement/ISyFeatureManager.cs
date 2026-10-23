@@ -1,4 +1,6 @@
 using System.Threading.Tasks;
+using System.Threading;
+using System.Collections.Generic;
 using Microsoft.FeatureManagement;
 using SyZero.Dependency;
 
@@ -10,7 +12,9 @@ namespace SyZero.FeatureManagement;
 public interface ISyFeatureManager
 {
     /// <summary>判断指定特性是否启用。</summary>
-    Task<bool> IsEnabledAsync(string feature);
+    Task<bool> IsEnabledAsync(string feature, CancellationToken cancellationToken = default);
+    Task<bool> IsEnabledAsync<TContext>(string feature, TContext context, CancellationToken cancellationToken = default);
+    IAsyncEnumerable<string> GetFeatureNamesAsync(CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -25,5 +29,12 @@ public class DefaultSyFeatureManager : ISyFeatureManager, IScopedDependency
         _inner = inner;
     }
 
-    public Task<bool> IsEnabledAsync(string feature) => _inner.IsEnabledAsync(feature);
+    public Task<bool> IsEnabledAsync(string feature, CancellationToken cancellationToken = default)
+        => _inner.IsEnabledAsync(feature, cancellationToken);
+
+    public Task<bool> IsEnabledAsync<TContext>(string feature, TContext context, CancellationToken cancellationToken = default)
+        => _inner.IsEnabledAsync(feature, context);
+
+    public IAsyncEnumerable<string> GetFeatureNamesAsync(CancellationToken cancellationToken = default)
+        => _inner.GetFeatureNamesAsync();
 }

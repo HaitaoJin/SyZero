@@ -3,6 +3,52 @@
 This page tracks framework updates for the VitePress site.
 
 
+## v10.0.0
+
+> v10 is a major .NET 10 upgrade. It does not provide a v9 public API compatibility layer. Migrate based on compiler errors and validate database changes and message delivery in a staging environment first.
+
+### Runtime, security, and engineering quality
+
+- All runtime modules, samples, gateways, and tests now target `net10.0`; only the `SyZero.SourceGenerator` analyzer remains on `netstandard2.0`. CI uses .NET 10 with Nullable, current analyzers, deterministic builds, package validation, test results, and coverage artifacts.
+- ASP.NET Core, EF Core, OpenTelemetry, HotChocolate, MongoDB, Ocelot, AutoMapper, and other dependencies were upgraded. Vulnerable transitive dependencies are centrally pinned, and CI now blocks direct or transitive dependency vulnerabilities.
+- Local file storage now rejects rooted paths and validates canonical paths against the storage root, preventing traversal through `../`, mixed separators, or prefix collisions.
+- Idempotency now scopes keys by tenant, user, HTTP method, and path; validates request fingerprints; limits request/response bodies; and releases reservations after failures. Redis provides an atomic cross-instance store.
+
+### Breaking API changes
+
+- `SyZeroServiceBase`, `ApplicationService`, and CRUD bases now require constructor-injected `SyZeroServiceDependencies`; parameterless constructors and static service-locator fallbacks were removed.
+- Static `AppConfig` and `SyZeroUtil` were removed. Configuration-based module registration now takes `builder.Configuration` explicitly, while runtime services use constructor injection or `IOptions<T>`. JWT settings are strongly typed through `JwtTokenOptions` and require a key of at least 32 bytes.
+- `IOutboxStore.ClaimPendingAsync` is mandatory. Custom providers must implement atomic, lease-based claiming.
+- `SyZero.Swagger` now uses the .NET 10 native `Microsoft.AspNetCore.OpenApi` stack. Use `AddSyZeroOpenApi()` / `MapSyZeroOpenApi()`; the legacy Swagger registration, UI, and build-time export APIs were removed.
+- Ocelot was upgraded to v25. Incompatible MMLib Swagger aggregation and Ocelot Consul/Polly providers were removed; use SyZero service discovery and `SyZero.Resilience` instead.
+
+### Reliable messaging, data, and distributed services
+
+- Outbox messages now carry owner/expiry leases for multi-instance claiming. The EF Core provider uses conditional updates to resolve races.
+- Inbox deduplication adds `IInboxStore`, `InboxExecutor`, and memory/EF Core implementations with leases, completion records, failure release, and retry counters.
+- Redis adds a Lua-backed atomic sliding-window `IDistributedRateLimiter` and distributed `IIdempotencyStore`, replacing local defaults when Redis is registered.
+- EF Core adds PostgreSQL support. `SyZero.Resilience` exposes the standard HTTP resilience handler, enabled by default for `SyZero.Sdk` typed clients.
+- `SyZero.Authorization.AspNetCore` adds OIDC JWT Bearer registration with strict issuer, audience, lifetime, and signature validation.
+
+### Framework capabilities
+
+- New domain primitives: `AggregateRoot<TKey>`, domain events, soft-delete, auditing, and concurrency-stamp contracts.
+- Multi-tenancy adds required-tenant mode, edition/properties metadata, and outbound tenant-header propagation. Feature Management supports contextual checks.
+- `SyZero.Files` adds metadata, listing, URL generation, and an Alibaba Cloud OSS provider. `SyZero.AI` adds streaming responses.
+- New `SyZero.Notifications` module orchestrates mail, SMS, and custom channels with per-channel delivery results.
+- Background jobs add retries, delay, execution state, success history, and dead-letter state; persistent scheduling remains available through `SyZero.BackgroundJobs.Quartz`.
+- A new Aspire AppHost orchestrates the gateway and sample services.
+
+### Migration checklist
+
+1. Install the .NET 10 SDK/runtime and move consuming applications to `net10.0`.
+2. Update application-service constructors to pass `SyZeroServiceDependencies` and session dependencies to base classes.
+3. Pass `builder.Configuration` explicitly to configuration-based module registration and migrate `AppConfig` / `SyZeroUtil` usage to `IOptions<T>` or constructor injection.
+4. Migrate Swagger registration/mapping to native OpenAPI and choose a UI separately if required.
+5. Implement atomic `ClaimPendingAsync` in custom Outbox providers; EF users must create migrations for the new Outbox fields and Inbox table.
+6. Remove legacy Ocelot Swagger aggregation and Consul/Polly provider settings.
+7. Run the complete test suite and vulnerability audit, then validate multi-instance delivery and idempotency conflicts.
+
 ## v9.1.0
 
 ### Runtime & build

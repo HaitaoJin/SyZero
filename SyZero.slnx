@@ -37,6 +37,7 @@
     <Project Path="src/SyZero.Module/SyZero.Mail/SyZero.Mail.csproj" />
     <Project Path="src/SyZero.Module/SyZero.ObjectMapping.Mapster/SyZero.ObjectMapping.Mapster.csproj" />
     <Project Path="src/SyZero.Module/SyZero.MongoDB/SyZero.MongoDB.csproj" />
+    <Project Path="src/SyZero.Module/SyZero.Notifications/SyZero.Notifications.csproj" />
     <Project Path="src/SyZero.Module/SyZero.MultiTenancy/SyZero.MultiTenancy.csproj" />
     <Project Path="src/SyZero.Module/SyZero.MultiTenancy.EntityFrameworkCore/SyZero.MultiTenancy.EntityFrameworkCore.csproj" />
     <Project Path="src/SyZero.Module/SyZero.ServiceDiscovery.Nacos/SyZero.ServiceDiscovery.Nacos.csproj" />
@@ -59,6 +60,9 @@
   </Folder>
   <Folder Name="/SyZero.Gateway/">
     <Project Path="src/SyZero.Gateway/SyZero.Gateway.csproj" />
+  </Folder>
+  <Folder Name="/SyZero.Service/SyZero.Example5.Frontend/">
+    <Project Path="src/SyZero.Service/SyZero.Example5.Frontend/SyZero.Example5.Frontend.esproj" />
   </Folder>
   <Folder Name="/SyZero.Service/" />
   <Folder Name="/SyZero.Service/SyZero.Example1.Service/">
@@ -90,6 +94,9 @@
     </Project>
     <Project Path="src/SyZero.Service/SyZero.Example3.SPA/SyZero.Example3.IApplication/SyZero.Example3.IApplication.csproj" />
     <Project Path="src/SyZero.Service/SyZero.Example3.SPA/SyZero.Example3.Web/SyZero.Example3.Web.csproj" />
+  </Folder>
+  <Folder Name="/SyZero.AppHost/">
+    <Project Path="src/SyZero.AppHost/SyZero.AppHost.csproj" />
   </Folder>
   <Folder Name="/SyZero.Service/SyZero.Example4.Monolith/">
     <Project Path="src/SyZero.Service/SyZero.Example4.Monolith/SyZero.Example4.Application/SyZero.Example4.Application.csproj" />

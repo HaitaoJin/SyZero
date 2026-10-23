@@ -18,7 +18,7 @@ dotnet add package SyZero.ObjectMapping.Mapster
 - 🔒 **MIT licensed** — no commercial-license risk (unlike AutoMapper 14+)
 - 🪶 **Minimal deps** — only `Mapster` + `Mapster.DependencyInjection`
 - ⚡ **High performance** — Mapster emits IL at compile-time, no reflection overhead
-- 🎯 **Target framework** — `net9.0`
+- 🎯 **Target framework** — `net10.0`
 
 ---
 

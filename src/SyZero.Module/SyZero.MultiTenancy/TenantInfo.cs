@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace SyZero.MultiTenancy
 {
@@ -20,5 +21,8 @@ namespace SyZero.MultiTenancy
 
         /// <summary>可选连接字符串。配合 <see cref="ITenantConnectionResolver"/> 实现分库。</summary>
         public string? ConnectionString { get; set; }
+
+        public string? Edition { get; set; }
+        public IDictionary<string, string> Properties { get; set; } = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
     }
 }

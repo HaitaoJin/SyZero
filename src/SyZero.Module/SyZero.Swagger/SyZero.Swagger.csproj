@@ -1,14 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <Description>SyZero-Swagger</Description>
+    <TargetFramework>net10.0</TargetFramework>
+    <Description>SyZero 的 .NET 10 原生 OpenAPI 集成。</Description>
     <IsPackable>true</IsPackable>
     <OpenApiGenerateDocuments>false</OpenApiGenerateDocuments>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Swashbuckle.AspNetCore" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
   </ItemGroup>
 
   <ItemGroup>
@@ -19,8 +19,4 @@
     <ProjectReference Include="..\..\SyZero.Core\SyZero.Core.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Include="buildTransitive\SyZero.Swagger.props" Pack="true" PackagePath="buildTransitive\SyZero.Swagger.props" />
-    <None Include="buildTransitive\SyZero.Swagger.targets" Pack="true" PackagePath="buildTransitive\SyZero.Swagger.targets" />
-  </ItemGroup>
 </Project>

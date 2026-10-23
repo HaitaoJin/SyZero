@@ -8,7 +8,7 @@
     string ActiveCls(string prefix, bool exact = false) => IsActive(prefix, exact) ? "active gw-menu-active" : string.Empty;
 
     var user = Context.User?.Identity?.Name;
-    var role = Context.User?.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "Admin";
+    var role = Context.User?.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "Reader";
     var isAdmin = string.Equals(role, "Admin", System.StringComparison.OrdinalIgnoreCase);
     var isBuiltIn = string.Equals(
         Context.User?.FindFirst("gw:builtin")?.Value,
@@ -18,17 +18,6 @@
     ViewData["IsAdmin"] = isAdmin;
     ViewData["Role"] = role;
     ViewData["IsBuiltIn"] = isBuiltIn;
-    if (string.IsNullOrEmpty(user) && Context.Request.Cookies.TryGetValue("syz_admin_auth", out var cookie))
-    {
-        try
-        {
-            var raw = System.Text.Encoding.UTF8.GetString(System.Convert.FromBase64String(cookie));
-            var idx = raw.IndexOf(':');
-            if (idx > 0) { user = raw.Substring(0, idx); }
-        }
-        catch { /* ignore */ }
-    }
-
     // 计算面包屑标题。
     string PageTitle()
     {

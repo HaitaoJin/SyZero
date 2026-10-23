@@ -4,12 +4,13 @@ using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using SyZero.Util;
 
 namespace SyZero.Web.Common
 {
     public class RestHelper
     {
+        private static readonly RestClient Client = new RestClient();
+
         /// <summary>
         /// 通过传入的请求信息访问服务端，并返回结果对象
         /// </summary>
@@ -17,8 +18,11 @@ namespace SyZero.Web.Common
         /// <param name="request">外部设定的请求</param>
         /// <returns>返回Jobject通用对象</returns>
         public static JObject? Execute(RestRequest request)
+            => Execute(Client, request);
+
+        public static JObject? Execute(RestClient client, RestRequest request)
         {
-            var client = SyZeroUtil.GetService<RestClient>();
+            ArgumentNullException.ThrowIfNull(client);
             var response = client.Execute(request);
             if (response.ErrorException != null)
             {
@@ -36,7 +40,7 @@ namespace SyZero.Web.Common
         /// <returns>返回Jobject通用对象</returns>
         public static async Task<JObject?> ExecuteAsync(RestRequest request)
         {
-            var client = SyZeroUtil.GetService<RestClient>();
+            var client = Client;
             var response = await client.ExecuteAsync(request);
             if (response.ErrorException != null)
             {
@@ -55,7 +59,7 @@ namespace SyZero.Web.Common
         /// <returns></returns>
         public static T? Execute<T>(RestRequest request) where T : class, new()
         {
-            var client = SyZeroUtil.GetService<RestClient>();
+            var client = Client;
             var response = client.Execute(request);
             if (response.ErrorException != null)
             {
@@ -74,7 +78,7 @@ namespace SyZero.Web.Common
         /// <returns></returns>
         public static async Task<T?> ExecuteAsync<T>(RestRequest request) where T : class, new()
         {
-            var client = SyZeroUtil.GetService<RestClient>();
+            var client = Client;
             var response = await client.ExecuteAsync(request);
             if (response.ErrorException != null)
             {
@@ -86,7 +90,7 @@ namespace SyZero.Web.Common
 
         public static string ExecuteToString(RestRequest request)
         {
-            var client = SyZeroUtil.GetService<RestClient>();
+            var client = Client;
             var response = client.Execute(request);
             if (response.ErrorException != null)
             {
@@ -104,7 +108,7 @@ namespace SyZero.Web.Common
         /// <param name="postData"></param>
         public static string PostJson(string url, object body)
         {
-            var client = SyZeroUtil.GetService<RestClient>();
+            var client = Client;
             var request = new RestRequest(url, Method.Post);
             request.RequestFormat = DataFormat.Json;
             request.AddHeader("Content-Type", "application/json");
@@ -120,7 +124,7 @@ namespace SyZero.Web.Common
         /// <returns></returns>
         public static HttpResultMessage<T> PostJson<T>(string url, object body, string token = "")
         {
-            var client = SyZeroUtil.GetService<RestClient>();
+            var client = Client;
             var request = new RestRequest(url, Method.Post);
             request.RequestFormat = DataFormat.Json;
             request.AddHeader("Content-Type", "application/json");
@@ -158,7 +162,7 @@ namespace SyZero.Web.Common
 
         public static HttpResultMessage? PostJsonAsUrl(string url, object body)
         {
-            var client = SyZeroUtil.GetService<RestClient>();
+            var client = Client;
             var request = new RestRequest(url, Method.Post);
             request.RequestFormat = DataFormat.Json;
             request.AddHeader("Content-Type", "application/json");
@@ -178,7 +182,7 @@ namespace SyZero.Web.Common
         {
             try
             {
-                var client = SyZeroUtil.GetService<RestClient>();
+                var client = Client;
                 var request = new RestRequest(url, method);
                 request.RequestFormat = DataFormat.Json;
                 request.AddHeader("Content-Type", "application/json");
@@ -208,7 +212,7 @@ namespace SyZero.Web.Common
         {
             try
             {
-                var client = SyZeroUtil.GetService<RestClient>();
+                var client = Client;
                 var request = new RestRequest(url, Method.Post);
                 request.RequestFormat = DataFormat.Json;
                 request.AddHeader("Content-Type", "application/json");
@@ -234,7 +238,7 @@ namespace SyZero.Web.Common
         {
             try
             {
-                var client = SyZeroUtil.GetService<RestClient>();
+                var client = Client;
                 var request = new RestRequest(url, Method.Get);
                 request.RequestFormat = DataFormat.Json;
                 request.AddHeader("Content-Type", "application/json");

@@ -29,4 +29,13 @@ public class IdempotencyStoreTests
         Assert.Equal(200, entry!.StatusCode);
         Assert.Equal(3, entry.Body!.Length);
     }
+
+    [Fact]
+    public async Task Release_AllowsKeyToBeReservedAgain()
+    {
+        var store = new MemoryIdempotencyStore();
+        Assert.True(await store.TryReserveAsync("k3", TimeSpan.FromMinutes(1)));
+        await store.ReleaseAsync("k3");
+        Assert.True(await store.TryReserveAsync("k3", TimeSpan.FromMinutes(1)));
+    }
 }

@@ -29,6 +29,18 @@
             当首个请求仍在处理（已占位但未保存）时，并发请求返回的状态码。
             </summary>
         </member>
+        <member name="P:SyZero.Idempotency.IdempotencyOptions.ConflictStatusCode">
+            <summary>同一个幂等键对应不同请求内容时返回的状态码。</summary>
+        </member>
+        <member name="P:SyZero.Idempotency.IdempotencyOptions.MaxResponseBodyBytes">
+            <summary>允许缓存的最大响应体字节数，默认 1 MiB。</summary>
+        </member>
+        <member name="P:SyZero.Idempotency.IdempotencyOptions.MaxRequestBodyBytes">
+            <summary>计算请求指纹时读取的最大请求体字节数，默认 1 MiB。</summary>
+        </member>
+        <member name="P:SyZero.Idempotency.IdempotencyOptions.ScopeKeyToRequest">
+            <summary>将用户、租户、HTTP 方法与路径加入存储键，避免跨调用方冲突。</summary>
+        </member>
         <member name="P:SyZero.Idempotency.IdempotencyOptions.Methods">
             <summary>
             仅对这些 HTTP 方法生效（默认 POST / PUT / PATCH / DELETE；GET / HEAD 默认幂等）。
@@ -58,6 +70,9 @@
             <summary>
             读取响应快照；若仅占位未完成返回 null（中间件应回 409 / 等待）。
             </summary>
+        </member>
+        <member name="M:SyZero.Idempotency.IIdempotencyStore.ReleaseAsync(System.String,System.Threading.CancellationToken)">
+            <summary>释放尚未完成的占位；请求失败或响应不应缓存时调用。</summary>
         </member>
         <member name="T:SyZero.Idempotency.MemoryIdempotencyStore">
             <summary>

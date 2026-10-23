@@ -4,184 +4,52 @@
         <name>SyZero.Swagger</name>
     </assembly>
     <members>
-        <member name="T:Microsoft.AspNetCore.Builder.SwaggerExportExtensions">
+        <member name="T:SyZero.Swagger.SyZeroOpenApiExtensions">
+            <summary>.NET 10 原生 OpenAPI 文档注册与端点映射。</summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.CreateDocumentationId(System.Type)">
             <summary>
-            Swagger 导出扩展方法。
+            Generates a documentation comment ID for a type.
+            Example: T:Namespace.Outer+Inner`1 becomes T:Namespace.Outer.Inner`1
             </summary>
         </member>
-        <member name="M:Microsoft.AspNetCore.Builder.SwaggerExportExtensions.UseSwagger(Microsoft.AspNetCore.Builder.WebApplication,System.Action{Swashbuckle.AspNetCore.Swagger.SwaggerOptions},System.String)">
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.CreateDocumentationId(System.Reflection.PropertyInfo)">
             <summary>
-            注册 Swagger 中间件；若当前进程以 Swagger 导出模式启动，则导出后直接退出。
+            Generates a documentation comment ID for a property.
+            Example: P:Namespace.ContainingType.PropertyName or for an indexer P:Namespace.ContainingType.Item(System.Int32)
             </summary>
         </member>
-        <member name="M:Microsoft.AspNetCore.Builder.SwaggerExportExtensions.TryExportSwaggerAsync(Microsoft.AspNetCore.Builder.WebApplication,System.String[],System.String)">
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.CreateDocumentationId(System.Type,System.String)">
             <summary>
-            检查命令行参数，若包含 Swagger 输出参数则导出文档并返回 true。
+            Generates a documentation comment ID for a property given its container type and property name.
+            Example: P:Namespace.ContainingType.PropertyName
             </summary>
         </member>
-        <member name="M:Microsoft.AspNetCore.Builder.SwaggerExportExtensions.TryGetSwaggerOutputPath(System.String[],System.String@)">
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.CreateDocumentationId(System.Reflection.MethodInfo)">
             <summary>
-            从命令行参数中解析 Swagger 输出路径。
+            Generates a documentation comment ID for a method (or constructor).
+            For example:
+              M:Namespace.ContainingType.MethodName(ParamType1,ParamType2)~ReturnType
+              M:Namespace.ContainingType.#ctor(ParamType)
             </summary>
         </member>
-        <member name="M:Microsoft.AspNetCore.Builder.SwaggerExportExtensions.ExportSwaggerAsync(Microsoft.AspNetCore.Builder.WebApplication,System.String,System.String)">
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.GetTypeDocId(System.Type,System.Boolean,System.Boolean)">
             <summary>
-            导出 Swagger JSON 到指定路径。
+            Generates a documentation ID string for a type.
+            This method handles nested types (replacing '+' with '.'),
+            generic types, arrays, pointers, by-ref types, and generic parameters.
+            The <paramref name="includeGenericArguments"/> flag controls whether
+            constructed generic type arguments are emitted, while <paramref name="omitGenericArity"/>
+            controls whether the generic arity marker (e.g. "`1") is appended.
             </summary>
         </member>
-        <member name="T:Microsoft.Extensions.DependencyInjection.SwaggerExtensions">
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.NormalizeDocId(System.String)">
             <summary>
-            Swagger 服务扩展方法
+            Normalizes a documentation comment ID to match the compiler-style format.
+            Strips the return type suffix for ordinary methods but retains it for conversion operators.
             </summary>
-        </member>
-        <member name="M:Microsoft.Extensions.DependencyInjection.SwaggerExtensions.AddSwagger(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
-            <summary>
-            添加 Swagger 到依赖注入容器（使用默认配置）
-            </summary>
-            <param name="services">服务集合</param>
-            <returns>服务集合</returns>
-        </member>
-        <member name="M:Microsoft.Extensions.DependencyInjection.SwaggerExtensions.AddSwagger(Microsoft.Extensions.DependencyInjection.IServiceCollection,SyZero.Swagger.SwaggerOptions,System.Action{Swashbuckle.AspNetCore.SwaggerGen.SwaggerGenOptions})">
-            <summary>
-            添加 Swagger 到依赖注入容器
-            </summary>
-            <param name="services">服务集合</param>
-            <param name="options">配置选项</param>
-            <param name="swaggerGenAction">SwaggerGen 额外配置委托</param>
-            <returns>服务集合</returns>
-            <exception cref="T:System.ArgumentNullException">options 为 null 时抛出</exception>
-        </member>
-        <member name="M:Microsoft.Extensions.DependencyInjection.SwaggerExtensions.AddSwagger(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Action{Swashbuckle.AspNetCore.SwaggerGen.SwaggerGenOptions})">
-            <summary>
-            添加 Swagger 到依赖注入容器（仅配置 SwaggerGenOptions）
-            </summary>
-            <param name="services">服务集合</param>
-            <param name="swaggerGenAction">SwaggerGen 配置委托</param>
-            <returns>服务集合</returns>
-        </member>
-        <member name="M:Microsoft.Extensions.DependencyInjection.SwaggerExtensions.AddSwagger(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,System.String)">
-            <summary>
-            添加 Swagger 到依赖注入容器（从配置读取）
-            </summary>
-            <param name="services">服务集合</param>
-            <param name="configuration">配置，为 null 时使用 AppConfig.Configuration</param>
-            <param name="sectionName">配置节名称，默认为 "Swagger"</param>
-            <returns>服务集合</returns>
-        </member>
-        <member name="M:Microsoft.Extensions.DependencyInjection.SwaggerExtensions.AddSwagger(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Action{SyZero.Swagger.SwaggerOptions},Microsoft.Extensions.Configuration.IConfiguration,System.String)">
-            <summary>
-            添加 Swagger 到依赖注入容器（从配置读取，并支持额外配置）
-            </summary>
-            <param name="services">服务集合</param>
-            <param name="optionsAction">额外配置委托（在配置文件配置之后执行）</param>
-            <param name="configuration">配置，为 null 时使用 AppConfig.Configuration</param>
-            <param name="sectionName">配置节名称，默认为 "Swagger"</param>
-            <returns>服务集合</returns>
-        </member>
-        <member name="M:Microsoft.Extensions.DependencyInjection.SwaggerExtensions.ConfigureSwaggerGen(Swashbuckle.AspNetCore.SwaggerGen.SwaggerGenOptions,SyZero.Swagger.SwaggerOptions)">
-            <summary>
-            配置 SwaggerGen
-            </summary>
-        </member>
-        <member name="M:Microsoft.Extensions.DependencyInjection.SwaggerExtensions.ConfigureJwtAuth(Swashbuckle.AspNetCore.SwaggerGen.SwaggerGenOptions,SyZero.Swagger.SwaggerOptions)">
-            <summary>
-            配置 JWT 认证
-            </summary>
-        </member>
-        <member name="M:Microsoft.Extensions.DependencyInjection.SwaggerExtensions.ConfigureXmlComments(Swashbuckle.AspNetCore.SwaggerGen.SwaggerGenOptions,SyZero.Swagger.SwaggerOptions)">
-            <summary>
-            配置 XML 注释
-            </summary>
-        </member>
-        <member name="T:SyZero.Swagger.SwaggerOptions">
-            <summary>
-            Swagger 配置选项
-            </summary>
-        </member>
-        <member name="F:SyZero.Swagger.SwaggerOptions.SectionName">
-            <summary>
-            配置节名称
-            </summary>
-        </member>
-        <member name="P:SyZero.Swagger.SwaggerOptions.Enabled">
-            <summary>
-            是否启用 Swagger，默认为 true
-            </summary>
-        </member>
-        <member name="P:SyZero.Swagger.SwaggerOptions.Version">
-            <summary>
-            文档版本，默认为 "v1"
-            </summary>
-        </member>
-        <member name="P:SyZero.Swagger.SwaggerOptions.Title">
-            <summary>
-            文档标题，为 null 时使用 "{ServerName}接口文档"
-            </summary>
-        </member>
-        <member name="P:SyZero.Swagger.SwaggerOptions.Description">
-            <summary>
-            文档描述，为 null 时使用 "RESTful API for {ServerName}"
-            </summary>
-        </member>
-        <member name="P:SyZero.Swagger.SwaggerOptions.ContactName">
-            <summary>
-            联系人名称
-            </summary>
-        </member>
-        <member name="P:SyZero.Swagger.SwaggerOptions.ContactEmail">
-            <summary>
-            联系人邮箱
-            </summary>
-        </member>
-        <member name="P:SyZero.Swagger.SwaggerOptions.ContactUrl">
-            <summary>
-            联系人网址
-            </summary>
-        </member>
-        <member name="P:SyZero.Swagger.SwaggerOptions.LicenseName">
-            <summary>
-            许可证名称
-            </summary>
-        </member>
-        <member name="P:SyZero.Swagger.SwaggerOptions.LicenseUrl">
-            <summary>
-            许可证网址
-            </summary>
-        </member>
-        <member name="P:SyZero.Swagger.SwaggerOptions.TermsOfServiceUrl">
-            <summary>
-            服务条款网址
-            </summary>
-        </member>
-        <member name="P:SyZero.Swagger.SwaggerOptions.EnableJwtAuth">
-            <summary>
-            是否启用 JWT 认证，默认为 true
-            </summary>
-        </member>
-        <member name="P:SyZero.Swagger.SwaggerOptions.JwtAuthDescription">
-            <summary>
-            JWT 认证描述
-            </summary>
-        </member>
-        <member name="P:SyZero.Swagger.SwaggerOptions.IncludeXmlComments">
-            <summary>
-            是否加载 XML 注释文档，默认为 true
-            </summary>
-        </member>
-        <member name="P:SyZero.Swagger.SwaggerOptions.XmlCommentFiles">
-            <summary>
-            XML 注释文件路径列表，为空时自动扫描 BaseDirectory 下的所有 XML 文件
-            </summary>
-        </member>
-        <member name="P:SyZero.Swagger.SwaggerOptions.RoutePrefix">
-            <summary>
-            路由前缀
-            </summary>
-        </member>
-        <member name="M:SyZero.Swagger.SwaggerOptions.Validate">
-            <summary>
-            验证配置
-            </summary>
+            <param name="docId">The documentation comment ID to normalize.</param>
+            <returns>The normalized documentation comment ID.</returns>
         </member>
     </members>
 </doc>

@@ -135,7 +135,12 @@ namespace SyZero
                     if (!typeInfo.IsGenericType)
                     {
                         var implementationType = typeInfo.AsType();
-                        foreach (var implementedInterface in typeInfo.ImplementedInterfaces)
+
+                        // 标记依赖既可以通过业务接口注入，也可以作为显式依赖对象直接注入。
+                        // 例如 SyZeroServiceDependencies 只实现标记接口，服务基类会按具体类型请求它。
+                        services.Add(new ServiceDescriptor(implementationType, implementationType, lifetime));
+
+                        foreach (var implementedInterface in typeInfo.ImplementedInterfaces.Where(i => i != compareType))
                         {
                             switch (lifetime)
                             {

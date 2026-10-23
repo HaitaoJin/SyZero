@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Builder;
+using SyZero.Swagger;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.Extensions.Configuration;
@@ -9,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
 using SyZero.Example2.Core.DbContext;
+using SyZero.Example2.Application.Examples;
 using SyZero.Example2.Web.Core.Filter;
 using SyZero.DynamicWebApi;
 using SyZero.Web.Common;
@@ -24,11 +26,11 @@ namespace SyZero.Example2.Web
 
             //使用SyZero
             builder.AddSyZero();
+            var serverOptions = builder.Configuration.GetRequiredSection("SyZero").Get<global::SyZero.Configurations.SyZeroServerOptions>()
+                ?? throw new InvalidOperationException("缺少 SyZero 配置节。");
 
             //builder.Configuration.AddNacos(cancellationTokenSource.Token); //Nacos动态配置
             //builder.Configuration.AddConsul(cancellationTokenSource.Token);
-
-            builder.WebHost.UseUrls($"{AppConfig.ServerOptions.Protocol}://*:{AppConfig.ServerOptions.Port}");
 
             builder.Logging.AddOpenTelemetry(logging =>
             {
@@ -51,28 +53,28 @@ namespace SyZero.Example2.Web
             builder.Services.AddDynamicWebApi(new DynamicWebApiOptions()
             {
                 DefaultApiPrefix = "/api",
-                DefaultAreaName = AppConfig.ServerOptions.Name
-            });
+                DefaultAreaName = serverOptions.Name
+            }, typeof(Example2AppService).Assembly);
             //Swagger
-            builder.Services.AddSwagger();
+            builder.Services.AddSyZeroOpenApi();
             //使用OpenTelemetry遥测
-            //builder.Services.AddSyZeroOpenTelemetry();
+            builder.Services.AddSyZeroOpenTelemetry(builder.Configuration);
             //使用AutoMapper
             builder.Services.AddSyZeroAutoMapper();
             //使用SqlSugar仓储
-            builder.Services.AddSyZeroSqlSugar<Example2DbContext>();
+            builder.Services.AddSyZeroSqlSugar<Example2DbContext>(builder.Configuration);
             //注入控制器
             builder.Services.AddSyZeroController();
             //注入Redis
             //builder.Services.AddSyZeroRedis();
             //注入公共层
-            builder.Services.AddSyZeroCommon();
+            builder.Services.AddSyZeroCommon(builder.Configuration);
             //注入本地服务管理（用于 Feign 服务发现）
-            builder.Services.AddLocalServiceManagement();
+            builder.Services.AddLocalServiceManagement(builder.Configuration);
             //注入Consul
             //builder.Services.AddConsul();
             //注入Feign
-            builder.Services.AddSyZeroFeign();
+            builder.Services.AddSyZeroFeign(builder.Configuration);
 
             // ============================================================
             // v1.5.0 集成示例（默认开启 AI Echo；Kafka / Outbox 以注释提供）
@@ -86,7 +88,7 @@ namespace SyZero.Example2.Web
             // builder.Services.AddSyZeroKafka(o =>
             // {
             //     o.BootstrapServers = "kafka:9092";
-            //     o.GroupId = AppConfig.ServerOptions.Name;
+            //     o.GroupId = serverOptions.Name;
             // });
             // builder.Services.AddHostedService<MyKafkaConsumer>();
 
@@ -116,13 +118,7 @@ namespace SyZero.Example2.Web
             app.UseStaticFiles();
             app.UseSyAuthMiddleware((sySeesion) => "Token:" + sySeesion.UserId);
             app.MapControllers();
-            app.UseSwagger();
-            app.UseSwaggerUI(c =>
-            {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "SyZero.Example2.Web API V1");
-                c.RoutePrefix = "api/swagger";
-
-            });
+            app.MapSyZeroOpenApi();
             //app.UseConsul();
             app.InitTables();
             app.Run();

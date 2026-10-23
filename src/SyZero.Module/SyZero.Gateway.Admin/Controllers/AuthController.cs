@@ -21,17 +21,20 @@ namespace SyZero.Gateway.Admin.Controllers
         private readonly IFailedLoginTracker _failedLogins;
         private readonly IOptionsMonitor<GatewayAdminRateLimitOptions> _rateLimitOptions;
         private readonly ICaptchaStore _captchaStore;
+        private readonly GatewayAdminCookieProtector? _cookieProtector;
 
         public AuthController(
             IUserResolver userResolver,
             IFailedLoginTracker failedLogins,
             IOptionsMonitor<GatewayAdminRateLimitOptions> rateLimitOptions,
-            ICaptchaStore captchaStore)
+            ICaptchaStore captchaStore,
+            GatewayAdminCookieProtector? cookieProtector = null)
         {
             _userResolver = userResolver;
             _failedLogins = failedLogins;
             _rateLimitOptions = rateLimitOptions;
             _captchaStore = captchaStore;
+            _cookieProtector = cookieProtector;
         }
 
         /// <summary>
@@ -135,7 +138,9 @@ namespace SyZero.Gateway.Admin.Controllers
             }
 
             _failedLogins.Reset(clientKey);
-            var token = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{request.Username}:{request.Password}"));
+            // 正常 DI 路径始终使用 Data Protection；null 分支仅保留直接 new Controller 的源兼容性。
+            var token = _cookieProtector?.Protect(matched.Name, request.Password)
+                ?? Convert.ToBase64String(Encoding.UTF8.GetBytes($"{matched.Name}:{request.Password}"));
             var options = new CookieOptions
             {
                 HttpOnly = true,
