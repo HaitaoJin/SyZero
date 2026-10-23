@@ -29,6 +29,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="..\SyZero.Module\SyZero.AspNetCore.SpaProxy\buildTransitive\SyZero.AspNetCore.SpaProxy.*"
+          Link="TestAssets\SpaProxy\%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\SyZero.Module\SyZero.ObjectMapping.AutoMapper\SyZero.ObjectMapping.AutoMapper.csproj" />
     <ProjectReference Include="..\SyZero.Module\SyZero.ObjectMapping.Mapster\SyZero.ObjectMapping.Mapster.csproj" />
     <ProjectReference Include="..\SyZero.Module\SyZero.AspNetCore\SyZero.AspNetCore.csproj" />
