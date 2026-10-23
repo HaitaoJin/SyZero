@@ -72,9 +72,15 @@ public sealed class LocalFileStorage : ISyFileStorage, ISingletonDependency
     private string Resolve(string path)
     {
         if (string.IsNullOrWhiteSpace(path)) throw new ArgumentException("path is required", nameof(path));
-        if (Path.IsPathRooted(path)) throw new InvalidOperationException("path 必须是相对路径。");
 
-        var combined = Path.GetFullPath(Path.Combine(RootPath, path));
+        // 文件存储路径是跨平台的逻辑路径，因此两种目录分隔符都必须按目录处理。
+        // 否则在 Linux 上，反斜杠会被当作普通文件名字符，导致 "..\\file" 绕过越界检查。
+        var normalizedPath = path
+            .Replace('\\', Path.DirectorySeparatorChar)
+            .Replace('/', Path.DirectorySeparatorChar);
+        if (Path.IsPathRooted(normalizedPath)) throw new InvalidOperationException("path 必须是相对路径。");
+
+        var combined = Path.GetFullPath(Path.Combine(RootPath, normalizedPath));
         var relative = Path.GetRelativePath(RootPath, combined);
         if (relative.Equals("..", StringComparison.Ordinal)
             || relative.StartsWith(".." + Path.DirectorySeparatorChar, StringComparison.Ordinal)

@@ -5,7 +5,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SyZero.AspNetCore.SpaProxy;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using Xunit;
@@ -122,9 +121,9 @@ public class SpaProxyTests
         using var tempDirectory = TempDirectory.Create();
         Directory.CreateDirectory(Path.Combine(tempDirectory.Path, "client"));
 
-        var srcDirectory = GetRepositorySrcDirectory();
-        var propsPath = Path.Combine(srcDirectory, "SyZero.Module", "SyZero.AspNetCore.SpaProxy", "buildTransitive", "SyZero.AspNetCore.SpaProxy.props");
-        var targetsPath = Path.Combine(srcDirectory, "SyZero.Module", "SyZero.AspNetCore.SpaProxy", "buildTransitive", "SyZero.AspNetCore.SpaProxy.targets");
+        var testAssetsDirectory = Path.Combine(AppContext.BaseDirectory, "TestAssets", "SpaProxy");
+        var propsPath = Path.Combine(testAssetsDirectory, "SyZero.AspNetCore.SpaProxy.props");
+        var targetsPath = Path.Combine(testAssetsDirectory, "SyZero.AspNetCore.SpaProxy.targets");
         var projectPath = Path.Combine(tempDirectory.Path, "SpaProxyTargetTests.csproj");
 
         File.WriteAllText(projectPath, $$"""
@@ -184,28 +183,6 @@ public class SpaProxyTests
     private static ILogger<T> CreateLogger<T>()
     {
         return LoggerFactory.Create(_ => { }).CreateLogger<T>();
-    }
-
-    private static string GetRepositorySrcDirectory([CallerFilePath] string sourceFilePath = "")
-    {
-        var directory = new FileInfo(sourceFilePath).Directory;
-        while (directory != null)
-        {
-            var srcDirectory = Path.Combine(directory.FullName, "src");
-            if (File.Exists(Path.Combine(directory.FullName, "SyZero.slnx")) && Directory.Exists(srcDirectory))
-            {
-                return srcDirectory;
-            }
-
-            if (File.Exists(Path.Combine(srcDirectory, "SyZero.sln")))
-            {
-                return srcDirectory;
-            }
-
-            directory = directory.Parent;
-        }
-
-        throw new DirectoryNotFoundException("Could not locate the repository src directory.");
     }
 
     private static async Task RunProcessAsync(string fileName, string arguments)
