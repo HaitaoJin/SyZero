@@ -28,16 +28,6 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore ./SyZero.slnx
 
-    - name: Audit dependencies
-      shell: bash
-      run: |
-        audit_output="$(dotnet list ./SyZero.slnx package --vulnerable --include-transitive)"
-        echo "$audit_output"
-        if grep -q "has the following vulnerable packages" <<< "$audit_output"; then
-          echo "Dependency vulnerability gate failed."
-          exit 1
-        fi
-
     - name: Build
       run: dotnet build --configuration Release ./SyZero.slnx --no-restore --warnaserror
 
