@@ -19,7 +19,7 @@
     "SyZero.Gateway": {
       "commandName": "Project",
       "launchBrowser": true,
-      "launchUrl": "weatherforecast",
+      "launchUrl": "admin",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },

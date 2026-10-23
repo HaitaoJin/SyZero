@@ -32,9 +32,9 @@ namespace SyZero.Gateway.Admin.Auth
     {
         private sealed class Entry
         {
-            public int Count;
-            public DateTimeOffset FirstFailureUtc;
-            public DateTimeOffset LockoutUntilUtc;
+            public int Count { get; init; }
+            public DateTimeOffset FirstFailureUtc { get; init; }
+            public DateTimeOffset LockoutUntilUtc { get; init; }
         }
 
         private readonly ConcurrentDictionary<string, Entry> _entries = new();
@@ -77,25 +77,34 @@ namespace SyZero.Gateway.Admin.Auth
 
             var entry = _entries.AddOrUpdate(
                 clientKey,
-                _ => new Entry { Count = 1, FirstFailureUtc = now },
+                _ => new Entry
+                {
+                    Count = 1,
+                    FirstFailureUtc = now,
+                    LockoutUntilUtc = maxFailures <= 1 ? now + lockoutDuration : default,
+                },
                 (_, existing) =>
                 {
                     // 失败窗口超时则重置计数。
                     if (now - existing.FirstFailureUtc > window
                         && existing.LockoutUntilUtc <= now)
                     {
-                        existing.Count = 1;
-                        existing.FirstFailureUtc = now;
+                        return new Entry
+                        {
+                            Count = 1,
+                            FirstFailureUtc = now,
+                            LockoutUntilUtc = maxFailures <= 1 ? now + lockoutDuration : default,
+                        };
                     }
-                    else
+                    var count = existing.Count + 1;
+                    return new Entry
                     {
-                        existing.Count++;
-                    }
-                    if (existing.Count >= maxFailures)
-                    {
-                        existing.LockoutUntilUtc = now + lockoutDuration;
-                    }
-                    return existing;
+                        Count = count,
+                        FirstFailureUtc = existing.FirstFailureUtc,
+                        LockoutUntilUtc = count >= maxFailures
+                            ? now + lockoutDuration
+                            : existing.LockoutUntilUtc,
+                    };
                 });
             return entry.Count;
         }

@@ -95,6 +95,9 @@
         <member name="P:SyZero.MultiTenancy.MultiTenancyOptions.TenantNameClaimType">
             <summary>Claim 解析使用的租户名 Claim 类型。</summary>
         </member>
+        <member name="P:SyZero.MultiTenancy.MultiTenancyOptions.RequireTenant">
+            <summary>启用后，未解析到有效租户的业务请求返回 400。</summary>
+        </member>
         <member name="T:SyZero.MultiTenancy.Resolvers.HeaderTenantResolver">
             <summary>从请求头解析租户名（默认 Header：<c>__tenant</c>）。</summary>
         </member>
@@ -135,6 +138,12 @@
         </member>
         <member name="P:SyZero.MultiTenancy.TenantInfo.ConnectionString">
             <summary>可选连接字符串。配合 <see cref="T:SyZero.MultiTenancy.ITenantConnectionResolver"/> 实现分库。</summary>
+        </member>
+        <member name="T:SyZero.MultiTenancy.TenantPropagationHandler">
+            <summary>把当前租户自动传播到服务间 HttpClient 调用。</summary>
+        </member>
+        <member name="M:SyZero.MultiTenancy.TenantPropagationHandler.#ctor(SyZero.MultiTenancy.ICurrentTenant,Microsoft.Extensions.Options.IOptions{SyZero.MultiTenancy.MultiTenancyOptions})">
+            <summary>把当前租户自动传播到服务间 HttpClient 调用。</summary>
         </member>
     </members>
 </doc>

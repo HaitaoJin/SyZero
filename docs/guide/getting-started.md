@@ -4,7 +4,7 @@
 
 ## 前置条件
 
-1. 安装 .NET 9 SDK
+1. 安装 .NET 10 SDK
 2. 准备一个可用的 NuGet 源
 3. 本地端口 `5000` 未被占用
 
@@ -49,13 +49,12 @@ builder.Services.AddDynamicWebApi(new DynamicWebApiOptions
     DefaultApiPrefix = "/api",
     DefaultAreaName = "MyService"
 });
-builder.Services.AddSwagger();
+builder.Services.AddSyZeroOpenApi();
 
 var app = builder.Build();
 
 app.UseSyZero();
-app.UseSwagger();
-app.UseSwaggerUI();
+app.MapSyZeroOpenApi();
 app.MapControllers();
 
 app.Run();
@@ -138,10 +137,10 @@ public record HelloOutput(string Service, string Message);
 dotnet run --urls http://localhost:5000
 ```
 
-打开 Swagger：
+打开 OpenAPI 文档：
 
 ```text
-http://localhost:5000/swagger
+http://localhost:5000/openapi/v1.json
 ```
 
 你应该能看到 `Hello` 相关接口。按上面的配置，常见生成路径会类似：
@@ -169,6 +168,7 @@ POST /api/myservice/hello/echo
 | 服务注册与发现 | `SyZero.ServiceDiscovery.Consul` / `SyZero.ServiceDiscovery.Nacos` / `SyZero.Redis` | [服务注册与发现](/guide/service-discovery) |
 | 事件总线 | `SyZero.EventBus.RabbitMQ` / `SyZero.EventBus.Kafka` / `SyZero.Redis` | [事件总线与集成事件](/guide/event-bus) |
 | 网关 | `SyZero.Gateway.Ocelot` / `SyZero.Gateway.YARP` / `SyZero.Gateway.Admin` | [SyZero.Gateway 微服务网关示例](/guide/gateway-microservice-demo) |
+| 本地编排与可观测性 | `SyZero.AppHost` / `SyZero.Observability.OpenTelemetry` | [AppHost 本地编排与可观测性](/guide/apphost-observability) |
 
 ## 常见问题
 
@@ -191,4 +191,5 @@ POST /api/myservice/hello/echo
 3. [数据访问与仓储](/guide/data-access)
 4. [服务注册与发现](/guide/service-discovery)
 5. [事件总线与集成事件](/guide/event-bus)
-6. [模块总览](/modules/index)
+6. [AppHost 本地编排与可观测性](/guide/apphost-observability)
+7. [模块总览](/modules/index)

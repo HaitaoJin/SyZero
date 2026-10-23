@@ -13,9 +13,11 @@ namespace SyZero.Feign
 {
     public class RequestFeignHandler : DelegatingHandler
     {
+        private readonly string _serverName;
+
         public RequestFeignHandler(string serverName, HttpMessageHandler innerHandler = null) : base(innerHandler ?? new HttpClientHandler())
         {
-            _ = serverName;
+            _serverName = serverName;
         }
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -33,6 +35,11 @@ namespace SyZero.Feign
                 var controllerName = GetControllerName(request);
                 var relativePath = TrimSlashes(RemoveApiPrefix(originalPath));
                 var segments = new List<string> { "api" };
+
+                if (!string.IsNullOrWhiteSpace(_serverName))
+                {
+                    segments.Add(TrimSlashes(_serverName));
+                }
 
                 if (!string.IsNullOrWhiteSpace(controllerName))
                 {

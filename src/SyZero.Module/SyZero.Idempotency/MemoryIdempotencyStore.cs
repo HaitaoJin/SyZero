@@ -52,6 +52,12 @@ namespace SyZero.Idempotency
             return Task.FromResult<IdempotencyEntry?>(null);
         }
 
+        public Task ReleaseAsync(string key, CancellationToken cancellationToken = default)
+        {
+            _slots.TryRemove(key, out _);
+            return Task.CompletedTask;
+        }
+
         private void CleanExpired()
         {
             var now = DateTime.UtcNow;

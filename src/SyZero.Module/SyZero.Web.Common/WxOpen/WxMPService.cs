@@ -4,6 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace SyZero.Web.Common
@@ -13,6 +15,8 @@ namespace SyZero.Web.Common
     /// </summary>
     public class WxMPService
     {
+        private static readonly HttpClient HttpClient = new HttpClient();
+
         public string access_token { get; set; } = string.Empty;
         public string appId { get; set; } = string.Empty;
         public string appSecret { get; set; } = string.Empty;
@@ -115,23 +119,10 @@ namespace SyZero.Web.Common
             try
             {
                 string strURL = wxacodeUrl + url;
-                System.Net.HttpWebRequest request;
-                request = (System.Net.HttpWebRequest)WebRequest.Create(strURL);
-                request.Method = "POST";
-                request.ContentType = "application/json";
-                string paraUrlCoded = param;
-                byte[] payload;
-                payload = System.Text.Encoding.UTF8.GetBytes(paraUrlCoded);
-                request.ContentLength = payload.Length;
-                Stream writer = request.GetRequestStream();
-                writer.Write(payload, 0, payload.Length);
-                writer.Close();
-                System.Net.HttpWebResponse response;
-                response =  (System.Net.HttpWebResponse) await request.GetResponseAsync();
-                System.IO.Stream s;
-                s = response.GetResponseStream();//返回图片数据流
-                byte[] tt = StreamToBytes(s);//将数据流转为byte[]
-                if (response.ContentType == "image/jpeg")
+                using var content = new StringContent(param, Encoding.UTF8, "application/json");
+                using var response = await HttpClient.PostAsync(strURL, content).ConfigureAwait(false);
+                var tt = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+                if (response.Content.Headers.ContentType?.MediaType == "image/jpeg")
                 {
                     result.ImgBase64 = Convert.ToBase64String(tt);
                 }

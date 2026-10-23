@@ -11,5 +11,7 @@ namespace SyZero.BackgroundJobs
 
         /// <summary>并发 Worker 数。</summary>
         public int WorkerCount { get; set; } = 1;
+        public int MaxRetryCount { get; set; } = 3;
+        public int RetryDelaySeconds { get; set; } = 5;
     }
 }

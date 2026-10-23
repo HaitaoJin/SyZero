@@ -25,6 +25,7 @@ public class MapsterTests
         });
 
         Assert.IsType<MapsterObjectMapper>(objectMapper);
+        Assert.NotNull(destination);
         Assert.Equal(7, destination.Id);
         Assert.Equal("alice", destination.Name);
         Assert.Equal(new[] { "a", "b" }, destination.Values);
@@ -49,6 +50,7 @@ public class MapsterTests
             Name = "bob"
         });
 
+        Assert.NotNull(destination);
         Assert.Equal(9, destination.Id);
         Assert.Equal("mapped:bob", destination.Name);
     }

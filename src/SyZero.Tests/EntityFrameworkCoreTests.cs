@@ -11,17 +11,16 @@ using Xunit;
 
 namespace SyZero.Tests;
 
-[Collection("AppConfig")]
 public class EntityFrameworkCoreTests
 {
     [Fact]
     public void AddSyZeroEntityFramework_UsesScopedDbContextSharedWithinScope()
     {
         using var database = CreateDatabase();
-        ConfigureAppConfig(database.ConnectionString);
+        var configuration = CreateDatabaseConfiguration(database.ConnectionString);
 
         var services = CreateServices();
-        services.AddSyZeroEntityFramework<TestDbContext>();
+        services.AddSyZeroEntityFramework<TestDbContext>(configuration);
 
         using var provider = services.BuildServiceProvider(new ServiceProviderOptions
         {
@@ -132,22 +131,20 @@ public class EntityFrameworkCoreTests
     }
 
     [Fact]
-    public void AddSyZeroEntityFramework_ThrowsForUnsupportedDbType()
+    public void AddSyZeroEntityFramework_SupportsPostgreSql()
     {
-        AppConfig.Configuration = new ConfigurationBuilder()
+        var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["ConnectionString:Type"] = DbType.PostgreSQL.ToString(),
                 ["ConnectionString:Master"] = "Host=localhost;"
             })
             .Build();
-        ResetAppConfigCache("connectionOptions");
 
         var services = CreateServices();
 
-        var exception = Assert.Throws<NotSupportedException>(() => services.AddSyZeroEntityFramework<TestDbContext>());
-
-        Assert.Contains(DbType.PostgreSQL.ToString(), exception.Message);
+        services.AddSyZeroEntityFramework<TestDbContext>(configuration);
+        Assert.Contains(services, x => x.ServiceType == typeof(TestDbContext));
     }
 
     private static ServiceCollection CreateServices()
@@ -159,10 +156,10 @@ public class EntityFrameworkCoreTests
 
     private static ServiceProvider CreateProvider(string connectionString)
     {
-        ConfigureAppConfig(connectionString);
+        var configuration = CreateDatabaseConfiguration(connectionString);
 
         var services = CreateServices();
-        services.AddSyZeroEntityFramework<TestDbContext>();
+        services.AddSyZeroEntityFramework<TestDbContext>(configuration);
 
         return services.BuildServiceProvider(new ServiceProviderOptions
         {
@@ -177,22 +174,15 @@ public class EntityFrameworkCoreTests
         context.Database.EnsureCreated();
     }
 
-    private static void ConfigureAppConfig(string connectionString)
+    private static IConfiguration CreateDatabaseConfiguration(string connectionString)
     {
-        AppConfig.Configuration = new ConfigurationBuilder()
+        return new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["ConnectionString:Type"] = DbType.Sqlite.ToString(),
                 ["ConnectionString:Master"] = connectionString
             })
             .Build();
-
-        ResetAppConfigCache("connectionOptions");
-    }
-
-    private static void ResetAppConfigCache(string fieldName)
-    {
-        AppConfig.ResetCacheForTests(fieldName);
     }
 
     private static T GetFieldValue<T>(object instance, string fieldName)

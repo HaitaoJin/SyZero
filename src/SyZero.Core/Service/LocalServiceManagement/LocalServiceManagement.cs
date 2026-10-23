@@ -469,7 +469,9 @@ namespace SyZero.Service.LocalServiceManagement
             lock (_stateLock)
             {
                 servicesToCheck = _services
-                    .SelectMany(kvp => kvp.Value.Select(service => (kvp.Key, CloneServiceInfo(service))))
+                    // localhost、回环地址和本机网卡地址表示同一个本地实例。
+                    // 只检查一次，避免 Docker/WSL 虚拟网卡地址产生重复且不可达的健康检查。
+                    .SelectMany(kvp => NormalizeServices(kvp.Value).Select(service => (kvp.Key, service)))
                     .ToList();
             }
 
@@ -484,19 +486,28 @@ namespace SyZero.Service.LocalServiceManagement
                         continue;
                     }
 
-                    var service = services.FirstOrDefault(item => item.ServiceID == serviceSnapshot.ServiceID);
-                    if (service == null)
+                    var instanceKey = BuildServiceInstanceKey(serviceSnapshot);
+                    var matchingServices = services
+                        .Where(item => string.Equals(
+                            BuildServiceInstanceKey(item),
+                            instanceKey,
+                            StringComparison.OrdinalIgnoreCase))
+                        .ToList();
+                    if (matchingServices.Count == 0)
                     {
                         continue;
                     }
 
-                    var previousHealth = service.IsHealthy;
-                    _healthStatus[service.ServiceID] = currentHealth;
-
-                    if (previousHealth != currentHealth)
+                    foreach (var service in matchingServices)
                     {
-                        service.IsHealthy = currentHealth;
-                        changedServices.Add(serviceName);
+                        var previousHealth = service.IsHealthy;
+                        _healthStatus[service.ServiceID] = currentHealth;
+
+                        if (previousHealth != currentHealth)
+                        {
+                            service.IsHealthy = currentHealth;
+                            changedServices.Add(serviceName);
+                        }
                     }
                 }
             }
@@ -539,7 +550,8 @@ namespace SyZero.Service.LocalServiceManagement
                         ? service.HealthCheckTimeoutSeconds 
                         : _options.HealthCheckTimeoutSeconds));
 
-                var response = await _httpClient.GetAsync(service.HealthCheckUrl, cts.Token);
+                var healthCheckUrl = NormalizeLocalHealthCheckUrl(service.HealthCheckUrl);
+                var response = await _httpClient.GetAsync(healthCheckUrl, cts.Token);
                 return response.IsSuccessStatusCode;
             }
             catch
@@ -818,15 +830,49 @@ namespace SyZero.Service.LocalServiceManagement
         {
             return services
                 .GroupBy(BuildServiceInstanceKey, StringComparer.OrdinalIgnoreCase)
-                .Select(group => group
+                .Select(group => NormalizeLocalService(group
                     .OrderByDescending(HasApiEndpointMetadata)
                     .ThenByDescending(s => s.Enabled && s.IsHealthy)
                     .ThenByDescending(s => s.LastHeartbeat ?? s.RegisterTime)
                     .ThenByDescending(s => s.RegisterTime)
                     .ThenBy(s => s.ServiceID, StringComparer.OrdinalIgnoreCase)
                     .Select(CloneServiceInfo)
-                    .First())
+                    .First()))
                 .ToList();
+        }
+
+        private static ServiceInfo NormalizeLocalService(ServiceInfo service)
+        {
+            if (!string.Equals(
+                NormalizeServiceAddress(service.ServiceAddress),
+                LocalAddressPlaceholder,
+                StringComparison.OrdinalIgnoreCase))
+            {
+                return service;
+            }
+
+            service.ServiceAddress = "localhost";
+            service.HealthCheckUrl = NormalizeLocalHealthCheckUrl(service.HealthCheckUrl);
+            return service;
+        }
+
+        private static string NormalizeLocalHealthCheckUrl(string? healthCheckUrl)
+        {
+            if (string.IsNullOrWhiteSpace(healthCheckUrl)
+                || !Uri.TryCreate(healthCheckUrl, UriKind.Absolute, out var uri)
+                || !string.Equals(
+                    NormalizeServiceAddress(uri.Host),
+                    LocalAddressPlaceholder,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return healthCheckUrl ?? string.Empty;
+            }
+
+            var builder = new UriBuilder(uri)
+            {
+                Host = "localhost"
+            };
+            return builder.Uri.AbsoluteUri;
         }
 
         private static string BuildServiceInstanceKey(ServiceInfo service)

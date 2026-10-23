@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Ocelot.Configuration.File;
-using Ocelot.Configuration.Setter;
+using Ocelot.Configuration.Repository;
 using SyZero.Gateway;
 
 namespace SyZero.Gateway.Ocelot
@@ -32,7 +32,7 @@ namespace SyZero.Gateway.Ocelot
             try
             {
                 var fileConfig = MapToFileConfiguration(configuration);
-                await _setter.Set(fileConfig).ConfigureAwait(false);
+                await _setter.SetAsync(fileConfig, cancellationToken).ConfigureAwait(false);
                 _logger.LogInformation("已将 {Count} 条路由热加载到 Ocelot。", fileConfig.Routes.Count);
             }
             catch (Exception ex)
@@ -55,7 +55,9 @@ namespace SyZero.Gateway.Ocelot
                 file.Routes.Add(new FileRoute
                 {
                     UpstreamPathTemplate = r.UpstreamPathTemplate,
-                    UpstreamHttpMethod = r.UpstreamHttpMethod ?? new List<string>(),
+                    UpstreamHttpMethod = r.UpstreamHttpMethod is null
+                        ? new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                        : new HashSet<string>(r.UpstreamHttpMethod, StringComparer.OrdinalIgnoreCase),
                     DownstreamPathTemplate = r.DownstreamPathTemplate,
                     DownstreamScheme = r.DownstreamScheme,
                     ServiceName = r.ServiceName ?? string.Empty,

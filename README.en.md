@@ -85,7 +85,7 @@ SyZero is a modular microservice framework for .NET. It provides rich components
 
 ## Quick Start
 
-> Current stable release: `v9.1.0`. The interim changes between `v1.2.0` and `v1.6.0` were never published as separate packages and are now shipped together in `v9.1.0`. See [docs/en/release-notes.md](docs/en/release-notes.md) for upgrade notes and breaking changes.
+> Current stable release: `v10.0.0`. This is a major .NET 10 upgrade and does not preserve v9 public API compatibility. See [docs/en/release-notes.md](docs/en/release-notes.md) for migration notes.
 
 ### Install
 
@@ -122,16 +122,15 @@ builder.Services.AddDynamicWebApi(new DynamicWebApiOptions()
     DefaultAreaName = "MyService"
 });
 
-builder.Services.AddSwagger();
+builder.Services.AddSyZeroOpenApi();
 
-builder.Services.AddSyZeroSqlSugar();
+builder.Services.AddSyZeroSqlSugar(builder.Configuration);
 builder.Services.AddSyZeroAutoMapper();
 
 var app = builder.Build();
 
 app.UseSyZero();
-app.UseSwagger();
-app.UseSwaggerUI();
+app.MapSyZeroOpenApi();
 app.MapControllers();
 
 app.Run();
@@ -237,7 +236,13 @@ SyZero/
 │   │   ├── SyZero.Swagger/             # Swagger docs
 │   │   └── SyZero.Web.Common/          # Common web components
 │   ├── SyZero.Gateway/                 # API gateway sample
-│   └── SyZero.Service/                 # Service samples
+│   ├── SyZero.AppHost/                 # Aspire local orchestration host
+│   └── SyZero.Service/                 # Service and client samples
+│       ├── SyZero.Example1.Service/    # Microservice sample 1
+│       ├── SyZero.Example2.Service/    # Microservice sample 2
+│       ├── SyZero.Example3.SPA/        # SPA with a shared back-end host
+│       ├── SyZero.Example4.Monolith/   # Back-end monolith sample
+│       └── SyZero.Example5.Frontend/   # Standalone TypeScript gateway client
 ├── docs/                               # Documentation
 ├── nuget/                              # NuGet packaging scripts
 ├── README.md                           # Chinese README
@@ -246,7 +251,7 @@ SyZero/
 
 ## Tech Stack
 
-- Runtime modules require .NET 9 SDK / Runtime; only `SyZero.SourceGenerator` remains `netstandard2.0` as an analyzer
+- Runtime modules require .NET 10 SDK / Runtime; only `SyZero.SourceGenerator` remains `netstandard2.0` as an analyzer
 - Visual Studio 2022, VS Code, Rider
 - SQL Server, MySQL, MongoDB, PostgreSQL (optional)
 - Redis (optional)
@@ -261,7 +266,7 @@ SyZero/
 
 ## Changelog
 
-See [release notes](docs/en/release-notes.md) for the `v9.1.0` consolidated release and upgrade notes.
+See [release notes](docs/en/release-notes.md) for the `v10.0.0` upgrade and breaking changes.
 
 ## Contributing
 

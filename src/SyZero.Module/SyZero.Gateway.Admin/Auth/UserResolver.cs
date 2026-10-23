@@ -2,8 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -85,25 +83,24 @@ namespace SyZero.Gateway.Admin.Auth
             if (string.IsNullOrEmpty(name) || password is null) return null;
             var u = await FindAsync(name, ct).ConfigureAwait(false);
             if (u is null) return null;
-            return FixedTimeEquals(u.Password ?? string.Empty, password) ? u : null;
+            var storedPassword = u.Password ?? string.Empty;
+            if (!GatewayAdminPasswordHasher.Verify(storedPassword, password))
+            {
+                return null;
+            }
+
+            // 兼容旧版 users.json 明文密码：首次成功登录后透明升级为 PBKDF2。
+            if (!u.IsBuiltIn && !GatewayAdminPasswordHasher.IsHashed(storedPassword))
+            {
+                await _fileStore.UpdateAsync(u.Name, password, null, ct).ConfigureAwait(false);
+            }
+            return u;
         }
 
         public async Task<int> CountAdminsAsync(CancellationToken ct)
         {
             var all = await ListAsync(ct).ConfigureAwait(false);
             return all.Count(u => string.Equals(u.Role, GatewayAdminRoles.Admin, StringComparison.OrdinalIgnoreCase));
-        }
-
-        internal static bool FixedTimeEquals(string a, string b)
-        {
-            var ba = Encoding.UTF8.GetBytes(a ?? string.Empty);
-            var bb = Encoding.UTF8.GetBytes(b ?? string.Empty);
-            if (ba.Length != bb.Length)
-            {
-                CryptographicOperations.FixedTimeEquals(ba, ba);
-                return false;
-            }
-            return CryptographicOperations.FixedTimeEquals(ba, bb);
         }
     }
 }

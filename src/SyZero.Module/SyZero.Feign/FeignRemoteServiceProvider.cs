@@ -84,7 +84,7 @@ namespace SyZero.Feign
 
                 var endPoint = GetServiceEndpoint(serviceManagement, effectiveItem);
 
-                return _factoryManager.CreateProxy(targetType, endPoint, effectiveItem, jsonSerialize);
+                return _factoryManager.CreateProxy(targetType, endPoint, effectiveItem, jsonSerialize, sp);
             });
         }
 

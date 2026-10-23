@@ -27,13 +27,20 @@ namespace SyZero
             configuration?.GetSection(sectionName)?.Bind(options);
             configure?.Invoke(options);
 
-            services.Configure<IdempotencyOptions>(o =>
+            services.AddOptions<IdempotencyOptions>().Configure(o =>
             {
                 o.HeaderName = options.HeaderName;
                 o.ExpirationSeconds = options.ExpirationSeconds;
                 o.InflightRejectionStatusCode = options.InflightRejectionStatusCode;
+                o.ConflictStatusCode = options.ConflictStatusCode;
+                o.MaxResponseBodyBytes = options.MaxResponseBodyBytes;
+                o.MaxRequestBodyBytes = options.MaxRequestBodyBytes;
+                o.ScopeKeyToRequest = options.ScopeKeyToRequest;
                 o.Methods = options.Methods;
-            });
+            }).Validate(o => !string.IsNullOrWhiteSpace(o.HeaderName), "HeaderName 不能为空")
+              .Validate(o => o.ExpirationSeconds > 0, "ExpirationSeconds 必须大于 0")
+              .Validate(o => o.MaxResponseBodyBytes > 0 && o.MaxRequestBodyBytes > 0, "请求/响应大小限制必须大于 0")
+              .ValidateOnStart();
 
             services.TryAddSingleton<IIdempotencyStore, MemoryIdempotencyStore>();
             services.AddSingleton<IdempotencyMiddleware>();

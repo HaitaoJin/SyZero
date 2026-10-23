@@ -150,7 +150,7 @@ services.AddDbContext<MyDbContext>((sp, opt) =>
 
 ## 兼容性
 
-- 目标框架：`net9.0`
+- 目标框架：`net10.0`
 - 依赖：`SyZero.Core`、`Microsoft.AspNetCore.App`（FrameworkReference）
 - `ICurrentTenant.Change(...)` 使用 `AsyncLocal<T>`，跨 `await` 安全。
 

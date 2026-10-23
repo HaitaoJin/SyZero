@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <AssemblyName>SyZero.Example1.Core</AssemblyName>
     <RootNamespace>SyZero.Example1.Core</RootNamespace>
     <Platforms>AnyCPU;x64</Platforms>

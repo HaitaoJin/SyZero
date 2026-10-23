@@ -15,6 +15,7 @@ const guideSidebar = [
       { text: "数据访问与仓储", link: "/guide/data-access" },
       { text: "服务注册与发现", link: "/guide/service-discovery" },
       { text: "事件总线与集成事件", link: "/guide/event-bus" },
+      { text: "AppHost 本地编排与可观测性", link: "/guide/apphost-observability" },
     ],
   },
   {
@@ -24,6 +25,7 @@ const guideSidebar = [
       { text: "SyZero.Gateway 微服务网关示例", link: "/guide/gateway-microservice-demo" },
       { text: "Example3.SPA 单体宿主示例", link: "/guide/example3-spa" },
       { text: "Example4.Monolith 后端单体项目示例", link: "/guide/example4-monolith" },
+      { text: "Example5.Frontend 网关前端示例", link: "/guide/example5-gateway-frontend" },
     ],
   },
 ];
@@ -43,6 +45,7 @@ const enGuideSidebar = [
       { text: "Data Access and Repositories", link: "/en/guide/data-access" },
       { text: "Service Registration and Discovery", link: "/en/guide/service-discovery" },
       { text: "Event Bus and Integration Events", link: "/en/guide/event-bus" },
+      { text: "AppHost Local Orchestration and Observability", link: "/en/guide/apphost-observability" },
     ],
   },
   {
@@ -52,6 +55,7 @@ const enGuideSidebar = [
       { text: "SyZero.Gateway Microservice Gateway Demo", link: "/en/guide/gateway-microservice-demo" },
       { text: "Example3.SPA Single-Host Sample", link: "/en/guide/example3-spa" },
       { text: "Example4.Monolith Back-End Monolith Sample", link: "/en/guide/example4-monolith" },
+      { text: "Example5.Frontend Gateway Client Sample", link: "/en/guide/example5-gateway-frontend" },
     ],
   },
 ];

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 using RestSharp;
 using System;
 using System.Collections.Generic;
@@ -23,8 +24,10 @@ namespace SyZero
         /// <param name="builder"></param>
         /// <param name="configuration"></param>
         /// <returns></returns>
-        public static IServiceCollection AddSyZeroCommon(this IServiceCollection services)
+        public static IServiceCollection AddSyZeroCommon(this IServiceCollection services, IConfiguration configuration)
         {
+            ArgumentNullException.ThrowIfNull(configuration);
+            services.Configure<JwtTokenOptions>(configuration.GetSection(JwtTokenOptions.SectionName));
             services.AddSingleton<IJsonSerialize, JsonSerialize>();
             services.AddSingleton<IXmlSerialize, XmlSerialize>();
             services.AddSingleton<ISyEncode, SyEncode>();

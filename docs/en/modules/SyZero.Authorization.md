@@ -152,6 +152,6 @@ modelBuilder.Entity<RefreshToken>().HasIndex(x => x.UserId);
 
 - `IPermissionChecker.IsHas(name)` is **synchronous** by design (the check stays in-process and uses cached lookups).
 - `ISySession.Principal` is read-only — populate it through the JwtBearer middleware, not by direct assignment.
-- `SyZero.Core` targets `netstandard2.1`; this module targets `net9.0`.
+- All runtime modules, including `SyZero.Core`, target `net10.0`.
 
 For the full Chinese reference (including a four-layer `Web / Application / IApplication / Core` registration + login + protected endpoint sample), see [the Chinese version](/modules/SyZero.Authorization).

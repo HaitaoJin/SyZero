@@ -45,5 +45,6 @@ SyZero 面向希望在 .NET 生态中快速构建微服务系统的团队，提�
 3. 阅读 [数据访问与仓储](/guide/data-access) 选择 EF Core / SqlSugar / MongoDB 路线。
 4. 阅读 [服务注册与发现](/guide/service-discovery) 接入 Local / Redis / Consul / Nacos。
 5. 阅读 [事件总线与集成事件](/guide/event-bus) 设计异步解耦链路。
-6. 按需进入 [模块总览](/modules/index) 选择扩展能力。
-7. 查看 [发布说明](/release-notes) 了解版本变更。
+6. 使用 [AppHost 本地编排与可观测性](/guide/apphost-observability) 一次验证网关、服务互调、日志、跟踪和指标。
+7. 按需进入 [模块总览](/modules/index) 选择扩展能力。
+8. 查看 [发布说明](/release-notes) 了解版本变更。

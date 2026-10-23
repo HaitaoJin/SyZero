@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Description>SyZero 限流模块：包装 .NET 内置 System.Threading.RateLimiting 与 ASP.NET Core RateLimiter 中间件，提供按用户 / 按租户 / 按 IP 的命名分区限流策略；分布式限流可由 SyZero.Redis 实现 IDistributedRateLimiter 提供。</Description>
     <IsPackable>true</IsPackable>
     <Nullable>enable</Nullable>

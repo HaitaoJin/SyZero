@@ -269,17 +269,17 @@ public class ConsulTests
 
         public CancellationToken CancellationToken { get; } = CancellationToken.None;
 
-        public Action<ConsulClientConfiguration>? ConsulClientConfiguration { get; set; }
+        public Action<ConsulClientConfiguration> ConsulClientConfiguration { get; set; } = null!;
 
-        public Action<HttpClient>? ConsulHttpClient { get; set; }
+        public Action<HttpClient> ConsulHttpClient { get; set; } = null!;
 
-        public Action<HttpClientHandler>? ConsulHttpClientHandler { get; set; }
+        public Action<HttpClientHandler> ConsulHttpClientHandler { get; set; } = null!;
 
         public string ServiceKey { get; }
 
         public bool Optional { get; set; }
 
-        public QueryOptions? QueryOptions { get; set; }
+        public QueryOptions QueryOptions { get; set; } = null!;
 
         public int ReloadDelay { get; set; }
 

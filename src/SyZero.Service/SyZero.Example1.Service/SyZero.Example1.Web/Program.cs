@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Builder;
+using SyZero.Swagger;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.Extensions.Configuration;
@@ -9,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
 using SyZero.Example1.Core.DbContext;
+using SyZero.Example1.Application.Examples;
 using SyZero.Example1.Web.Core.Filter;
 using SyZero.DynamicWebApi;
 using SyZero.Web.Common;
@@ -24,11 +26,11 @@ namespace SyZero.Example1.Web
 
             //使用SyZero
             builder.AddSyZero();
+            var serverOptions = builder.Configuration.GetRequiredSection("SyZero").Get<global::SyZero.Configurations.SyZeroServerOptions>()
+                ?? throw new InvalidOperationException("缺少 SyZero 配置节。");
 
             //builder.Configuration.AddNacos(cancellationTokenSource.Token); //Nacos动态配置
             //builder.Configuration.AddConsul(cancellationTokenSource.Token); //Consul动态配置
-
-            builder.WebHost.UseUrls($"{AppConfig.ServerOptions.Protocol}://*:{AppConfig.ServerOptions.Port}");
 
             builder.Logging.AddOpenTelemetry(logging =>
             {
@@ -51,26 +53,26 @@ namespace SyZero.Example1.Web
             builder.Services.AddDynamicWebApi(new DynamicWebApiOptions()
             {
                 DefaultApiPrefix = "/api",
-                DefaultAreaName = AppConfig.ServerOptions.Name
-            });
+                DefaultAreaName = serverOptions.Name
+            }, typeof(Example1AppService).Assembly);
             //Swagger
-            builder.Services.AddSwagger();
+            builder.Services.AddSyZeroOpenApi();
             //使用OpenTelemetry遥测
-            //builder.Services.AddSyZeroOpenTelemetry();
+            builder.Services.AddSyZeroOpenTelemetry(builder.Configuration);
             //使用AutoMapper
             builder.Services.AddSyZeroAutoMapper();
             //使用SqlSugar仓储
-            builder.Services.AddSyZeroSqlSugar<Example1DbContext>();
+            builder.Services.AddSyZeroSqlSugar<Example1DbContext>(builder.Configuration);
             //注入控制器
             builder.Services.AddSyZeroController();
             //注入公共层
-            builder.Services.AddSyZeroCommon();
+            builder.Services.AddSyZeroCommon(builder.Configuration);
             //注入本地服务管理（用于 Feign 服务发现）
-            builder.Services.AddLocalServiceManagement();
+            builder.Services.AddLocalServiceManagement(builder.Configuration);
             //注入Consul
-            //builder.Services.AddConsul();
+            //builder.Services.AddConsul(builder.Configuration);
             //注入Feign
-            builder.Services.AddSyZeroFeign();
+            builder.Services.AddSyZeroFeign(builder.Configuration);
 
             // ============================================================
             // v1.5.0 集成示例（默认开启 GraphQL；其余以注释提供）
@@ -116,13 +118,7 @@ namespace SyZero.Example1.Web
             app.MapControllers();
             // GraphQL 端点（默认 /graphql）
             app.MapSyZeroGraphQL();
-            app.UseSwagger();
-            app.UseSwaggerUI(c =>
-            {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "SyZero.Example1.Web API V1");
-                c.RoutePrefix = "api/swagger";
-
-            });
+            app.MapSyZeroOpenApi();
             app.InitTables();
             app.Run();
         }

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Description>SyZero 多语言资源抽象：包装 Microsoft.Extensions.Localization，提供 ISyStringLocalizer。</Description>
     <IsPackable>true</IsPackable>
     <Nullable>enable</Nullable>

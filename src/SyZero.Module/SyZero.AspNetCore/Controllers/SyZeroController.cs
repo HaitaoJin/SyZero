@@ -5,7 +5,6 @@ using System;
 using SyZero.Cache;
 using SyZero.ObjectMapper;
 using SyZero.Runtime.Session;
-using SyZero.Util;
 
 namespace SyZero.AspNetCore.Controllers
 {
@@ -65,8 +64,7 @@ namespace SyZero.AspNetCore.Controllers
         private IServiceProvider GetServiceProvider()
         {
             return HttpContext?.RequestServices
-                   ?? SyZeroUtil.ServiceProvider
-                   ?? throw new InvalidOperationException("SyZero controller services have not been initialized.");
+                   ?? throw new InvalidOperationException("控制器尚未绑定 HttpContext，无法解析请求作用域服务。");
         }
 
         private TService GetRequiredService<TService>() where TService : class

@@ -13,7 +13,7 @@ namespace SyZero.Tests;
 /// 1) <see cref="ReflectionHelper.GetAssemblies"/> 必须能加载真实的运行时程序集
 ///    （历史 bug：用 lib.Name 调 Assembly.Load 失败时静默吞异常，导致 SyZero.Core
 ///     程序集从未被扫描）。
-/// 2) <see cref="ServiceCollectionExtensions.AddClassesAsImplementedInterface"/>
+/// 2) ServiceCollectionExtensions 的标记接口自动注册能力
 ///    必须支持非泛型标记接口（IScopedDependency / ISingletonDependency /
 ///    ITransientDependency）。
 /// </summary>
@@ -51,5 +51,21 @@ public class DependencyAutoRegistrationTests
 
         Assert.NotNull(resolved);
         Assert.IsType<DefaultJsonSerialize>(resolved);
+    }
+
+    [Fact]
+    public void AddClassesAsImplementedInterface_Registers_ConcreteMarkerDependency()
+    {
+        var services = new ServiceCollection();
+
+        services.AddClassesAsImplementedInterface(
+            typeof(IScopedDependency),
+            ServiceLifetime.Scoped);
+
+        Assert.Contains(services, descriptor =>
+            descriptor.ServiceType == typeof(SyZeroServiceDependencies)
+            && descriptor.ImplementationType == typeof(SyZeroServiceDependencies)
+            && descriptor.Lifetime == ServiceLifetime.Scoped);
+        Assert.DoesNotContain(services, descriptor => descriptor.ServiceType == typeof(IScopedDependency));
     }
 }

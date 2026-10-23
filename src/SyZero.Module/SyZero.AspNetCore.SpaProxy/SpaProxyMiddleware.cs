@@ -83,7 +83,7 @@ namespace SyZero.AspNetCore.SpaProxy
                 return false;
             }
 
-            if (context.Request.Path.StartsWithSegments("/swagger", StringComparison.OrdinalIgnoreCase) ||
+            if (context.Request.Path.StartsWithSegments("/openapi", StringComparison.OrdinalIgnoreCase) ||
                 context.Request.Path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase))
             {
                 return false;

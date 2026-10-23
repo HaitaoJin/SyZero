@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Description>SyZero 后台任务的 Quartz 适配：Cron / 调度托管，复用 IBackgroundJob&lt;TArgs&gt; 抽象。</Description>
     <IsPackable>true</IsPackable>
     <Nullable>enable</Nullable>

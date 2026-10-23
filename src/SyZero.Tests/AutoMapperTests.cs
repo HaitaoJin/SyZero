@@ -24,6 +24,7 @@ public class AutoMapperTests
         });
 
         Assert.IsType<SyZero.ObjectMapping.AutoMapper.ObjectMapper>(objectMapper);
+        Assert.NotNull(destination);
         Assert.Equal(7, destination.Id);
         Assert.Equal("alice", destination.Name);
         Assert.Equal(["a", "b"], destination.Values);
@@ -45,6 +46,7 @@ public class AutoMapperTests
             Values = null
         });
 
+        Assert.NotNull(destination);
         Assert.Equal(9, destination.Id);
         Assert.Equal("bob", destination.Name);
         Assert.Null(destination.Values);

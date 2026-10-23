@@ -18,7 +18,7 @@ dotnet add package SyZero.EventBus.RabbitMQ
 ## Quick Start
 
 ```csharp
-builder.Services.AddRabbitMQEventBus();
+builder.Services.AddRabbitMQEventBus(builder.Configuration);
 ```
 
 ## Configuration Example (appsettings.json)

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Description>SyZero 多租户模块：ICurrentTenant / ITenantStore / ITenantResolver（Header / Domain / Claim） + ASP.NET Core 中间件，单库 Filter 默认实现，可扩展到分库</Description>
     <IsPackable>true</IsPackable>
   </PropertyGroup>

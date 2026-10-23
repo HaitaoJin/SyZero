@@ -118,7 +118,7 @@ public class RabbitMQTests
             .Build();
 
         var services = new ServiceCollection();
-        services.AddRabbitMQEventBus(options => options.RetryCount = 0, configuration);
+        services.AddRabbitMQEventBus(configuration, options => options.RetryCount = 0);
 
         using var provider = services.BuildServiceProvider();
         var options = provider.GetRequiredService<RabbitMQEventBusOptions>();

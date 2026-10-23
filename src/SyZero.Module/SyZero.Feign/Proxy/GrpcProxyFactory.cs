@@ -1,6 +1,7 @@
 using Grpc.Net.Client;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -8,7 +9,6 @@ using System.Linq;
 using System.Reflection;
 using SyZero.Client.RemoteService;
 using SyZero.Serialization;
-using SyZero.Util;
 
 namespace SyZero.Feign.Proxy
 {
@@ -22,16 +22,9 @@ namespace SyZero.Feign.Proxy
         /// </summary>
         private static readonly ConcurrentDictionary<string, GrpcChannel> _channelCache = new ConcurrentDictionary<string, GrpcChannel>();
 
-        private static ILogger ResolveLogger()
+        private static ILogger ResolveLogger(IServiceProvider serviceProvider)
         {
-            try
-            {
-                return SyZeroUtil.GetService<ILogger<GrpcProxyFactory>>() ?? (ILogger)NullLogger<GrpcProxyFactory>.Instance;
-            }
-            catch
-            {
-                return NullLogger<GrpcProxyFactory>.Instance;
-            }
+            return serviceProvider.GetService<ILogger<GrpcProxyFactory>>() ?? NullLogger<GrpcProxyFactory>.Instance;
         }
 
         /// <summary>
@@ -42,7 +35,7 @@ namespace SyZero.Feign.Proxy
         /// <summary>
         /// 创建 gRPC 代理实例
         /// </summary>
-        public object CreateProxy(Type targetType, string endPoint, RemoteServiceItem service, IJsonSerialize jsonSerialize)
+        public object CreateProxy(Type targetType, string endPoint, RemoteServiceItem service, IJsonSerialize jsonSerialize, IServiceProvider serviceProvider)
         {
             try
             {
@@ -62,7 +55,7 @@ namespace SyZero.Feign.Proxy
             }
             catch (Exception ex)
             {
-                ResolveLogger().LogError(ex, "gRPC 代理创建失败: EndPoint({EndPoint}) ServiceName({ServiceName})", endPoint, service?.ServiceName);
+                ResolveLogger(serviceProvider).LogError(ex, "gRPC 代理创建失败: EndPoint({EndPoint}) ServiceName({ServiceName})", endPoint, service?.ServiceName);
                 throw;
             }
         }

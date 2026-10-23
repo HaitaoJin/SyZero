@@ -30,9 +30,11 @@ namespace SyZero
                 o.PollIntervalSeconds = options.PollIntervalSeconds;
                 o.BatchSize = options.BatchSize;
                 o.MaxRetryCount = options.MaxRetryCount;
+                o.LeaseSeconds = options.LeaseSeconds;
             });
 
             services.TryAddSingleton<IOutboxStore, MemoryOutboxStore>();
+            services.TryAddSingleton<IInboxStore, MemoryInboxStore>();
             services.AddHostedService<OutboxBackgroundService>();
             return services;
         }

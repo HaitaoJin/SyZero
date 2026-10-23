@@ -13,30 +13,24 @@ namespace SyZero
     public static class SyZeroMongoDBExtension
     {
         /// <summary>
-        /// 使用 AppConfig 中的 MongoDB 配置注册服务
-        /// </summary>
-        public static IServiceCollection AddSyZeroMongoDB(this IServiceCollection services)
-        {
-            var options = AppConfig.GetSection<SyZero.MongoDB.MongoOptions>("MongoDB") ?? new SyZero.MongoDB.MongoOptions();
-            return services.AddSyZeroMongoDB(options);
-        }
-
-        /// <summary>
-        /// 使用指定配置注册服务
+        /// 使用 MongoDB 配置节注册服务
         /// </summary>
         public static IServiceCollection AddSyZeroMongoDB(this IServiceCollection services, IConfiguration configuration, string sectionName = "MongoDB")
         {
+            ArgumentNullException.ThrowIfNull(configuration);
             var options = new SyZero.MongoDB.MongoOptions();
-            configuration?.GetSection(sectionName)?.Bind(options);
+            configuration.GetSection(sectionName).Bind(options);
             return services.AddSyZeroMongoDB(options);
         }
 
         /// <summary>
         /// 使用默认配置并允许额外覆盖注册服务
         /// </summary>
-        public static IServiceCollection AddSyZeroMongoDB(this IServiceCollection services, Action<SyZero.MongoDB.MongoOptions> optionsAction)
+        public static IServiceCollection AddSyZeroMongoDB(this IServiceCollection services, IConfiguration configuration, Action<SyZero.MongoDB.MongoOptions> optionsAction, string sectionName = "MongoDB")
         {
-            var options = AppConfig.GetSection<SyZero.MongoDB.MongoOptions>("MongoDB") ?? new SyZero.MongoDB.MongoOptions();
+            ArgumentNullException.ThrowIfNull(configuration);
+            var options = new SyZero.MongoDB.MongoOptions();
+            configuration.GetSection(sectionName).Bind(options);
             optionsAction?.Invoke(options);
             return services.AddSyZeroMongoDB(options);
         }

@@ -5,20 +5,16 @@ namespace Microsoft.Extensions.Configuration
 {
     public static class NacosConfigurationBuilderExtensions
     {
-        public static IConfigurationBuilder AddNacos(this IConfigurationBuilder builder, IConfiguration configuration = null, string sectionName = "NacosConfig")
+        public static IConfigurationBuilder AddNacos(this IConfigurationBuilder builder, IConfiguration configuration, string sectionName = "NacosConfig")
         {
             if (builder == null)
             {
                 throw new ArgumentNullException(nameof(builder));
             }
 
-            var config = configuration ?? SyZero.AppConfig.Configuration;
-            if (config == null)
-            {
-                throw new ArgumentNullException(nameof(configuration));
-            }
+            ArgumentNullException.ThrowIfNull(configuration);
 
-            return builder.AddNacosV2Configuration(config.GetSection(sectionName));
+            return builder.AddNacosV2Configuration(configuration.GetSection(sectionName));
         }
 
         public static IConfigurationBuilder AddNacos(this IConfigurationBuilder builder, Action<NacosV2ConfigurationSource> action)
@@ -36,7 +32,7 @@ namespace Microsoft.Extensions.Configuration
             return builder.AddNacosV2Configuration(action);
         }
 
-        public static IConfigurationBuilder AddNacosConfiguration(this IConfigurationBuilder builder, IConfiguration configuration = null, string sectionName = "NacosConfig")
+        public static IConfigurationBuilder AddNacosConfiguration(this IConfigurationBuilder builder, IConfiguration configuration, string sectionName = "NacosConfig")
         {
             return builder.AddNacos(configuration, sectionName);
         }

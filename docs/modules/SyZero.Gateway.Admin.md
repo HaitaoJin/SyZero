@@ -100,7 +100,9 @@ REST：
 | `DELETE /admin-api/users/{name}` | 删除 file 用户；最后一个 Admin / 当前登录用户 / `IsBuiltIn=true` 均不可删 |
 | `POST /admin-api/me/password` | 任意登录用户改自己密码。Body：`{ "oldPassword", "newPassword" }` |
 
-文件 `users.json` 由 `FileGatewayAdminUserStore` 维护：写入临时文件后原子 replace，进程内 `SemaphoreSlim` 串行化；不支持跨实例同步（多实例部署请将所有账号收敛到 `Users[]`）。
+文件 `users.json` 由 `FileGatewayAdminUserStore` 维护：密码使用 PBKDF2-SHA256（随机盐、120,000 次迭代）存储，写入临时文件后原子 replace，进程内 `SemaphoreSlim` 串行化；旧版明文密码会在首次成功登录后透明升级。不支持跨实例同步（多实例部署请将所有账号收敛到 `Users[]`）。登录 Cookie 使用 ASP.NET Core Data Protection 加密与签名，不再暴露 Base64 明文凭据。
+
+> 多实例部署若需要 Cookie 在实例间通用，请按 ASP.NET Core Data Protection 的标准方式共享密钥环并设置统一的应用名称；未共享密钥时，用户切换实例后需要重新登录。
 
 ### 登录失败限流
 
@@ -189,6 +191,7 @@ builder.Services
 | `GET /admin/routes` | 路由 CRUD（搜索 / 上下移 / 克隆 / ServiceName 自动补全 / 拖拽排序 / Markdown 描述 / YAML 导入导出 / 列显示设置 / 表头点击三态排序 / 一键发送到测试器） |
 | `GET /admin/route-overview` | 路由概览：按 ServiceName 分组统计、标签 / 方法分布 |
 | `GET /admin/swagger-endpoints` | Swagger 端点 CRUD |
+| `GET /admin/service-interfaces` | 服务接口总览：读取注册中心中下游服务上报的 HTTP 接口，支持按服务 / 方法 / 关键字筛选；点击 Path 可携带方法与路径跳转到路由测试器 |
 | `GET /admin/backups` | 备份列表，支持下载 / 还原 / 删除 |
 | `GET /admin/raw-editor` | 原生 JSON 编辑器（导入 / 导出 / 全量替换） |
 | `GET /admin/diff` | 磁盘 vs 运行时配置的行级 Diff |
@@ -196,7 +199,7 @@ builder.Services
 | `GET /admin/users` | **`v9.1.0` 提供** 用户与角色管理（仅 Admin 可写） |
 | `GET /admin/rate-limiting` | **`v9.1.0` 提供** 全局 + 单路由限流配置 |
 | `GET /admin/load-balancing` | **`v9.1.0` 提供** 单路由负载均衡器类型管理 |
-| `GET /admin/tester` | 浏览器侧路由测试器（直发 fetch，不经管理 API），支持 URL 查询参数 `?method=&url=&headers=&body=` 预填表单，自动保存最近 20 条历史到 localStorage；Routes 页操作列「▶」一键发送；同时提供「收藏夹」（按分组列表，一键回填 / 转 cURL）以及 cURL 命令双向互转、收藏夹 JSON 导入导出 |
+| `GET /admin/tester` | 浏览器侧路由测试器（直发 fetch，不经管理 API），支持 URL 查询参数 `?method=&url=&headers=&body=` 预填表单，自动保存最近 20 条历史到 localStorage；Routes 页操作列「▶」和服务接口页的 Path 均可一键发送；同时提供「收藏夹」（按分组列表，一键回填 / 转 cURL）以及 cURL 命令双向互转、收藏夹 JSON 导入导出 |
 | `GET /admin/login` | **`v9.1.0` 提供** 美化登录页（玻璃拟态 + 渐变背景，支持「记住我 7 天」） |
 | `GET /admin/logout` | 清除登录 cookie 并跳转登录页 |
 
@@ -223,6 +226,7 @@ builder.Services
 | `GET /admin-api/swagger-endpoints/export?format=json\|yaml` | 仅导出 Swagger 端点列表 |
 | `POST /admin-api/swagger-endpoints/import?format=json\|yaml&mode=append\|merge\|replace` | Body 为端点列表文本；`append` 拒绝 Key 冲突，`merge` 按 Key 覆盖/新增，`replace` 全量覆盖 |
 | `GET /admin-api/services` | 服务发现的服务名列表（来自 `IServiceManagement`，未注册时返回空+`Available=false`） |
+| `GET /admin-api/service-interfaces[?service=服务名]` | 聚合注册中心中的服务实例与 HTTP 接口元数据；可按服务名精确筛选，返回 `Available`、服务版本、实例健康统计、Swagger JSON 地址与去重后的接口列表 |
 | `GET /admin-api/backups` | 备份列表（`Id`/`CreatedAt`/`SizeBytes`） |
 | `GET /admin-api/backups/{id}/download` | 下载备份文件 |
 | `POST /admin-api/backups/{id}/restore` | 用备份覆盖当前配置（写入前再次自动备份） |
@@ -239,6 +243,18 @@ builder.Services
 | `GET /admin-api/auth/captcha` | **`v9.1.0` 提供** 颁发新算术验证码，返回 `{ id, question }` |
 
 > 备份/审计的可选能力由 `IGatewayConfigurationStore` 的默认接口方法承载（详见下文「抽象扩展」），不支持的实现会返回 `501 Not Supported`。
+
+### 服务接口与路由测试器
+
+下游服务在 `app.UseSyZero()` 启动注册流程时，会自动收集 ASP.NET Core 端点，并将 HTTP 方法、路径模板、分组、Controller、Action 与显示名写入服务实例元数据。管理面板通过 `IServiceManagement` 读取这些元数据；同一服务的多个实例会按 `Method + Path` 去重后展示。
+
+在 `/admin/service-interfaces` 中点击任意 Path，会跳转到：
+
+```text
+/admin/tester?method=<HTTP_METHOD>&url=<PATH>
+```
+
+测试器使用浏览器端 `fetch`，Path 链接会把服务上报的路径模板原样预填为相对 URL。若网关的上游路由增加了前缀（例如服务上报 `/api/orders/{id}`，而网关入口是 `/example1/api/orders/{id}`），请在发送前补上该前缀；也需要将 `{id}` 等模板参数替换为实际值，并按需补充鉴权、请求头或请求体。服务已注册但没有接口数据时，请确认下游服务使用了支持接口元数据上报的版本，并在升级后重新启动服务完成注册。
 
 ## 🧩 抽象扩展（向后兼容）
 
@@ -288,13 +304,13 @@ Task DeleteBackupAsync(string id, CancellationToken ct = default);
 - 默认路径：`<ContentRoot>/logs/gateway-admin-audit.jsonl`
 - 单条目字段：`Timestamp`(UTC) / `User` / `Ip` / `Action` / `Target` / `Summary`
 - `Action` 取值示例：`route.create`、`route.update`、`route.delete`、`route.move`、`route.clone`、`swagger.create/update/delete`、`config.reload`、`config.replace`、`backup.restore`、`backup.delete`
-- 默认实现是简单的全量读取 + 截取最后 N 行，**不做轮转**——大流量场景建议接管 `IGatewayAdminAuditLog` 自行实现。
+- 默认实现会流式扫描文件且仅在内存保留最后 N 行，但**不做轮转**——大流量场景仍建议接管 `IGatewayAdminAuditLog` 自行实现或配置外部日志归档。
 
 ## ⚠️ 注意事项
 
 - **Razor Pages 来自类库**：模块通过 `Microsoft.NET.Sdk.Razor` 把视图嵌入 dll，宿主无需任何 `Pages/` 文件。
 - **必须在 Ocelot 之前注册**：`UseSyZeroGatewayAdmin` 与 `MapControllers/MapRazorPages` 都要排在 Ocelot 接管 pipeline 之前。
-- **Swagger 端点修改不会热更新**：`MMLib.SwaggerForOcelot` 只在启动时读取 `SwaggerEndPoints`，UI 中也已用横幅提示。修改后请重启进程或所属容器。
+- **文档端点是通用元数据**：v10 Ocelot Provider 不再内置 Swagger 聚合器；`SwaggerEndPoints` 可供自定义 OpenAPI 门户读取。
 - **`configuration.json` 中的 `//` 注释会在保存时丢失**（System.Text.Json 不写注释）。如需保留行内注释，请走 `git diff` 审查变更。
 - **生产部署务必启用 HTTPS**：Basic Auth 在明文 HTTP 上等同于裸密码，请配合反向代理或 Kestrel 直连 TLS 使用。
 

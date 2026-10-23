@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Refit;
 using SyZero.Application.Routing;
@@ -13,16 +14,14 @@ using SyZero.Runtime.Security;
 using SyZero.Runtime.Session;
 using SyZero.Serialization;
 using SyZero.Service;
-using SyZero.Util;
 using Xunit;
 
 namespace SyZero.Tests;
 
-[Collection("AppConfig")]
 public class FeignTests
 {
     [Fact]
-    public async Task RequestFeignHandler_BuildsDynamicApiPath_WithoutServiceNamePrefix()
+    public async Task RequestFeignHandler_BuildsDynamicApiPath_WithServiceNamePrefix()
     {
         var innerHandler = new CaptureHandler();
         var handler = new RequestFeignHandler("sample-service", innerHandler);
@@ -32,7 +31,7 @@ public class FeignTests
 
         await client.SendAsync(request);
 
-        Assert.Equal("/api/orders/orders/list", innerHandler.LastRequest!.RequestUri!.AbsolutePath);
+        Assert.Equal("/api/sample-service/orders/orders/list", innerHandler.LastRequest!.RequestUri!.AbsolutePath);
     }
 
     [Fact]
@@ -58,18 +57,13 @@ public class FeignTests
 
         await client.SendAsync(request);
 
-        Assert.Equal("/api/example2/GetServiceInfo", innerHandler.LastRequest!.RequestUri!.AbsolutePath);
+        Assert.Equal("/api/sample-service/example2/GetServiceInfo", innerHandler.LastRequest!.RequestUri!.AbsolutePath);
     }
 
     [Fact]
     public async Task AuthenticationFeignHandler_PreservesExistingAuthorizationHeader()
     {
-        var previousProvider = SyZeroUtil.ServiceProvider;
-        var services = new ServiceCollection();
-        services.AddScoped<ISySession>(_ => new TestSySession("session-token"));
-
-        using var provider = services.BuildServiceProvider();
-        using var client = new HttpClient(new AuthenticationFeignHandler("sample-service", new CaptureHandler()));
+        using var client = new HttpClient(new AuthenticationFeignHandler(new TestSySession("session-token"), new CaptureHandler()));
         using var request = new HttpRequestMessage(HttpMethod.Get, "http://localhost/test")
         {
             Headers =
@@ -78,43 +72,20 @@ public class FeignTests
             }
         };
 
-        try
-        {
-            SyZeroUtil.ServiceProvider = provider;
+        await client.SendAsync(request);
 
-            await client.SendAsync(request);
-
-            Assert.Equal("external-token", request.Headers.Authorization?.Parameter);
-        }
-        finally
-        {
-            SyZeroUtil.ServiceProvider = previousProvider;
-        }
+        Assert.Equal("external-token", request.Headers.Authorization?.Parameter);
     }
 
     [Fact]
     public async Task AuthenticationFeignHandler_SkipsBlankToken()
     {
-        var previousProvider = SyZeroUtil.ServiceProvider;
-        var services = new ServiceCollection();
-        services.AddScoped<ISySession>(_ => new TestSySession(" "));
-
-        using var provider = services.BuildServiceProvider();
-        using var client = new HttpClient(new AuthenticationFeignHandler("sample-service", new CaptureHandler()));
+        using var client = new HttpClient(new AuthenticationFeignHandler(new TestSySession(" "), new CaptureHandler()));
         using var request = new HttpRequestMessage(HttpMethod.Get, "http://localhost/test");
 
-        try
-        {
-            SyZeroUtil.ServiceProvider = provider;
+        await client.SendAsync(request);
 
-            await client.SendAsync(request);
-
-            Assert.Null(request.Headers.Authorization);
-        }
-        finally
-        {
-            SyZeroUtil.ServiceProvider = previousProvider;
-        }
+        Assert.Null(request.Headers.Authorization);
     }
 
     [Fact]
@@ -244,7 +215,7 @@ public class FeignTests
     {
         var method = typeof(HttpProxyFactory).GetMethod("CreateRefitSettings", BindingFlags.Instance | BindingFlags.NonPublic)
             ?? throw new MissingMethodException(typeof(HttpProxyFactory).FullName, "CreateRefitSettings");
-        var settings = (RefitSettings)method.Invoke(new HttpProxyFactory(), [new DefaultJsonSerialize()])!;
+        var settings = (RefitSettings)method.Invoke(new HttpProxyFactory(), [new DefaultJsonSerialize(), NullLogger.Instance])!;
 
         Assert.NotNull(settings.DeserializationExceptionFactory);
         var deserializationException = await settings.DeserializationExceptionFactory!(
@@ -290,7 +261,7 @@ public class FeignTests
         var requestHandler = new RequestFeignHandler("SyZero.Example2", responseHandler);
         var method = typeof(HttpProxyFactory).GetMethod("CreateRefitSettings", BindingFlags.Instance | BindingFlags.NonPublic)
             ?? throw new MissingMethodException(typeof(HttpProxyFactory).FullName, "CreateRefitSettings");
-        var settings = (RefitSettings)method.Invoke(new HttpProxyFactory(), [new DefaultJsonSerialize()])!;
+        var settings = (RefitSettings)method.Invoke(new HttpProxyFactory(), [new DefaultJsonSerialize(), NullLogger.Instance])!;
         using var client = new HttpClient(requestHandler)
         {
             BaseAddress = new Uri("http://localhost:5003")
@@ -370,7 +341,7 @@ public class FeignTests
 
         public RemoteServiceProtocol Protocol { get; }
 
-        public object CreateProxy(Type targetType, string endPoint, RemoteServiceItem service, IJsonSerialize jsonSerialize)
+        public object CreateProxy(Type targetType, string endPoint, RemoteServiceItem service, IJsonSerialize jsonSerialize, IServiceProvider serviceProvider)
         {
             return new object();
         }

@@ -14,17 +14,20 @@ namespace SyZero.BackgroundJobs
         private readonly IServiceProvider _services;
         private readonly ILogger<BackgroundJobWorker> _logger;
         private readonly BackgroundJobsOptions _options;
+        private readonly IBackgroundJobStateStore _states;
 
         public BackgroundJobWorker(
             BackgroundJobChannel channel,
             IServiceProvider services,
             ILogger<BackgroundJobWorker> logger,
-            IOptions<BackgroundJobsOptions> options)
+            IOptions<BackgroundJobsOptions> options,
+            IBackgroundJobStateStore states)
         {
             _channel = channel;
             _services = services;
             _logger = logger;
             _options = options.Value;
+            _states = states;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -45,7 +48,9 @@ namespace SyZero.BackgroundJobs
             {
                 try
                 {
+                    await _states.SaveAsync(new(item.Id, item.JobTypeName, BackgroundJobStatus.Running, item.Attempt, item.EnqueuedAtUtc, DateTime.UtcNow), ct).ConfigureAwait(false);
                     await item.Invoke(_services, ct).ConfigureAwait(false);
+                    await _states.SaveAsync(new(item.Id, item.JobTypeName, BackgroundJobStatus.Succeeded, item.Attempt, item.EnqueuedAtUtc, DateTime.UtcNow), ct).ConfigureAwait(false);
                 }
                 catch (OperationCanceledException) when (ct.IsCancellationRequested)
                 {
@@ -54,6 +59,17 @@ namespace SyZero.BackgroundJobs
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "[BgJobs#{Worker}] 任务 {Job} 执行失败", index, item.JobTypeName);
+                    item.Attempt++;
+                    if (item.Attempt <= Math.Max(0, _options.MaxRetryCount))
+                    {
+                        await _states.SaveAsync(new(item.Id, item.JobTypeName, BackgroundJobStatus.RetryScheduled, item.Attempt, item.EnqueuedAtUtc, DateTime.UtcNow, ex.Message), ct).ConfigureAwait(false);
+                        await Task.Delay(TimeSpan.FromSeconds(Math.Max(0, _options.RetryDelaySeconds)), ct).ConfigureAwait(false);
+                        await _channel.Channel.Writer.WriteAsync(item, ct).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        await _states.SaveAsync(new(item.Id, item.JobTypeName, BackgroundJobStatus.DeadLettered, item.Attempt, item.EnqueuedAtUtc, DateTime.UtcNow, ex.Message), ct).ConfigureAwait(false);
+                    }
                 }
             }
         }

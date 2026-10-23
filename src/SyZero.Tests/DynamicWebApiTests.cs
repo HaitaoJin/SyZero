@@ -2,8 +2,11 @@ using System.Reflection;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.ActionConstraints;
+using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SyZero.Application.Attributes;
+using SyZero.Application.DynamicApi;
 using SyZero.Application.Service;
 using SyZero.Client;
 using SyZero.DynamicWebApi;
@@ -12,32 +15,22 @@ using Xunit;
 
 namespace SyZero.Tests;
 
-[Collection("AppConfig")]
 public class DynamicWebApiTests
 {
     [Fact]
-    public void AddDynamicWebApi_AllowsMissingConfiguration_AndAvoidsDuplicateFeatureProviders()
+    public void AddDynamicWebApi_WithEmptyConfiguration_AvoidsDuplicateFeatureProviders()
     {
-        var previousConfiguration = AppConfig.Configuration;
-        AppConfig.Configuration = null!;
+        var configuration = new ConfigurationBuilder().Build();
+        var services = new ServiceCollection();
+        services.AddControllers();
 
-        try
-        {
-            var services = new ServiceCollection();
-            services.AddControllers();
+        services.AddDynamicWebApi(configuration);
+        services.AddDynamicWebApi(configuration);
 
-            services.AddDynamicWebApi(configuration: null);
-            services.AddDynamicWebApi(configuration: null);
+        using var provider = services.BuildServiceProvider();
+        var partManager = provider.GetRequiredService<ApplicationPartManager>();
 
-            using var provider = services.BuildServiceProvider();
-            var partManager = provider.GetRequiredService<ApplicationPartManager>();
-
-            Assert.Single(partManager.FeatureProviders.OfType<DynamicWebApiControllerFeatureProvider>());
-        }
-        finally
-        {
-            AppConfig.Configuration = previousConfiguration;
-        }
+        Assert.Single(partManager.FeatureProviders.OfType<DynamicWebApiControllerFeatureProvider>());
     }
 
     [Fact]
@@ -52,6 +45,31 @@ public class DynamicWebApiTests
         Assert.False(provider.Check(typeof(NonWebApiAppService)));
         Assert.False(provider.Check(typeof(ExcludedDynamicApiAppService)));
         Assert.False(provider.Check(typeof(FallbackDynamicApiAppService)));
+    }
+
+    [Fact]
+    public void AddDynamicWebApi_DiscoversApplicationLayerControllers()
+    {
+        DynamicWebApiControllerFeatureProvider.ClearCache();
+        DynamicApiAttributeCache.Clear();
+
+        var services = new ServiceCollection();
+        services.AddControllers();
+        services.AddDynamicWebApi(new DynamicWebApiOptions
+        {
+            DefaultApiPrefix = "/api",
+            DefaultAreaName = "SyZero.Example3"
+        });
+
+        using var provider = services.BuildServiceProvider();
+        var partManager = provider.GetRequiredService<ApplicationPartManager>();
+        var feature = new ControllerFeature();
+        partManager.PopulateFeature(feature);
+
+        Assert.Contains(DynamicApiAssemblyScanner.GetAssemblies(),
+            assembly => assembly.GetName().Name == "SyZero.Example3.Application");
+        Assert.Contains(feature.Controllers,
+            controller => controller.FullName == "SyZero.Example3.Application.Examples.Example3AppService");
     }
 
     [Fact]
@@ -119,6 +137,27 @@ public class DynamicWebApiTests
         Assert.Null(exception);
         Assert.Equal("default-area", controller.RouteValues["area"]);
         Assert.Equal("api/default-area/attributelessdynamicapp", controller.Selectors.Single().AttributeRouteModel!.Template);
+    }
+
+    [Fact]
+    public void Convention_UsesDefaultArea_WhenDynamicApiModuleIsEmpty()
+    {
+        DynamicWebApiConvention.ClearCache();
+
+        var controller = CreateControllerModel(typeof(EmptyModuleDynamicAppService), "EmptyModuleDynamicAppService");
+        controller.Actions.Add(CreateActionModel(typeof(EmptyModuleDynamicAppService).GetMethod(nameof(EmptyModuleDynamicAppService.PingAsync))!));
+
+        var application = new ApplicationModel();
+        application.Controllers.Add(controller);
+
+        new DynamicWebApiConvention(new DynamicWebApiOptions
+        {
+            DefaultAreaName = "SyZero.Example",
+            DefaultApiPrefix = "api",
+            EnableLowerCaseRoutes = false
+        }).Apply(application);
+
+        Assert.Equal("api/SyZero.Example/EmptyModuleDynamic", controller.Selectors.Single().AttributeRouteModel!.Template);
     }
 
     private static ControllerModel CreateControllerModel(Type controllerType, string controllerName)
@@ -216,6 +255,16 @@ public class GeneratedAppService : IGeneratedAppService
 }
 
 public class AttributeLessDynamicAppService : IDynamicApi
+{
+    public Task<string> PingAsync(WidgetInput input) => Task.FromResult(input.Name);
+}
+
+[DynamicApi]
+public interface IEmptyModuleDynamicAppService : IDynamicApi
+{
+}
+
+public class EmptyModuleDynamicAppService : IEmptyModuleDynamicAppService
 {
     public Task<string> PingAsync(WidgetInput input) => Task.FromResult(input.Name);
 }

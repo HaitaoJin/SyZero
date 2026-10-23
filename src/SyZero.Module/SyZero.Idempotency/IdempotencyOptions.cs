@@ -22,6 +22,18 @@ namespace SyZero.Idempotency
         /// </summary>
         public int InflightRejectionStatusCode { get; set; } = 409;
 
+        /// <summary>同一个幂等键对应不同请求内容时返回的状态码。</summary>
+        public int ConflictStatusCode { get; set; } = 422;
+
+        /// <summary>允许缓存的最大响应体字节数，默认 1 MiB。</summary>
+        public int MaxResponseBodyBytes { get; set; } = 1024 * 1024;
+
+        /// <summary>计算请求指纹时读取的最大请求体字节数，默认 1 MiB。</summary>
+        public int MaxRequestBodyBytes { get; set; } = 1024 * 1024;
+
+        /// <summary>将用户、租户、HTTP 方法与路径加入存储键，避免跨调用方冲突。</summary>
+        public bool ScopeKeyToRequest { get; set; } = true;
+
         /// <summary>
         /// 仅对这些 HTTP 方法生效（默认 POST / PUT / PATCH / DELETE；GET / HEAD 默认幂等）。
         /// </summary>

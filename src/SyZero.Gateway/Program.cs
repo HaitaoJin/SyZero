@@ -19,21 +19,19 @@ namespace SyZero.Gateway
 
             builder.AddSyZero();
             builder.Configuration.AddJsonFile("configuration.json", optional: false, reloadOnChange: true);
-            builder.WebHost.UseUrls($"{AppConfig.ServerOptions.Protocol}://*:{AppConfig.ServerOptions.Port}");
-
+            var serverOptions = builder.Configuration.GetRequiredSection("SyZero").Get<global::SyZero.Configurations.SyZeroServerOptions>()
+                ?? throw new InvalidOperationException("缺少 SyZero 配置节。");
             builder.Logging.AddOpenTelemetry(logging =>
             {
                 logging.IncludeFormattedMessage = true;
                 logging.IncludeScopes = true;
             }).AddSyZeroLog4Net();
 
-            builder.Services.AddSyZeroOpenTelemetry();
-            builder.Services.AddLocalServiceManagement();
+            builder.Services.AddSyZeroOpenTelemetry(builder.Configuration);
+            builder.Services.AddLocalServiceManagement(builder.Configuration);
             builder.Services.AddSyZeroOcelot(options =>
             {
-                options.SwaggerTitle = AppConfig.GetSection("SyZero:Name") ?? "SyZero.Gateway";
-                options.EnableConsul = false;
-                options.EnableConfigStoredInConsul = false;
+                options.SwaggerTitle = serverOptions.Name ?? "SyZero.Gateway";
                 options.EnableSyZeroServiceDiscovery = true;
             }, builder.Configuration);
             builder.Services.AddSyZeroGatewayAdmin();
@@ -62,7 +60,7 @@ namespace SyZero.Gateway
             app.MapGet("/health", () => new
             {
                 status = "Healthy",
-                service = AppConfig.ServerOptions.Name,
+                service = serverOptions.Name,
                 timestamp = DateTimeOffset.Now
             });
             app.MapControllers();

@@ -19,7 +19,7 @@ dotnet add package SyZero.ServiceDiscovery.Nacos
 
 ```csharp
 // Required: service registration and discovery.
-builder.Services.AddNacos();
+builder.Services.AddNacos(builder.Configuration);
 
 // Optional: load configuration from Nacos configuration center.
 builder.Configuration.AddNacosConfiguration();

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Description>SyZero 后台任务模块：IBackgroundJobManager 抽象 + 基于 Channel 的内存默认实现 + IHostedService Worker。可通过子模块（Hangfire / Quartz）替换为持久化与 Cron 调度。</Description>
     <IsPackable>true</IsPackable>
   </PropertyGroup>

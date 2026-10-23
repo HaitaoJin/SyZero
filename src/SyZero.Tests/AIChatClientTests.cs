@@ -2,6 +2,7 @@ using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using SyZero.AI;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -38,15 +39,20 @@ public class AIChatClientTests
     {
         public ChatClientMetadata Metadata { get; } = new("fake");
 
-        public Task<ChatCompletion> CompleteAsync(IList<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
+        public Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
         {
-            var lastUser = chatMessages[chatMessages.Count - 1].Text ?? string.Empty;
+            var lastUser = chatMessages.Last().Text ?? string.Empty;
             var msg = new ChatMessage(ChatRole.Assistant, $"[meai-fake] {lastUser}");
-            return Task.FromResult(new ChatCompletion(msg));
+            return Task.FromResult(new ChatResponse(msg));
         }
 
-        public IAsyncEnumerable<StreamingChatCompletionUpdate> CompleteStreamingAsync(IList<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
-            => throw new System.NotSupportedException();
+        public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+            var lastUser = chatMessages.Last().Text ?? string.Empty;
+            yield return new ChatResponseUpdate(ChatRole.Assistant, $"[meai-fake] {lastUser}");
+        }
 
         public TService? GetService<TService>(object? key = null) where TService : class => null;
         public object? GetService(System.Type serviceType, object? serviceKey = null) => null;

@@ -1,7 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Description>SyZero-Mapster: 基于 Mapster 的 IObjectMapper 实现，作为 SyZero.ObjectMapping.AutoMapper 的轻量、MIT 许可替代方案。</Description>
     <IsPackable>true</IsPackable>
   </PropertyGroup>

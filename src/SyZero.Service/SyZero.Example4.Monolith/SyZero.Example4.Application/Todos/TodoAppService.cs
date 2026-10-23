@@ -9,7 +9,7 @@ using SyZero.Example4.IApplication.Todos.Dto;
 
 namespace SyZero.Example4.Application.Todos
 {
-    public class TodoAppService : SyZeroServiceBase, ITodoAppService, IScopedDependency
+    public class TodoAppService : ITodoAppService, IScopedDependency
     {
         private readonly ITodoStore _todoStore;
 

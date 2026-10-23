@@ -11,11 +11,13 @@ namespace SyZero.BackgroundJobs
     {
         private readonly BackgroundJobChannel _channel;
         private readonly BackgroundJobsOptions _options;
+        private readonly IBackgroundJobStateStore _states;
 
-        public ChannelBackgroundJobManager(BackgroundJobChannel channel, IOptions<BackgroundJobsOptions> options)
+        public ChannelBackgroundJobManager(BackgroundJobChannel channel, IOptions<BackgroundJobsOptions> options, IBackgroundJobStateStore states)
         {
             _channel = channel;
             _options = options.Value;
+            _states = states;
         }
 
         public async Task<bool> EnqueueAsync<TJob, TArgs>(TArgs args, CancellationToken cancellationToken = default)
@@ -31,6 +33,7 @@ namespace SyZero.BackgroundJobs
                     await job.ExecuteAsync(args, ct).ConfigureAwait(false);
                 }
             };
+            await _states.SaveAsync(new(item.Id, item.JobTypeName, BackgroundJobStatus.Queued, 0, item.EnqueuedAtUtc, System.DateTime.UtcNow), cancellationToken).ConfigureAwait(false);
 
             if (_options.DropOldestWhenFull || _options.QueueCapacity <= 0)
             {

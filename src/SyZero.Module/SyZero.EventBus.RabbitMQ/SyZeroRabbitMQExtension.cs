@@ -85,12 +85,12 @@ namespace SyZero
         /// 添加 RabbitMQ 事件总线到依赖注入容器（从配置读取）
         /// </summary>
         /// <param name="services">服务集合</param>
-        /// <param name="configuration">配置，为 null 时使用 AppConfig.Configuration</param>
+        /// <param name="configuration">配置</param>
         /// <param name="sectionName">配置节名称，默认为 "RabbitMQ"</param>
         /// <returns>服务集合</returns>
         public static IServiceCollection AddRabbitMQEventBus(
             this IServiceCollection services,
-            IConfiguration configuration = null,
+            IConfiguration configuration,
             string sectionName = RabbitMQEventBusOptions.SectionName)
         {
             if (services == null)
@@ -98,9 +98,9 @@ namespace SyZero
                 throw new ArgumentNullException(nameof(services));
             }
 
-            var config = configuration ?? AppConfig.Configuration;
+            ArgumentNullException.ThrowIfNull(configuration);
             var options = new RabbitMQEventBusOptions();
-            config?.GetSection(sectionName)?.Bind(options);
+            configuration.GetSection(sectionName).Bind(options);
             return AddRabbitMQEventBus(services, options);
         }
 
@@ -109,13 +109,13 @@ namespace SyZero
         /// </summary>
         /// <param name="services">服务集合</param>
         /// <param name="optionsAction">额外配置委托（在配置文件配置之后执行）</param>
-        /// <param name="configuration">配置，为 null 时使用 AppConfig.Configuration</param>
+        /// <param name="configuration">配置</param>
         /// <param name="sectionName">配置节名称，默认为 "RabbitMQ"</param>
         /// <returns>服务集合</returns>
         public static IServiceCollection AddRabbitMQEventBus(
             this IServiceCollection services,
+            IConfiguration configuration,
             Action<RabbitMQEventBusOptions> optionsAction,
-            IConfiguration configuration = null,
             string sectionName = RabbitMQEventBusOptions.SectionName)
         {
             if (services == null)
@@ -123,9 +123,9 @@ namespace SyZero
                 throw new ArgumentNullException(nameof(services));
             }
 
-            var config = configuration ?? AppConfig.Configuration;
+            ArgumentNullException.ThrowIfNull(configuration);
             var options = new RabbitMQEventBusOptions();
-            config?.GetSection(sectionName)?.Bind(options);
+            configuration.GetSection(sectionName).Bind(options);
             optionsAction?.Invoke(options);
             return AddRabbitMQEventBus(services, options);
         }

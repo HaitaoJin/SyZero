@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -28,6 +29,7 @@ namespace SyZero
             var assembly = typeof(SyZeroGatewayAdminExtension).Assembly;
             services.AddRazorPages().AddApplicationPart(assembly);
             services.AddControllers().AddApplicationPart(assembly);
+            services.AddDataProtection();
 
             // 绑定限流配置（缺省即使用默认值）。手动读取避免引入 Configuration.Binder 依赖。
             services.AddOptions<GatewayAdminRateLimitOptions>()
@@ -69,6 +71,7 @@ namespace SyZero
             services.TryAddSingleton<IFailedLoginTracker, FailedLoginTracker>();
             // 验证码存储：默认内存实现。
             services.TryAddSingleton<ICaptchaStore, MemoryCaptchaStore>();
+            services.TryAddSingleton<GatewayAdminCookieProtector>();
             // 写操作事件总线（SSE 推送的源），单例 in-process。
             services.TryAddSingleton<IGatewayAdminEventBus, GatewayAdminEventBus>();
 

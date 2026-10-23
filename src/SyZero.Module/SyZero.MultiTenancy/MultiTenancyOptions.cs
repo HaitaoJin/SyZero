@@ -17,5 +17,8 @@ namespace SyZero.MultiTenancy
 
         /// <summary>Claim 解析使用的租户名 Claim 类型。</summary>
         public string TenantNameClaimType { get; set; } = "tenant";
+
+        /// <summary>启用后，未解析到有效租户的业务请求返回 400。</summary>
+        public bool RequireTenant { get; set; }
     }
 }

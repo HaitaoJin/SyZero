@@ -8,7 +8,6 @@ using SyZero.AspNetCore;
 using SyZero.AspNetCore.Middleware;
 using SyZero.Cache;
 using SyZero.Runtime.Session;
-using SyZero.Util;
 
 namespace Microsoft.AspNetCore.Builder
 {
@@ -41,7 +40,7 @@ namespace Microsoft.AspNetCore.Builder
             {
                 app.Use(async (context, next) =>
                 {
-                    var sySeesion = SyZeroUtil.GetScopeService<ISySession>();
+                    var sySeesion = context.RequestServices.GetService<ISySession>();
                     if (sySeesion?.UserId != null)
                     {
                         var cache = context.RequestServices.GetService<ICache>();

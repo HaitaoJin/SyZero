@@ -17,6 +17,8 @@ namespace SyZero.DistributedTransaction
         public DateTime? PublishedAtUtc { get; set; }
         public int RetryCount { get; set; }
         public string? LastError { get; set; }
+        public string? LockOwner { get; set; }
+        public DateTime? LockedUntilUtc { get; set; }
     }
 
     /// <summary>
@@ -27,6 +29,13 @@ namespace SyZero.DistributedTransaction
         Task EnqueueAsync(OutboxMessage message, CancellationToken cancellationToken = default);
 
         Task<IReadOnlyList<OutboxMessage>> FetchPendingAsync(int batchSize, CancellationToken cancellationToken = default);
+
+        /// <summary>原子认领一批消息。持久化实现应使用租约防止多实例重复投递。</summary>
+        Task<IReadOnlyList<OutboxMessage>> ClaimPendingAsync(
+            int batchSize,
+            string lockOwner,
+            TimeSpan lease,
+            CancellationToken cancellationToken = default);
 
         Task MarkPublishedAsync(string id, CancellationToken cancellationToken = default);
 

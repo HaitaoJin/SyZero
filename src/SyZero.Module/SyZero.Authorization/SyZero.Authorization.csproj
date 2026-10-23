@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Description>SyZero 鉴权与授权模块（ASP.NET Core Identity + ABP 风格 RBAC + JWT），存储基于 SyZero.Core 仓储抽象</Description>
     <IsPackable>true</IsPackable>
   </PropertyGroup>

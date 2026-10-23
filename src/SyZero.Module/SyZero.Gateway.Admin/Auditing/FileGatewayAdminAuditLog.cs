@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -82,13 +83,30 @@ namespace SyZero.Gateway.Admin.Auditing
                 return Array.Empty<GatewayAdminAuditEntry>();
             }
 
-            // 简单实现：读全部行 → 取末尾 N 条 → 反序列化。日志体量大时建议外部归档。
-            var lines = await File.ReadAllLinesAsync(_path, Encoding.UTF8, cancellationToken).ConfigureAwait(false);
-            var start = Math.Max(0, lines.Length - take);
-            var result = new List<GatewayAdminAuditEntry>(lines.Length - start);
-            for (var i = lines.Length - 1; i >= start; i--)
+            // 流式读取并只保留末尾 N 行，避免大型审计日志被一次性载入内存。
+            var lines = new Queue<string>(Math.Min(take, 4096));
+            await using (var stream = new FileStream(
+                _path,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.ReadWrite | FileShare.Delete,
+                bufferSize: 16 * 1024,
+                useAsync: true))
             {
-                var line = lines[i];
+                using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+                while (await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false) is { } line)
+                {
+                    if (lines.Count == take)
+                    {
+                        lines.Dequeue();
+                    }
+                    lines.Enqueue(line);
+                }
+            }
+
+            var result = new List<GatewayAdminAuditEntry>(lines.Count);
+            foreach (var line in lines.Reverse())
+            {
                 if (string.IsNullOrWhiteSpace(line))
                 {
                     continue;

@@ -61,7 +61,7 @@
             支持的协议类型
             </summary>
         </member>
-        <member name="M:SyZero.Feign.Proxy.GrpcProxyFactory.CreateProxy(System.Type,System.String,SyZero.Client.RemoteService.RemoteServiceItem,SyZero.Serialization.IJsonSerialize)">
+        <member name="M:SyZero.Feign.Proxy.GrpcProxyFactory.CreateProxy(System.Type,System.String,SyZero.Client.RemoteService.RemoteServiceItem,SyZero.Serialization.IJsonSerialize,System.IServiceProvider)">
             <summary>
             创建 gRPC 代理实例
             </summary>
@@ -101,27 +101,27 @@
             支持的协议类型
             </summary>
         </member>
-        <member name="M:SyZero.Feign.Proxy.HttpProxyFactory.ResolveLogger">
+        <member name="M:SyZero.Feign.Proxy.HttpProxyFactory.ResolveLogger(System.IServiceProvider)">
             <summary>
             解析 ILogger，DI 未就绪时回退到 NullLogger，避免在工厂初始化阶段抛异常。
             </summary>
         </member>
-        <member name="M:SyZero.Feign.Proxy.HttpProxyFactory.CreateProxy(System.Type,System.String,SyZero.Client.RemoteService.RemoteServiceItem,SyZero.Serialization.IJsonSerialize)">
+        <member name="M:SyZero.Feign.Proxy.HttpProxyFactory.CreateProxy(System.Type,System.String,SyZero.Client.RemoteService.RemoteServiceItem,SyZero.Serialization.IJsonSerialize,System.IServiceProvider)">
             <summary>
             创建 HTTP 代理实例
             </summary>
         </member>
-        <member name="M:SyZero.Feign.Proxy.HttpProxyFactory.CreateHttpClient(System.String,SyZero.Client.RemoteService.RemoteServiceItem)">
+        <member name="M:SyZero.Feign.Proxy.HttpProxyFactory.CreateHttpClient(System.String,SyZero.Client.RemoteService.RemoteServiceItem,SyZero.Runtime.Session.ISySession)">
             <summary>
             创建 HttpClient
             </summary>
         </member>
-        <member name="M:SyZero.Feign.Proxy.HttpProxyFactory.CreateRefitSettings(SyZero.Serialization.IJsonSerialize)">
+        <member name="M:SyZero.Feign.Proxy.HttpProxyFactory.CreateRefitSettings(SyZero.Serialization.IJsonSerialize,Microsoft.Extensions.Logging.ILogger)">
             <summary>
             创建 Refit 设置
             </summary>
         </member>
-        <member name="M:SyZero.Feign.Proxy.HttpProxyFactory.CreateHttpMessageHandler(SyZero.Client.RemoteService.RemoteServiceItem)">
+        <member name="M:SyZero.Feign.Proxy.HttpProxyFactory.CreateHttpMessageHandler(SyZero.Client.RemoteService.RemoteServiceItem,SyZero.Runtime.Session.ISySession)">
             <summary>
             创建 HTTP 消息处理器链
             </summary>

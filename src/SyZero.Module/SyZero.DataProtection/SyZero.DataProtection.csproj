@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Description>SyZero 数据保护模块：基于 ASP.NET Core Data Protection 提供 IFieldEncryptor 抽象与 [Encrypted] 标记的字段级加解密辅助；可对 DTO / 配置中的敏感字段进行可逆加密。</Description>
     <IsPackable>true</IsPackable>
     <Nullable>enable</Nullable>

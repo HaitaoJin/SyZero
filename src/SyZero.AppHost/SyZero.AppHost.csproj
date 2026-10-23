@@ -1,0 +1,18 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.6.3">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <AspireUseCliBundle>true</AspireUseCliBundle>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.AppHost" />
+    <PackageReference Include="Aspire.Hosting.JavaScript" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SyZero.Gateway\SyZero.Gateway.csproj" />
+    <ProjectReference Include="..\SyZero.Service\SyZero.Example1.Service\SyZero.Example1.Web\SyZero.Example1.Web.csproj" />
+    <ProjectReference Include="..\SyZero.Service\SyZero.Example2.Service\SyZero.Example2.Web\SyZero.Example2.Web.csproj" />
+    <ProjectReference Include="..\SyZero.Service\SyZero.Example3.SPA\SyZero.Example3.Web\SyZero.Example3.Web.csproj" />
+  </ItemGroup>
+</Project>

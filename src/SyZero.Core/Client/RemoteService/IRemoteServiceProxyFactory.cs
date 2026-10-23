@@ -21,6 +21,6 @@ namespace SyZero.Client.RemoteService
         /// <param name="endPoint">解析后的服务端点</param>
         /// <param name="service">服务配置（已合并全局默认值）</param>
         /// <param name="jsonSerialize">JSON 序列化器</param>
-        object CreateProxy(Type targetType, string endPoint, RemoteServiceItem service, IJsonSerialize jsonSerialize);
+        object CreateProxy(Type targetType, string endPoint, RemoteServiceItem service, IJsonSerialize jsonSerialize, IServiceProvider serviceProvider);
     }
 }

@@ -1,6 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
@@ -10,12 +10,15 @@
   <ItemGroup>
     <PackageReference Include="AutoMapper" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
-    <PackageReference Include="Microsoft.Extensions.Logging" VersionOverride="9.0.6" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
     <PackageReference Include="Moq" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="coverlet.collector">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -67,6 +70,7 @@
     <ProjectReference Include="..\SyZero.Module\SyZero.Files\SyZero.Files.csproj" />
     <ProjectReference Include="..\SyZero.Module\SyZero.Mail\SyZero.Mail.csproj" />
     <ProjectReference Include="..\SyZero.Module\SyZero.Sms\SyZero.Sms.csproj" />
+    <ProjectReference Include="..\SyZero.Module\SyZero.Notifications\SyZero.Notifications.csproj" />
     <ProjectReference Include="..\SyZero.Module\SyZero.EventBus.Kafka\SyZero.EventBus.Kafka.csproj" />
     <ProjectReference Include="..\SyZero.Module\SyZero.DistributedTransaction.EntityFrameworkCore\SyZero.DistributedTransaction.EntityFrameworkCore.csproj" />
     <ProjectReference Include="..\SyZero.Module\SyZero.Authentication.ApiKey\SyZero.Authentication.ApiKey.csproj" />
@@ -75,6 +79,6 @@
     <ProjectReference Include="..\SyZero.Module\SyZero.AI\SyZero.AI.csproj" />
     <ProjectReference Include="..\SyZero.Module\SyZero.SourceGenerator\SyZero.SourceGenerator.csproj" />
     <ProjectReference Include="..\SyZero.Core\SyZero.Core.csproj" />
+    <ProjectReference Include="..\SyZero.Service\SyZero.Example3.SPA\SyZero.Example3.Application\SyZero.Example3.Application.csproj" />
   </ItemGroup>
 </Project>
-

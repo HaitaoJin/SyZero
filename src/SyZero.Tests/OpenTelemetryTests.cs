@@ -8,37 +8,24 @@ using Xunit;
 
 namespace SyZero.Tests;
 
-[Collection("AppConfig")]
 public class OpenTelemetryTests
 {
     [Fact]
     public void AddSyZeroOpenTelemetry_UsesSafeDefaults_WhenConfigIsMissing()
     {
-        var previousConfiguration = AppConfig.Configuration;
+        var configuration = new ConfigurationBuilder().Build();
+        var services = new ServiceCollection();
+        services.AddSyZeroOpenTelemetry(configuration);
 
-        try
-        {
-            AppConfig.Configuration = new ConfigurationBuilder().Build();
-            ResetAppConfigCache("serverOptions");
+        using var provider = services.BuildServiceProvider();
+        var options = provider.GetRequiredService<SyZeroOpenTelemetryOptions>();
 
-            var services = new ServiceCollection();
-            services.AddSyZeroOpenTelemetry();
-
-            using var provider = services.BuildServiceProvider();
-            var options = provider.GetRequiredService<SyZeroOpenTelemetryOptions>();
-
-            Assert.Equal(Assembly.GetEntryAssembly()?.GetName().Name, options.ServiceName);
-            Assert.Null(options.OtlpUrl);
-            Assert.Equal(new[] { "/api" }, options.AspNetCorePathPrefixes);
-            Assert.Empty(options.HttpClientPathPrefixes);
-            Assert.NotNull(provider.GetService<TracerProvider>());
-            Assert.NotNull(provider.GetService<MeterProvider>());
-        }
-        finally
-        {
-            AppConfig.Configuration = previousConfiguration;
-            ResetAppConfigCache("serverOptions");
-        }
+        Assert.Equal(Assembly.GetEntryAssembly()?.GetName().Name, options.ServiceName);
+        Assert.Null(options.OtlpUrl);
+        Assert.Equal(new[] { "/api" }, options.AspNetCorePathPrefixes);
+        Assert.Empty(options.HttpClientPathPrefixes);
+        Assert.NotNull(provider.GetService<TracerProvider>());
+        Assert.NotNull(provider.GetService<MeterProvider>());
     }
 
     [Fact]
@@ -93,8 +80,26 @@ public class OpenTelemetryTests
         Assert.Throws<InvalidOperationException>(() => services.AddSyZeroOpenTelemetry(configuration));
     }
 
-    private static void ResetAppConfigCache(string fieldName)
+    [Fact]
+    public void AddSyZeroOpenTelemetry_PrefersStandardOtelEnvironment()
     {
-        AppConfig.ResetCacheForTests(fieldName);
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["SyZero:Name"] = "configured-service",
+                ["OpenTelemetry:OtlpUrl"] = "http://collector:4317",
+                ["OpenTelemetry:OtlpProtocol"] = "HttpProtobuf",
+                ["OTEL_EXPORTER_OTLP_ENDPOINT"] = "https://localhost:57290",
+                ["OTEL_EXPORTER_OTLP_PROTOCOL"] = "grpc",
+                ["OTEL_SERVICE_NAME"] = "aspire-resource"
+            })
+            .Build();
+
+        var options = SyZeroOpenTelemetryOptions.CreateDefault(configuration);
+
+        Assert.Equal("https://localhost:57290", options.OtlpUrl);
+        Assert.Equal(OtlpExportProtocol.Grpc, options.OtlpProtocol);
+        Assert.Equal("aspire-resource", options.ServiceName);
     }
+
 }

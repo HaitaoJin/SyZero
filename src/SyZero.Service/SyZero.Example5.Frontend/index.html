@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="通过 SyZero Gateway 调用微服务的独立前端示例" />
+    <title>SyZero Example5 Gateway 前端示例</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="hero">
+        <div class="eyebrow"><span class="pulse"></span> GATEWAY ONLINE</div>
+        <h1>一个入口，连接多个服务。</h1>
+        <p>独立前端通过 <code>SyZero.Gateway</code> 访问 Example1 与 Example2，演示微服务网关的路由、服务发现和统一响应。</p>
+        <div class="route"><span>Browser</span><b>→</b><span>Gateway :5000</span><b>→</b><span>Services</span></div>
+      </header>
+
+      <section class="toolbar" aria-label="操作栏">
+        <div>
+          <h2>服务状态</h2>
+          <p id="summary">正在检查两个下游服务…</p>
+        </div>
+        <button id="refresh" type="button">重新检查</button>
+      </section>
+
+      <section class="grid" aria-live="polite">
+        <article class="service-card" data-service="example1">
+          <div class="card-head"><span class="number">01</span><span class="status loading">连接中</span></div>
+          <h3>SyZero.Example1</h3>
+          <code>/example1/api/SyZero.Example1/Example1/GetServiceInfo</code>
+          <dl><div><dt>版本</dt><dd data-field="version">—</dd></div><div><dt>端口</dt><dd data-field="port">—</dd></div><div><dt>响应时间</dt><dd data-field="latency">—</dd></div></dl>
+          <p class="error" data-field="error"></p>
+        </article>
+
+        <article class="service-card" data-service="example2">
+          <div class="card-head"><span class="number">02</span><span class="status loading">连接中</span></div>
+          <h3>SyZero.Example2</h3>
+          <code>/example2/api/SyZero.Example2/Example2/GetServiceInfo</code>
+          <dl><div><dt>版本</dt><dd data-field="version">—</dd></div><div><dt>端口</dt><dd data-field="port">—</dd></div><div><dt>响应时间</dt><dd data-field="latency">—</dd></div></dl>
+          <p class="error" data-field="error"></p>
+        </article>
+      </section>
+
+      <section class="toolbar call-toolbar" aria-label="服务互调操作栏">
+        <div>
+          <h2>服务相互调用</h2>
+          <p>请求先经过 Gateway，再由目标服务通过 Feign 调用另一个服务。</p>
+        </div>
+        <button id="call-all" type="button">验证全部链路</button>
+      </section>
+
+      <section class="call-grid" aria-live="polite">
+        <article class="call-card" data-call="example1-to-example2">
+          <div class="card-head"><span class="number">CALL 01</span><span class="status idle">等待调用</span></div>
+          <h3>Example1 调用 Example2</h3>
+          <div class="call-route"><span>Browser</span><b>→</b><span>Gateway</span><b>→</b><span>Example1</span><b>→</b><span>Example2</span></div>
+          <code>/example1/api/SyZero.Example1/Example1/CallExample2Service</code>
+          <button class="call-button" type="button">发起调用</button>
+          <dl>
+            <div><dt>远端服务</dt><dd data-field="remote-service">—</dd></div>
+            <div><dt>远端版本</dt><dd data-field="remote-version">—</dd></div>
+            <div><dt>远端端口</dt><dd data-field="remote-port">—</dd></div>
+            <div><dt>调用时间</dt><dd data-field="call-time">—</dd></div>
+            <div><dt>响应耗时</dt><dd data-field="latency">—</dd></div>
+          </dl>
+          <p class="call-message" data-field="message">点击“发起调用”验证服务间通信。</p>
+        </article>
+
+        <article class="call-card" data-call="example2-to-example1">
+          <div class="card-head"><span class="number">CALL 02</span><span class="status idle">等待调用</span></div>
+          <h3>Example2 调用 Example1</h3>
+          <div class="call-route"><span>Browser</span><b>→</b><span>Gateway</span><b>→</b><span>Example2</span><b>→</b><span>Example1</span></div>
+          <code>/example2/api/SyZero.Example2/Example2/CallExample1Service</code>
+          <button class="call-button" type="button">发起调用</button>
+          <dl>
+            <div><dt>远端服务</dt><dd data-field="remote-service">—</dd></div>
+            <div><dt>远端版本</dt><dd data-field="remote-version">—</dd></div>
+            <div><dt>远端端口</dt><dd data-field="remote-port">—</dd></div>
+            <div><dt>调用时间</dt><dd data-field="call-time">—</dd></div>
+            <div><dt>响应耗时</dt><dd data-field="latency">—</dd></div>
+          </dl>
+          <p class="call-message" data-field="message">点击“发起调用”验证服务间通信。</p>
+        </article>
+      </section>
+
+      <footer><span>SyZero 10.0.0</span><span>Example5 · 独立 Gateway Client 示例</span></footer>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

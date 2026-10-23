@@ -35,7 +35,7 @@ dotnet add package SyZero.SqlSugar
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddSyZero();
-builder.Services.AddSyZeroSqlSugar();
+builder.Services.AddSyZeroSqlSugar(builder.Configuration);
 
 var app = builder.Build();
 app.UseSyZero();

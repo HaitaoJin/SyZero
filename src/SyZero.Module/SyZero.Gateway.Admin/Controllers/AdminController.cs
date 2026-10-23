@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using SyZero.Gateway.Admin.Auditing;
 using SyZero.Gateway.Admin.Events;
 using SyZero.Service;
@@ -44,17 +45,20 @@ namespace SyZero.Gateway.Admin.Controllers
         private readonly IGatewayAdminAuditLog _audit;
         private readonly IGatewayAdminEventBus _bus;
         private readonly IServiceProvider _services;
+        private readonly string? _currentServiceName;
 
         public AdminController(
             IGatewayConfigurationStore store,
             IGatewayAdminAuditLog audit,
             IGatewayAdminEventBus bus,
-            IServiceProvider services)
+            IServiceProvider services,
+            IConfiguration configuration)
         {
             _store = store;
             _audit = audit;
             _bus = bus;
             _services = services;
+            _currentServiceName = configuration["SyZero:Name"];
         }
 
         // ---------- 健康/概览 ----------
@@ -894,8 +898,8 @@ namespace SyZero.Gateway.Admin.Controllers
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .OrderBy(n => n, StringComparer.OrdinalIgnoreCase))
                 {
-                    if (!string.IsNullOrWhiteSpace(AppConfig.ServerOptions?.Name)
-                        && string.Equals(name, AppConfig.ServerOptions.Name, StringComparison.OrdinalIgnoreCase))
+                    if (!string.IsNullOrWhiteSpace(_currentServiceName)
+                        && string.Equals(name, _currentServiceName, StringComparison.OrdinalIgnoreCase))
                     {
                         continue;
                     }
@@ -940,8 +944,8 @@ namespace SyZero.Gateway.Admin.Controllers
                         InstanceCount = instances.Count,
                         HealthyInstanceCount = instances.Count(s => s.IsHealthy && s.Enabled),
                         EndpointCount = endpoints.Count,
-                        SwaggerJsonUrl = BuildServiceUrl(primary, "/swagger/v1/swagger.json"),
-                        SwaggerUiUrl = BuildServiceUrl(primary, "/api/swagger/index.html"),
+                        SwaggerJsonUrl = BuildServiceUrl(primary, "/openapi/v1.json"),
+                        SwaggerUiUrl = null,
                         Endpoints = endpoints,
                         Instances = instances
                             .OrderByDescending(s => s.IsHealthy && s.Enabled)

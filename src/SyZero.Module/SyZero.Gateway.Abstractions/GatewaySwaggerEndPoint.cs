@@ -28,6 +28,6 @@ namespace SyZero.Gateway
     {
         public string Name { get; set; } = string.Empty;
 
-        public string Path { get; set; } = "/swagger/v1/swagger.json";
+        public string Path { get; set; } = "/openapi/v1.json";
     }
 }

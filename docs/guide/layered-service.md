@@ -120,15 +120,14 @@ builder.Services.AddDynamicWebApi(new DynamicWebApiOptions
     DefaultApiPrefix = "/api",
     DefaultAreaName = "UserService"
 });
-builder.Services.AddSwagger();
+builder.Services.AddSyZeroOpenApi();
 builder.Services.AddSyZeroSqlSugar<ExampleDbContext>();
 builder.Services.AddSyZeroAutoMapper();
 
 var app = builder.Build();
 
 app.UseSyZero();
-app.UseSwagger();
-app.UseSwaggerUI();
+app.MapSyZeroOpenApi();
 app.MapControllers();
 
 app.Run();

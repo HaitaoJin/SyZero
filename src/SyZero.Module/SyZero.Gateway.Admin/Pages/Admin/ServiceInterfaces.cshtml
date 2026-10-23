@@ -70,6 +70,14 @@
             return `<span class="badge badge-sm ${cls}">${escapeHtml(upper || '-')}</span>`;
         }
 
+        function testerUrl(endpoint) {
+            const query = new URLSearchParams({
+                method: String(endpoint.method || 'GET').toUpperCase(),
+                url: endpoint.path || '/'
+            });
+            return '/admin/tester?' + query.toString();
+        }
+
         function statCard(title, value, tone) {
             return `<div class="stat bg-base-100 shadow rounded-box">
                 <div class="stat-title">${title}</div>
@@ -152,7 +160,11 @@
                         </div>
                     </td>
                     <td>${methodBadge(endpoint.method)}</td>
-                    <td><code>${escapeHtml(endpoint.path || '')}</code></td>
+                    <td>
+                        <a class="link link-primary font-mono" href="${escapeHtml(testerUrl(endpoint))}" title="在路由测试器中打开">
+                            ${escapeHtml(endpoint.path || '/')}
+                        </a>
+                    </td>
                     <td>${escapeHtml(endpoint.controller || '-')}</td>
                     <td>${escapeHtml(endpoint.action || '-')}</td>
                     <td>${escapeHtml(endpoint.groupName || '-')}</td>
@@ -203,7 +215,7 @@
                                 </span>`).join('')}
                         </div>
                         ${(service.endpoints || []).length > 0
-                            ? `<div class="flex flex-wrap gap-2">${service.endpoints.slice(0, 8).map(endpoint => `${methodBadge(endpoint.method)} <code>${escapeHtml(endpoint.path || '')}</code>`).join('')} ${(service.endpoints || []).length > 8 ? `<span class="text-xs opacity-60">另有 ${(service.endpoints || []).length - 8} 个接口</span>` : ''}</div>`
+                            ? `<div class="flex flex-wrap gap-2">${service.endpoints.slice(0, 8).map(endpoint => `${methodBadge(endpoint.method)} <a class="link link-primary font-mono" href="${escapeHtml(testerUrl(endpoint))}" title="在路由测试器中打开">${escapeHtml(endpoint.path || '/')}</a>`).join('')} ${(service.endpoints || []).length > 8 ? `<span class="text-xs opacity-60">另有 ${(service.endpoints || []).length - 8} 个接口</span>` : ''}</div>`
                             : '<div class="alert alert-warning"><span>该服务已注册，但当前实例未上报接口元数据。确认服务已升级到带接口注册能力的版本</span></div>'}
                     </div>
                 </div>`).join('');

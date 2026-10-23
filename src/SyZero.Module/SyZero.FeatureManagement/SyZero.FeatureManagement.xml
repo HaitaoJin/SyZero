@@ -9,7 +9,7 @@
             SyZero 特性开关抽象。在业务层直接依赖此接口而非 Microsoft.FeatureManagement，便于替换或 mock。
             </summary>
         </member>
-        <member name="M:SyZero.FeatureManagement.ISyFeatureManager.IsEnabledAsync(System.String)">
+        <member name="M:SyZero.FeatureManagement.ISyFeatureManager.IsEnabledAsync(System.String,System.Threading.CancellationToken)">
             <summary>判断指定特性是否启用。</summary>
         </member>
         <member name="T:SyZero.FeatureManagement.DefaultSyFeatureManager">

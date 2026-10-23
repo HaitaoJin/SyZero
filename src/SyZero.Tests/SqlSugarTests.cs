@@ -10,17 +10,16 @@ using Xunit;
 
 namespace SyZero.Tests;
 
-[Collection("AppConfig")]
 public class SqlSugarTests
 {
     [Fact]
     public void AddSyZeroSqlSugar_UsesScopedDbContextSharedWithinScope()
     {
         using var database = CreateDatabase();
-        ConfigureAppConfig(database.ConnectionString);
+        var configuration = CreateDatabaseConfiguration(database.ConnectionString);
 
         var services = CreateServices();
-        services.AddSyZeroSqlSugar();
+        services.AddSyZeroSqlSugar(configuration);
 
         using var provider = services.BuildServiceProvider(new ServiceProviderOptions
         {
@@ -119,10 +118,10 @@ public class SqlSugarTests
 
     private static ServiceProvider CreateProvider(string connectionString)
     {
-        ConfigureAppConfig(connectionString);
+        var configuration = CreateDatabaseConfiguration(connectionString);
 
         var services = CreateServices();
-        services.AddSyZeroSqlSugar();
+        services.AddSyZeroSqlSugar(configuration);
 
         return services.BuildServiceProvider(new ServiceProviderOptions
         {
@@ -130,22 +129,15 @@ public class SqlSugarTests
         });
     }
 
-    private static void ConfigureAppConfig(string connectionString)
+    private static IConfiguration CreateDatabaseConfiguration(string connectionString)
     {
-        AppConfig.Configuration = new ConfigurationBuilder()
+        return new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["ConnectionString:Type"] = DbType.Sqlite.ToString(),
                 ["ConnectionString:Master"] = connectionString
             })
             .Build();
-
-        ResetAppConfigCache("connectionOptions");
-    }
-
-    private static void ResetAppConfigCache(string fieldName)
-    {
-        AppConfig.ResetCacheForTests(fieldName);
     }
 
     private static T GetFieldValue<T>(object instance, string fieldName)

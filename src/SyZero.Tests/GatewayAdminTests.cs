@@ -130,6 +130,31 @@ public sealed class GatewayAdminTests : IDisposable
         Assert.Null(await store.ReadBackupAsync("not-exist"));
     }
 
+    [Fact]
+    public async Task FileAuditLog_ReadRecent_ReturnsNewestEntriesInReverseOrder()
+    {
+        var envMock = new Mock<IWebHostEnvironment>();
+        envMock.SetupGet(e => e.ContentRootPath).Returns(_root);
+        var configuration = new ConfigurationBuilder().Build();
+        var audit = new FileGatewayAdminAuditLog(
+            envMock.Object,
+            configuration,
+            NullLogger<FileGatewayAdminAuditLog>.Instance);
+
+        for (var i = 0; i < 20; i++)
+        {
+            await audit.AppendAsync(new GatewayAdminAuditEntry
+            {
+                Action = "test." + i,
+                Summary = "entry " + i,
+            });
+        }
+
+        var recent = await audit.ReadRecentAsync(3);
+
+        Assert.Equal(new[] { "test.19", "test.18", "test.17" }, recent.Select(e => e.Action));
+    }
+
     // ---------- AdminController: reorder ----------
 
     [Fact]
@@ -329,7 +354,7 @@ public sealed class GatewayAdminTests : IDisposable
       version: v1
       service:
         name: Svc
-        path: /swagger/v1/swagger.json
+        path: /openapi/v1.json
 ";
         ctx.SetRequestBody(yaml);
         var imp = await ctx.Controller.ImportSwaggerEndPoints("yaml", "replace", CancellationToken.None);
@@ -348,7 +373,8 @@ public sealed class GatewayAdminTests : IDisposable
         Assert.IsType<BadRequestObjectResult>(imp);
     }
 
-    // ---------- mapper：Disabled 跳过 ----------    [Fact]
+    // ---------- mapper：Disabled 跳过 ----------
+    [Fact]
     public void OcelotMapper_SkipsDisabledRoutes()
     {
         var dto = new GatewayConfiguration
@@ -417,7 +443,7 @@ public sealed class GatewayAdminTests : IDisposable
         }
         var audit = new NoopAudit();
         var bus = new NoopBus();
-        var controller = new AdminController(store, audit, bus, services: new EmptyServiceProvider());
+        var controller = new AdminController(store, audit, bus, services: new EmptyServiceProvider(), new ConfigurationBuilder().Build());
         var httpContext = new DefaultHttpContext();
         controller.ControllerContext = new ControllerContext { HttpContext = httpContext };
         return new ControllerHarness(controller, store, httpContext);
@@ -439,7 +465,7 @@ public sealed class GatewayAdminTests : IDisposable
                         {
                             Name = k + "-api",
                             Version = "v1",
-                            Service = new GatewaySwaggerService { Name = k + "-svc", Path = "/swagger/v1/swagger.json" },
+                            Service = new GatewaySwaggerService { Name = k + "-svc", Path = "/openapi/v1.json" },
                         },
                     },
                 }).ToList(),
@@ -448,7 +474,7 @@ public sealed class GatewayAdminTests : IDisposable
         }
         var audit = new NoopAudit();
         var bus = new NoopBus();
-        var controller = new AdminController(store, audit, bus, services: new EmptyServiceProvider());
+        var controller = new AdminController(store, audit, bus, services: new EmptyServiceProvider(), new ConfigurationBuilder().Build());
         var httpContext = new DefaultHttpContext();
         controller.ControllerContext = new ControllerContext { HttpContext = httpContext };
         return new ControllerHarness(controller, store, httpContext);
@@ -647,6 +673,34 @@ public sealed class GatewayAdminTests : IDisposable
         tracker.Reset("ip-x");
         Assert.Equal(0, tracker.GetFailureCount("ip-x"));
         Assert.Equal(0, tracker.GetLockoutSeconds("ip-x"));
+    }
+
+    [Fact]
+    public void FailedLoginTracker_MaxFailuresOne_LocksOnFirstFailure()
+    {
+        var opts = new TestOptionsMonitor<GatewayAdminRateLimitOptions>(new GatewayAdminRateLimitOptions
+        {
+            MaxFailures = 1,
+            LockoutMinutes = 5,
+        });
+        var tracker = new FailedLoginTracker(opts);
+
+        Assert.Equal(1, tracker.RecordFailure("ip-one"));
+        Assert.True(tracker.GetLockoutSeconds("ip-one") > 0);
+    }
+
+    [Fact]
+    public void FailedLoginTracker_ConcurrentFailures_AreNotLost()
+    {
+        var opts = new TestOptionsMonitor<GatewayAdminRateLimitOptions>(new GatewayAdminRateLimitOptions
+        {
+            MaxFailures = 2000,
+        });
+        var tracker = new FailedLoginTracker(opts);
+
+        Parallel.For(0, 1000, _ => tracker.RecordFailure("same-client"));
+
+        Assert.Equal(1000, tracker.GetFailureCount("same-client"));
     }
 
     [Fact]

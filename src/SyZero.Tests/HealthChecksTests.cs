@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using SyZero;
 using SyZero.HealthChecks;
@@ -14,7 +15,7 @@ public class HealthChecksTests
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddOptions();
-        services.AddSyZeroHealthChecks(configure: o =>
+        services.AddSyZeroHealthChecks(new ConfigurationBuilder().Build(), configure: o =>
         {
             o.LivePath = "/healthz/live";
             o.ReadyPath = "/healthz/ready";

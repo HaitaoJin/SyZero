@@ -4,6 +4,18 @@
         <name>SyZero.DistributedTransaction</name>
     </assembly>
     <members>
+        <member name="T:SyZero.DistributedTransaction.InboxMessage">
+            <summary>记录消费端处理状态，用于实现至少一次投递下的幂等消费。</summary>
+        </member>
+        <member name="M:SyZero.DistributedTransaction.IInboxStore.TryBeginAsync(System.String,System.String,System.TimeSpan,System.Threading.CancellationToken)">
+            <summary>尝试取得消息处理权；已完成或仍在租约内时返回 false。</summary>
+        </member>
+        <member name="T:SyZero.DistributedTransaction.InboxExecutor">
+            <summary>围绕事件处理器执行 Inbox 去重、租约与失败释放。</summary>
+        </member>
+        <member name="M:SyZero.DistributedTransaction.InboxExecutor.#ctor(SyZero.DistributedTransaction.IInboxStore)">
+            <summary>围绕事件处理器执行 Inbox 去重、租约与失败释放。</summary>
+        </member>
         <member name="T:SyZero.DistributedTransaction.MemoryOutboxStore">
             <summary>
             默认进程内 <see cref="T:SyZero.DistributedTransaction.IOutboxStore"/> 实现，仅适合演示与单元测试。
@@ -25,6 +37,9 @@
             Outbox 存储抽象。业务可基于 EF / SqlSugar / MongoDB 实现真正的事务一致性。
             </summary>
         </member>
+        <member name="M:SyZero.DistributedTransaction.IOutboxStore.ClaimPendingAsync(System.Int32,System.String,System.TimeSpan,System.Threading.CancellationToken)">
+            <summary>原子认领一批消息。持久化实现应使用租约防止多实例重复投递。</summary>
+        </member>
         <member name="T:SyZero.DistributedTransaction.OutboxOptions">
             <summary>
             Outbox 后台投递配置。
@@ -44,6 +59,9 @@
             <summary>
             最大重试次数（达到后保留错误状态等待人工处理），默认 5。
             </summary>
+        </member>
+        <member name="P:SyZero.DistributedTransaction.OutboxOptions.LeaseSeconds">
+            <summary>消息认领租约（秒），用于多实例并发投递。</summary>
         </member>
         <member name="T:SyZero.DistributedTransaction.Saga.ISagaStep`1">
             <summary>

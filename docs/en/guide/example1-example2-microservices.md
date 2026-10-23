@@ -25,11 +25,17 @@ These sample services already ship with:
 1. `Example1` on port `5002`, service name `SyZero.Example1`
 2. `Example2` on port `5003`, service name `SyZero.Example2`
 3. `AddDynamicWebApi(...)` enabled on both sides
-4. `AddSyZeroFeign()` enabled on both sides
-5. `AddLocalServiceManagement()` enabled on both sides
+4. `AddSyZeroFeign(builder.Configuration)` enabled on both sides
+5. `AddLocalServiceManagement(builder.Configuration)` enabled on both sides
 6. The peer service declared in each `Feign:Service` section
 
 That means you can demonstrate two-service remote calls locally without setting up Consul or Nacos first.
+
+You can also start both services, Gateway, and the frontend through AppHost:
+
+```bash
+dotnet run --launch-profile https --project src/SyZero.AppHost/SyZero.AppHost.csproj
+```
 
 ## 1. Start Example1
 
@@ -39,7 +45,7 @@ dotnet run --project src/SyZero.Service/SyZero.Example1.Service/SyZero.Example1.
 
 Then browse:
 
-1. `http://localhost:5002/api/swagger`
+1. `http://localhost:5002/openapi/v1.json`
 2. `http://localhost:5002/api/SyZero.Example1/Example1/GetServiceInfo`
 
 ## 2. Start Example2
@@ -50,7 +56,7 @@ dotnet run --project src/SyZero.Service/SyZero.Example2.Service/SyZero.Example2.
 
 Then browse:
 
-1. `http://localhost:5003/api/swagger`
+1. `http://localhost:5003/openapi/v1.json`
 2. `http://localhost:5003/api/SyZero.Example2/Example2/GetServiceInfo`
 
 ## 3. Verify cross-service calls
@@ -112,8 +118,8 @@ Local development uses `LocalServiceManagement` by default. In practice this mea
 
 If you want to evolve this into a more production-like topology:
 
-1. Replace `AddLocalServiceManagement()` with `AddConsul()` or `AddNacos()`
-2. Keep `AddSyZeroFeign()` unchanged
+1. Replace `AddLocalServiceManagement(builder.Configuration)` with `AddConsul(builder.Configuration)` or `AddNacos(builder.Configuration)`
+2. Keep `AddSyZeroFeign(builder.Configuration)` unchanged
 3. Keep the same `ServiceName` values
 
 That is the intended SyZero design: keep business code stable while swapping the discovery backend.
@@ -143,3 +149,4 @@ Compare the local `SyZero:Name` values with the peer names in `Feign:Service`.
 1. To place both services behind one entry point, continue with [SyZero.Gateway Microservice Gateway Demo](/en/guide/gateway-microservice-demo)
 2. To switch to a registry-backed setup, continue with [Service Registration and Discovery](/en/guide/service-discovery)
 3. For Feign-specific details, read [SyZero.Feign](/en/modules/SyZero.Feign)
+4. To inspect the complete distributed trace, read [AppHost Local Orchestration and Observability](/en/guide/apphost-observability)

@@ -126,7 +126,7 @@ modelBuilder.Entity<PermissionGroup>().HasIndex(g => g.Name).IsUnique();
 
 ## 兼容性
 
-- TargetFramework：`net9.0`
+- TargetFramework：`net10.0`
 - 主键：固定 `long`（与 SyZero 雪花 ID 一致）。如需自定义主键，请使用泛型仓储 `IRepository<TEntity, TKey>`（自 1.3.0 起 `SyZero.Core` 已提供）自行扩展。
 
 ## RefreshToken（脱机刷新令牌）

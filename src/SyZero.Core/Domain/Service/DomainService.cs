@@ -5,5 +5,6 @@
     /// </summary>
     public abstract class DomainService : SyZeroServiceBase, IDomainService
     {
+        protected DomainService(SyZero.Dependency.SyZeroServiceDependencies dependencies) : base(dependencies) { }
     }
 }

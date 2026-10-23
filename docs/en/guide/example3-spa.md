@@ -22,12 +22,12 @@ SyZero.Example3.SPA/
 | Layer | Tech |
 | --- | --- |
 | Front-end | React 19, TypeScript, Vite 6, Tailwind CSS v4, shadcn-style components, TanStack Query, React Router 7, Axios, Zustand |
-| Back-end | .NET 9, SyZero, SqlSugar (default SQLite `app.db`), AutoMapper, Log4Net, Swagger, Newtonsoft.Json |
+| Back-end | .NET 10, SyZero, SqlSugar (default SQLite `app.db`), AutoMapper, Log4Net, native OpenAPI, Newtonsoft.Json |
 | Integration | `SyZero.AspNetCore.SpaProxy` (dev-time reverse proxy), `MapFallbackToFile("/index.html")` for SPA routing |
 
 ## 🚀 Run in Development
 
-```pwsh
+```powershell
 # 1) Install front-end deps once
 cd src/SyZero.Service/SyZero.Example3.SPA/SyZero.Example3.Frontend
 npm install
@@ -40,7 +40,7 @@ dotnet run
 Browse:
 
 - `http://localhost:5004/` — single-host entry (falls back to React routes)
-- `http://localhost:5004/api/swagger` — Swagger UI
+- `http://localhost:5004/openapi/v1.json` — OpenAPI JSON
 - `http://localhost:5174/` — Vite dev server directly (alternative; `/api` is proxied to 5004)
 
 ## 🛠️ Conventions
@@ -52,7 +52,7 @@ Browse:
 
 ## 📤 Publish as a Single Artifact
 
-```pwsh
+```powershell
 cd src/SyZero.Service/SyZero.Example3.SPA/SyZero.Example3.Web
 dotnet publish -c Release -o ./out
 ```

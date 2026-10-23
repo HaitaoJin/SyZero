@@ -55,14 +55,14 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddSyZero();
 
 // 注册服务方式1 - 从配置 "Feign" 节读取
-builder.Services.AddSyZeroFeign();
+builder.Services.AddSyZeroFeign(builder.Configuration);
 
 // 注册服务方式2 - 配置 + 委托
 builder.Services.AddSyZeroFeign(options =>
 {
     options.Global.Timeout = 30;
     options.Global.Retry = 3;
-});
+}, builder.Configuration);
 
 // 注册服务方式3 - 直接传入 RemoteServiceOptions
 builder.Services.AddSyZeroFeign(new RemoteServiceOptions
@@ -79,7 +79,7 @@ builder.Services.AddSyZeroFeign(new RemoteServiceOptions
 });
 
 // 也可直接走 Core 的 Provider 注册入口（与上面等价）：
-// builder.Services.AddRemoteService<FeignRemoteServiceProvider>();
+// builder.Services.AddRemoteService<FeignRemoteServiceProvider>(builder.Configuration);
 
 var app = builder.Build();
 // 使用SyZero
@@ -147,7 +147,7 @@ public class MyService
 ### 请求拦截器
 
 ```csharp
-builder.Services.AddSyZeroFeign()
+builder.Services.AddSyZeroFeign(builder.Configuration)
     .AddInterceptor<AuthHeaderInterceptor>();
 
 public class AuthHeaderInterceptor : IRequestInterceptor

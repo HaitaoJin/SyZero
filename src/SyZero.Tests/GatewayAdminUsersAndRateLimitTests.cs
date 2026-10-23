@@ -9,9 +9,11 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -81,8 +83,15 @@ public class GatewayAdminUsersAndRateLimitTests
             Assert.True(await store.UpdateAsync("alice", "p1-new", null, default));
             var alice = await store.FindAsync("alice", default);
             Assert.NotNull(alice);
-            Assert.Equal("p1-new", alice!.Password);
+            Assert.StartsWith("$pbkdf2-sha256$", alice!.Password);
+            Assert.DoesNotContain("p1-new", alice.Password, StringComparison.Ordinal);
             Assert.Equal("Admin", alice.Role);
+
+            var resolver = new UserResolver(
+                new SimpleOptionsMonitor<GatewayAdminUsersOptions>(new GatewayAdminUsersOptions()),
+                store);
+            Assert.NotNull(await resolver.ValidateAsync("alice", "p1-new", default));
+            Assert.Null(await resolver.ValidateAsync("alice", "wrong", default));
 
             // 改角色
             Assert.True(await store.UpdateAsync("bob", null, "Admin", default));
@@ -111,6 +120,8 @@ public class GatewayAdminUsersAndRateLimitTests
             Assert.True(File.Exists(path));
             var raw = File.ReadAllText(path);
             Assert.Contains("carol", raw);
+            Assert.DoesNotContain("secret", raw, StringComparison.Ordinal);
+            Assert.Contains("$pbkdf2-sha256$", raw, StringComparison.Ordinal);
             Assert.DoesNotContain("\"isBuiltIn\"", raw, StringComparison.OrdinalIgnoreCase); // [JsonIgnore]
         }
         finally
@@ -165,6 +176,31 @@ public class GatewayAdminUsersAndRateLimitTests
             Assert.NotNull(ok);
             Assert.Equal("Reader", ok!.Role);
             Assert.False(ok.IsBuiltIn);
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async Task UserResolver_LegacyPlaintextPassword_IsUpgradedAfterSuccessfulLogin()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "syzero-users-" + Guid.NewGuid().ToString("N") + ".json");
+        try
+        {
+            await File.WriteAllTextAsync(path,
+                "[{\"Name\":\"legacy\",\"Password\":\"old-secret\",\"Role\":\"Admin\"}]");
+            var store = MakeFileStore(path);
+            var resolver = new UserResolver(
+                new SimpleOptionsMonitor<GatewayAdminUsersOptions>(new GatewayAdminUsersOptions()),
+                store);
+
+            Assert.NotNull(await resolver.ValidateAsync("legacy", "old-secret", default));
+            var raw = await File.ReadAllTextAsync(path);
+            Assert.DoesNotContain("old-secret", raw, StringComparison.Ordinal);
+            Assert.Contains("$pbkdf2-sha256$", raw, StringComparison.Ordinal);
+            Assert.NotNull(await resolver.ValidateAsync("legacy", "old-secret", default));
         }
         finally
         {
@@ -260,6 +296,53 @@ public class GatewayAdminUsersAndRateLimitTests
         var calledMe = false;
         await new AdminBasicAuthMiddleware(_ => { calledMe = true; return Task.CompletedTask; }).InvokeAsync(ctxMe, resolver);
         Assert.True(calledMe);
+    }
+
+    [Fact]
+    public async Task Middleware_PathExceptions_RequireExactPath()
+    {
+        var resolver = MakeResolver(new GatewayAdminUser { Name = "bob", Password = "p", Role = "Reader" });
+
+        var fakeLogin = new DefaultHttpContext();
+        fakeLogin.Request.Path = "/admin/login-anything";
+        var fakeLoginCalled = false;
+        await new AdminBasicAuthMiddleware(_ => { fakeLoginCalled = true; return Task.CompletedTask; })
+            .InvokeAsync(fakeLogin, resolver);
+        Assert.False(fakeLoginCalled);
+        Assert.Equal(StatusCodes.Status302Found, fakeLogin.Response.StatusCode);
+
+        var fakeMe = new DefaultHttpContext();
+        fakeMe.Request.Path = "/admin-api/me/password-reset";
+        fakeMe.Request.Method = "POST";
+        fakeMe.Request.Headers.Authorization = "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes("bob:p"));
+        var fakeMeCalled = false;
+        await new AdminBasicAuthMiddleware(_ => { fakeMeCalled = true; return Task.CompletedTask; })
+            .InvokeAsync(fakeMe, resolver);
+        Assert.False(fakeMeCalled);
+        Assert.Equal(StatusCodes.Status403Forbidden, fakeMe.Response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Middleware_ProtectedCookie_RoundTripsWithoutPlaintextCredentials()
+    {
+        var resolver = MakeResolver(new GatewayAdminUser { Name = "alice", Password = "secret", Role = "Admin" });
+        var protector = new GatewayAdminCookieProtector(new EphemeralDataProtectionProvider());
+        var token = protector.Protect("alice", "secret");
+        Assert.DoesNotContain("alice", token, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("secret", token, StringComparison.Ordinal);
+
+        var ctx = new DefaultHttpContext();
+        ctx.Request.Path = "/admin";
+        ctx.Request.Headers.Cookie = AdminBasicAuthMiddleware.AuthCookieName + "=" + token;
+        var called = false;
+        var middleware = new AdminBasicAuthMiddleware(
+            _ => { called = true; return Task.CompletedTask; },
+            protector);
+
+        await middleware.InvokeAsync(ctx, resolver);
+
+        Assert.True(called);
+        Assert.Equal("alice", ctx.User.Identity?.Name);
     }
 
     // ---------- 5. UsersController ----------
@@ -511,6 +594,18 @@ public class GatewayAdminUsersAndRateLimitTests
     // ---------- 9. appsettings 凭据绑定（单账号 / 多账号 / 并存） ----------
 
     [Fact]
+    public void AddSyZeroGatewayAdmin_RegistersCookieProtector()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSyZeroGatewayAdmin();
+
+        using var provider = services.BuildServiceProvider();
+
+        Assert.NotNull(provider.GetRequiredService<GatewayAdminCookieProtector>());
+    }
+
+    [Fact]
     public void Bind_LegacyUsernamePassword_RegistersSingleAdmin()
     {
         var cfg = new ConfigurationBuilder()
@@ -664,7 +759,7 @@ public class GatewayAdminUsersAndRateLimitTests
                 }).ToList()
             });
         }
-        var ctrl = new AdminController(store, new NoopAudit(), new NoopBus(), new EmptyServiceProvider());
+        var ctrl = new AdminController(store, new NoopAudit(), new NoopBus(), new EmptyServiceProvider(), new ConfigurationBuilder().Build());
         ctrl.ControllerContext = new ControllerContext { HttpContext = MakeHttpContext("admin", "Admin") };
         return new AdminHarness(ctrl);
     }

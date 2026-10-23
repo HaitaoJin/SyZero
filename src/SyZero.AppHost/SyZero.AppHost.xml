@@ -1,0 +1,99 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyZero.AppHost</name>
+    </assembly>
+    <members>
+        <member name="T:Program">
+            <summary>
+            Auto-generated public partial Program class for top-level statement apps.
+            </summary>
+        </member>
+        <member name="T:Projects.SyZero_Gateway">
+            <summary>
+            Metadata for the SyZero_Gateway project.
+            </summary>
+        </member>
+        <member name="P:Projects.SyZero_Gateway.ProjectPath">
+            <summary>
+            The path to the SyZero_Gateway project.
+            </summary>
+        </member>
+        <member name="P:Projects.SyZero_Gateway.SuppressBuild">
+            <summary>
+            Gets a value indicating whether building the project before running it should be suppressed.
+            </summary>
+            <remarks>
+            Projects added via ProjectReference items in the AppHost project file are built as part of building the AppHost project process
+            so building them again before running is unnecessary. This property always returns true.
+            </remarks>
+        </member>
+        <member name="T:Projects.SyZero_Example1_Web">
+            <summary>
+            Metadata for the SyZero_Example1_Web project.
+            </summary>
+        </member>
+        <member name="P:Projects.SyZero_Example1_Web.ProjectPath">
+            <summary>
+            The path to the SyZero_Example1_Web project.
+            </summary>
+        </member>
+        <member name="P:Projects.SyZero_Example1_Web.SuppressBuild">
+            <summary>
+            Gets a value indicating whether building the project before running it should be suppressed.
+            </summary>
+            <remarks>
+            Projects added via ProjectReference items in the AppHost project file are built as part of building the AppHost project process
+            so building them again before running is unnecessary. This property always returns true.
+            </remarks>
+        </member>
+        <member name="T:Projects.SyZero_Example2_Web">
+            <summary>
+            Metadata for the SyZero_Example2_Web project.
+            </summary>
+        </member>
+        <member name="P:Projects.SyZero_Example2_Web.ProjectPath">
+            <summary>
+            The path to the SyZero_Example2_Web project.
+            </summary>
+        </member>
+        <member name="P:Projects.SyZero_Example2_Web.SuppressBuild">
+            <summary>
+            Gets a value indicating whether building the project before running it should be suppressed.
+            </summary>
+            <remarks>
+            Projects added via ProjectReference items in the AppHost project file are built as part of building the AppHost project process
+            so building them again before running is unnecessary. This property always returns true.
+            </remarks>
+        </member>
+        <member name="T:Projects.SyZero_Example3_Web">
+            <summary>
+            Metadata for the SyZero_Example3_Web project.
+            </summary>
+        </member>
+        <member name="P:Projects.SyZero_Example3_Web.ProjectPath">
+            <summary>
+            The path to the SyZero_Example3_Web project.
+            </summary>
+        </member>
+        <member name="P:Projects.SyZero_Example3_Web.SuppressBuild">
+            <summary>
+            Gets a value indicating whether building the project before running it should be suppressed.
+            </summary>
+            <remarks>
+            Projects added via ProjectReference items in the AppHost project file are built as part of building the AppHost project process
+            so building them again before running is unnecessary. This property always returns true.
+            </remarks>
+        </member>
+        <member name="T:Projects.SyZero_AppHost">
+            <summary>
+            Metadata for the Aspire AppHost project.
+            </summary>
+        </member>
+        <member name="P:Projects.SyZero_AppHost.ProjectPath">
+            <summary>
+            The path to the Aspire Host project.
+            </summary>
+        </member>
+    </members>
+</doc>

@@ -8,7 +8,7 @@ SyZero provides a unified `IEventBus` abstraction. You can start with in-process
 | --- | --- | --- |
 | Local | `AddLocalEventBus()` | In-process events, no external dependency |
 | DB | `AddDBEventBus()` | Simple persistence and retry support |
-| Redis | `AddSyZeroRedis()` + `AddRedisEventBus()` | Cross-instance broadcast without durable delivery guarantees |
+| Redis | `AddSyZeroRedis(builder.Configuration)` + `AddRedisEventBus(builder.Configuration)` | Cross-instance broadcast without durable delivery guarantees |
 | RabbitMQ | `AddRabbitMQEventBus()` | Standard queue-based async integration for production |
 
 ## 1. Define an event
@@ -46,7 +46,7 @@ public class OrderCreatedHandler : IEventHandler<OrderCreatedEvent>
 
 ```csharp
 builder.AddSyZero();
-builder.Services.AddLocalEventBus();
+builder.Services.AddLocalEventBus(builder.Configuration);
 ```
 
 Good for monoliths, domain events, and local verification.
@@ -55,7 +55,7 @@ Good for monoliths, domain events, and local verification.
 
 ```csharp
 builder.AddSyZero();
-builder.Services.AddDBEventBus();
+builder.Services.AddDBEventBus(builder.Configuration);
 ```
 
 Good when you need basic persistence and retries without adding a broker yet.
@@ -65,7 +65,7 @@ Good when you need basic persistence and retries without adding a broker yet.
 ```csharp
 builder.AddSyZero();
 builder.Services.AddSyZeroRedis(builder.Configuration);
-builder.Services.AddRedisEventBus(options =>
+builder.Services.AddRedisEventBus(builder.Configuration, options =>
 {
     options.ChannelPrefix = "SyZero:EventBus:";
 });
@@ -77,7 +77,7 @@ Good for lightweight broadcast scenarios such as cross-instance notifications an
 
 ```csharp
 builder.AddSyZero();
-builder.Services.AddRabbitMQEventBus();
+builder.Services.AddRabbitMQEventBus(builder.Configuration);
 ```
 
 Configuration example:

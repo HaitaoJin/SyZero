@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>true</IsPackable>
+    <Description>SyZero 统一通知编排，支持邮件、短信及可扩展通道。</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\SyZero.Core\SyZero.Core.csproj" />
+    <ProjectReference Include="..\SyZero.Mail\SyZero.Mail.csproj" />
+    <ProjectReference Include="..\SyZero.Sms\SyZero.Sms.csproj" />
+  </ItemGroup>
+</Project>

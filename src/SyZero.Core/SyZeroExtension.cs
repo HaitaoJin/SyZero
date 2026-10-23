@@ -1,13 +1,19 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Linq;
 using System.Reflection;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using SyZero.Dependency;
+using SyZero.Domain.Repository;
+using SyZero.Runtime.Security;
 using SyZero.Runtime.Session;
 using SyZero.Serialization;
 using SyZero.Service;
-using SyZero.Util;
 
 namespace SyZero
 {
@@ -15,17 +21,12 @@ namespace SyZero
     {
         public static IHost UseSyZero(this IHost app)
         {
-            // 设置全局服务提供者；
-            // 服务注册 / 注销改由 SyZeroBootstrapper（IHostedService）以异步方式完成，
-            // 不再在此处通过 .GetAwaiter().GetResult() 同步阻塞。
-            SyZeroUtil.ServiceProvider = app.Services;
             return app;
         }
 
         public static IHostApplicationBuilder AddSyZero(this IHostApplicationBuilder builder)
         {
-            AppConfig.Configuration = builder.Configuration;
-            builder.Services.AddSyZero();
+            builder.Services.AddSyZero(builder.Configuration);
             return builder;
         }
 
@@ -36,8 +37,9 @@ namespace SyZero
         /// <param name="builder"></param>
         /// <param name="configuration"></param>
         /// <returns></returns>
-        public static IServiceCollection AddSyZero(this IServiceCollection services)
+        public static IServiceCollection AddSyZero(this IServiceCollection services, IConfiguration configuration)
         {
+            ArgumentNullException.ThrowIfNull(configuration);
             System.Console.WriteLine(@" _____  __    __  ______  _____   _____    _____  
 /  ___/ \ \  / / |___  / | ____| |  _  \  /  _  \ 
 | |___   \ \/ /     / /  | |__   | |_| |  | | | | 
@@ -49,10 +51,22 @@ namespace SyZero
             System.Console.WriteLine("版本号: " + Assembly.GetExecutingAssembly().GetName().Version);
             System.Console.WriteLine("启动中......");
 
+            // 核心包可被网关等无认证、无持久化宿主独立使用；功能模块注册后会覆盖这些占位实现。
+            services.TryAddSingleton<IToken, NullToken>();
+            services.TryAddScoped<IUnitOfWork, UnsupportedUnitOfWork>();
+
             //注入SySession
             services.AddScoped<ISySession, SySession>();
             services.AddSyZeroValidation();
             services.AddOptions();
+            services.AddOptions<Configurations.SyZeroServerOptions>().Bind(configuration.GetSection("SyZero"));
+            services.PostConfigure<Configurations.SyZeroServerOptions>(options =>
+            {
+                var localIp = ResolveLocalIPv4() ?? "127.0.0.1";
+                if (string.IsNullOrWhiteSpace(options.Ip)) options.Ip = localIp;
+                if (string.IsNullOrWhiteSpace(options.WanIp)) options.WanIp = localIp;
+            });
+            services.AddOptions<Configurations.SyZeroConnectionOptions>().Bind(configuration.GetSection("ConnectionString"));
             services.AddMemoryCache();
             services.AddDistributedMemoryCache();
 
@@ -101,6 +115,19 @@ namespace SyZero
             }
 
             return services;
+        }
+
+        private static string? ResolveLocalIPv4()
+        {
+            return NetworkInterface.GetAllNetworkInterfaces()
+                .Select(network => network.GetIPProperties())
+                .SelectMany(properties => properties.UnicastAddresses)
+                .Where(address => address.Address.AddressFamily == AddressFamily.InterNetwork
+                    && (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                        || address.DuplicateAddressDetectionState == DuplicateAddressDetectionState.Preferred)
+                    && !System.Net.IPAddress.IsLoopback(address.Address))
+                .Select(address => address.Address.ToString())
+                .FirstOrDefault();
         }
     }
 }

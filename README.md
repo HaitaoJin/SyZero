@@ -87,7 +87,7 @@ SyZero 是一个基于 .NET 的模块化微服务开发框架，提供了丰富�
 
 ## 🛠️ 快速开始
 
-> 💡 当前正式版本为 `v9.1.0`。`v1.2.0` 之后到 `v1.6.0` 之间的阶段性变更未单独发布，已统一并入 `v9.1.0`；相关升级与破坏性变更请查看 [docs/release-notes.md](docs/release-notes.md)。
+> 💡 当前正式版本为 `v10.0.0`。这是面向 .NET 10 的大版本升级，不承诺兼容 v9 公共 API；迁移说明见 [docs/release-notes.md](docs/release-notes.md)。
 
 ### 安装
 
@@ -129,10 +129,10 @@ builder.Services.AddDynamicWebApi(new DynamicWebApiOptions()
 });
 
 // 添加 Swagger 文档
-builder.Services.AddSwagger();
+builder.Services.AddSyZeroOpenApi();
 
 // 添加 SqlSugar ORM (可选)
-builder.Services.AddSyZeroSqlSugar();
+builder.Services.AddSyZeroSqlSugar(builder.Configuration);
 
 // 添加 AutoMapper (可选)
 builder.Services.AddSyZeroAutoMapper();
@@ -140,8 +140,7 @@ builder.Services.AddSyZeroAutoMapper();
 var app = builder.Build();
 
 app.UseSyZero();
-app.UseSwagger();
-app.UseSwaggerUI();
+app.MapSyZeroOpenApi();
 app.MapControllers();
 
 app.Run();
@@ -194,7 +193,7 @@ builder.Services.AddSyZeroConsul();
 // builder.Services.AddSyZeroNacos();
 
 // 或使用 Redis 服务管理
-// builder.Services.AddRedisServiceManagement();
+// builder.Services.AddRedisServiceManagement(builder.Configuration);
 
 var app = builder.Build();
 app.UseSyZero();
@@ -367,17 +366,17 @@ SyZero 提供了统一的 `IEventBus` 接口，支持多种事件总线实现：
 var builder = WebApplication.CreateBuilder(args);
 
 // 使用本地内存事件总线（单体应用）
-builder.Services.AddLocalEventBus();
+builder.Services.AddLocalEventBus(builder.Configuration);
 
 // 或使用数据库事件总线（需要持久化）
-// builder.Services.AddDBEventBus();
+// builder.Services.AddDBEventBus(builder.Configuration);
 
 // 或使用 Redis 事件总线（轻量跨实例广播）
-// builder.Services.AddSyZeroRedis();
-// builder.Services.AddRedisEventBus();
+// builder.Services.AddSyZeroRedis(builder.Configuration);
+// builder.Services.AddRedisEventBus(builder.Configuration);
 
 // 或使用 RabbitMQ 事件总线（分布式系统）
-// builder.Services.AddRabbitMQEventBus();
+// builder.Services.AddRabbitMQEventBus(builder.Configuration);
 
 var app = builder.Build();
 app.Run();
@@ -486,9 +485,13 @@ SyZero/
 │   │   ├── SyZero.Swagger/             # Swagger 文档
 │   │   └── SyZero.Web.Common/          # Web 公共组件
 │   ├── SyZero.Gateway/                 # API 网关示例
-│   └── SyZero.Service/                 # 示例服务
-│       ├── SyZero.Example1.Service/    # 示例服务 1
-│       └── SyZero.Example2.Service/    # 示例服务 2
+│   ├── SyZero.AppHost/                 # Aspire 本地编排宿主
+│   └── SyZero.Service/                 # 示例服务与客户端
+│       ├── SyZero.Example1.Service/    # 微服务示例 1
+│       ├── SyZero.Example2.Service/    # 微服务示例 2
+│       ├── SyZero.Example3.SPA/        # 前后端同宿主 SPA 示例
+│       ├── SyZero.Example4.Monolith/   # 后端单体示例
+│       └── SyZero.Example5.Frontend/   # 独立 Gateway TypeScript 前端示例
 ├── doc/                                # 文档
 ├── nuget/                              # NuGet 发布脚本
 └── README.md
@@ -496,7 +499,7 @@ SyZero/
 
 ## 🔧 技术栈
 
-- **.NET**: 运行时模块统一要求 .NET 9 SDK / Runtime；仅 `SyZero.SourceGenerator` 作为 Analyzer 保持 `netstandard2.0`
+- **.NET**: 运行时模块统一要求 .NET 10 SDK / Runtime；仅 `SyZero.SourceGenerator` 作为 Analyzer 保持 `netstandard2.0`
 - **IDE**: Visual Studio 2022 / VS Code / Rider
 - **数据库**: SQL Server / MySQL / MongoDB / PostgreSQL (可选)
 - **缓存**: Redis / 内存缓存 (可选)
@@ -510,7 +513,7 @@ SyZero/
 
 ## 📋 更新历史
 
-查看完整的 [更新日志](docs/release-notes.md) 了解 `v9.1.0` 的合并发布与升级说明。
+查看完整的 [更新日志](docs/release-notes.md) 了解 `v10.0.0` 的升级说明与破坏性变更。
 
 ## 🤝 贡献
 

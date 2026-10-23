@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Http.Resilience;
 using System;
 
 namespace SyZero.Sdk;
@@ -18,6 +19,8 @@ public static class SyZeroSdkExtension
     {
         if (string.IsNullOrWhiteSpace(baseAddress)) throw new ArgumentException("baseAddress is required", nameof(baseAddress));
 
-        return services.AddHttpClient<TClient>(c => c.BaseAddress = new Uri(baseAddress));
+        var builder = services.AddHttpClient<TClient>(c => c.BaseAddress = new Uri(baseAddress));
+        builder.AddStandardResilienceHandler();
+        return builder;
     }
 }

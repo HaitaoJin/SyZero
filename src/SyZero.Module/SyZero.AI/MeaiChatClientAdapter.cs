@@ -1,6 +1,8 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.AI;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace SyZero.AI;
 
@@ -23,7 +25,16 @@ public sealed class MeaiChatClientAdapter : ISyChatClient
         {
             new(ChatRole.User, prompt)
         };
-        var completion = await _inner.CompleteAsync(messages, options: null, cancellationToken).ConfigureAwait(false);
-        return completion?.Message?.Text ?? string.Empty;
+        var response = await _inner.GetResponseAsync(messages, options: null, cancellationToken).ConfigureAwait(false);
+        return response.Text ?? string.Empty;
+    }
+
+    public async IAsyncEnumerable<string> StreamAsync(string prompt, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        var messages = new List<ChatMessage> { new(ChatRole.User, prompt) };
+        await foreach (var update in _inner.GetStreamingResponseAsync(messages, options: null, cancellationToken).ConfigureAwait(false))
+        {
+            if (!string.IsNullOrEmpty(update.Text)) yield return update.Text;
+        }
     }
 }

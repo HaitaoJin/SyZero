@@ -1,7 +1,7 @@
 {
   "Routes": [
     {
-      "UpstreamPathTemplate": "/api/example1/{everything}",
+      "UpstreamPathTemplate": "/example1/{everything}",
       "UpstreamHttpMethod": [
         "GET",
         "POST",
@@ -10,7 +10,7 @@
         "PATCH"
       ],
       "UseServiceDiscovery": true,
-      "DownstreamPathTemplate": "/api/example1/{everything}",
+      "DownstreamPathTemplate": "/{everything}",
       "DownstreamScheme": "http",
       "ServiceName": "SyZero.Example1",
       "LoadBalancerOptions": {
@@ -19,7 +19,7 @@
       "SwaggerKey": "SyZero.Example1"
     },
     {
-      "UpstreamPathTemplate": "/api/example2/{everything}",
+      "UpstreamPathTemplate": "/example2/{everything}",
       "UpstreamHttpMethod": [
         "Get",
         "Post",
@@ -28,7 +28,7 @@
         "Patch"
       ],
       "UseServiceDiscovery": true,
-      "DownstreamPathTemplate": "/api/example2/{everything}",
+      "DownstreamPathTemplate": "/{everything}",
       "DownstreamScheme": "http",
       "ServiceName": "SyZero.Example2",
       "LoadBalancerOptions": {
@@ -46,7 +46,7 @@
           "Version": "v1",
           "Service": {
             "Name": "SyZero.Example1",
-            "Path": "/swagger/v1/swagger.json"
+            "Path": "/openapi/v1.json"
           }
         }
       ]
@@ -59,7 +59,7 @@
           "Version": "v1",
           "Service": {
             "Name": "SyZero.Example2",
-            "Path": "/swagger/v1/swagger.json"
+            "Path": "/openapi/v1.json"
           }
         }
       ]

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Security.Cryptography;
 
 namespace SyZero.Gateway.Admin.Auth
@@ -28,6 +29,7 @@ namespace SyZero.Gateway.Admin.Auth
     public sealed class MemoryCaptchaStore : ICaptchaStore
     {
         private static readonly TimeSpan Ttl = TimeSpan.FromMinutes(5);
+        private const int MaxEntries = 4096;
         private readonly ConcurrentDictionary<string, Entry> _store = new();
 
         /// <inheritdoc />
@@ -45,6 +47,16 @@ namespace SyZero.Gateway.Admin.Auth
 
             // 顺手清理过期项，避免无限增长。
             CleanupExpired();
+            if (_store.Count > MaxEntries)
+            {
+                // 匿名颁发端点可能被恶意请求；达到上限时移除最早到期项，保持内存有界。
+                foreach (var item in _store
+                    .OrderBy(pair => pair.Value.ExpiresUtc)
+                    .Take(_store.Count - MaxEntries))
+                {
+                    _store.TryRemove(item.Key, out _);
+                }
+            }
             return new CaptchaChallenge { Id = id, Question = question };
         }
 

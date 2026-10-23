@@ -37,9 +37,11 @@ namespace SyZero
             var options = new SyZeroOpenTelemetryOptions();
             configuration?.GetSection(SectionName)?.Bind(options);
 
+            ApplyStandardEnvironment(configuration, options);
+
             if (string.IsNullOrWhiteSpace(options.ServiceName))
             {
-                options.ServiceName = ResolveServiceName();
+                options.ServiceName = ResolveServiceName(configuration);
             }
 
             if (string.IsNullOrWhiteSpace(options.ServiceVersion))
@@ -52,6 +54,43 @@ namespace SyZero
             options.HttpClientPathPrefixes = NormalizePathPrefixes(options.HttpClientPathPrefixes);
 
             return options;
+        }
+
+        private static void ApplyStandardEnvironment(
+            IConfiguration configuration,
+            SyZeroOpenTelemetryOptions options)
+        {
+            if (configuration == null)
+            {
+                return;
+            }
+
+            var endpoint = configuration["OTEL_EXPORTER_OTLP_ENDPOINT"];
+            if (!string.IsNullOrWhiteSpace(endpoint))
+            {
+                // Aspire 为每个项目注入标准 OTLP 地址，应优先于应用配置中的独立采集器地址。
+                options.OtlpUrl = endpoint.Trim();
+            }
+
+            var serviceName = configuration["OTEL_SERVICE_NAME"];
+            if (!string.IsNullOrWhiteSpace(serviceName))
+            {
+                options.ServiceName = serviceName.Trim();
+            }
+
+            var protocol = configuration["OTEL_EXPORTER_OTLP_PROTOCOL"];
+            if (string.IsNullOrWhiteSpace(protocol))
+            {
+                return;
+            }
+
+            options.OtlpProtocol = protocol.Trim().ToLowerInvariant() switch
+            {
+                "grpc" => OtlpExportProtocol.Grpc,
+                "http/protobuf" => OtlpExportProtocol.HttpProtobuf,
+                "httpprotobuf" => OtlpExportProtocol.HttpProtobuf,
+                _ => options.OtlpProtocol
+            };
         }
 
         public void Validate()
@@ -108,11 +147,12 @@ namespace SyZero
             return normalized.Length > 1 ? normalized.TrimEnd('/') : normalized;
         }
 
-        private static string ResolveServiceName()
+        private static string ResolveServiceName(IConfiguration configuration)
         {
-            if (!string.IsNullOrWhiteSpace(AppConfig.ServerOptions?.Name))
+            var configuredName = configuration?["SyZero:Name"];
+            if (!string.IsNullOrWhiteSpace(configuredName))
             {
-                return AppConfig.ServerOptions.Name;
+                return configuredName;
             }
 
             return Assembly.GetEntryAssembly()?.GetName().Name ?? "syzero-service";

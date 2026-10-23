@@ -22,12 +22,12 @@ SyZero.Example3.SPA/
 | 层 | 技术 |
 | --- | --- |
 | 前端 | React 19、TypeScript、Vite 6、Tailwind CSS v4、shadcn/ui 风格、TanStack Query、React Router 7、Axios、Zustand |
-| 后端 | .NET 9、SyZero 框架、SqlSugar（默认 SQLite `app.db`）、AutoMapper、Log4Net、Swagger、Newtonsoft.Json |
+| 后端 | .NET 10、SyZero 框架、SqlSugar（默认 SQLite `app.db`）、AutoMapper、Log4Net、原生 OpenAPI、Newtonsoft.Json |
 | 集成 | `SyZero.AspNetCore.SpaProxy`（开发期 dev server 反代）、统一 `MapFallbackToFile("/index.html")` SPA 路由 |
 
 ## 🚀 启动开发模式
 
-```pwsh
+```powershell
 # 1) 安装前端依赖（首次）
 cd src/SyZero.Service/SyZero.Example3.SPA/SyZero.Example3.Frontend
 npm install
@@ -40,7 +40,7 @@ dotnet run
 浏览器访问：
 
 - `http://localhost:5004/`：单体宿主入口（自动 fallback 到 React 路由）
-- `http://localhost:5004/api/swagger`：Swagger UI
+- `http://localhost:5004/openapi/v1.json`：OpenAPI JSON
 - `http://localhost:5174/`：直连 Vite Dev Server（备选，`/api` 通过代理转发到 5004）
 
 ## 🛠️ 关键约定
@@ -52,7 +52,7 @@ dotnet run
 
 ## 📤 发布为单体
 
-```pwsh
+```powershell
 cd src/SyZero.Service/SyZero.Example3.SPA/SyZero.Example3.Web
 dotnet publish -c Release -o ./out
 ```

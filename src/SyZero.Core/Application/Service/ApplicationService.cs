@@ -1,13 +1,15 @@
 ﻿using SyZero.Dependency;
 using SyZero.Runtime.Security;
 using SyZero.Runtime.Session;
-using SyZero.Util;
 
 namespace SyZero.Application.Service
 {
     public class ApplicationService : SyZeroServiceBase, IApplicationService
     {
-        public ISySession SySession => SyZeroUtil.GetScopeService<ISySession>()!;
+        public ApplicationService(SyZeroServiceDependencies dependencies, ISySession sySession) : base(dependencies)
+            => SySession = sySession;
+
+        public ISySession SySession { get; }
 
         protected virtual void CheckPermission(string? permissionName = null)
         {
@@ -17,7 +19,10 @@ namespace SyZero.Application.Service
             }
             if (!string.IsNullOrEmpty(permissionName))
             {
-                PermissionChecker.Authorize(permissionName);
+                if (!PermissionChecker.IsHas(permissionName))
+                {
+                    throw new SyMessageException(SyMessageBoxStatus.NoPermission);
+                }
             }
         }
     }

@@ -116,12 +116,22 @@ namespace SyZero.Gateway.Admin.Services
             {
                 BackupCurrent();
 
-                var tempPath = _configPath + ".tmp";
-                await using (var stream = File.Create(tempPath))
+                var tempPath = _configPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
+                try
                 {
-                    await JsonSerializer.SerializeAsync(stream, configuration, WriteOptions, cancellationToken).ConfigureAwait(false);
+                    await using (var stream = File.Create(tempPath))
+                    {
+                        await JsonSerializer.SerializeAsync(stream, configuration, WriteOptions, cancellationToken).ConfigureAwait(false);
+                    }
+                    File.Move(tempPath, _configPath, overwrite: true);
                 }
-                File.Move(tempPath, _configPath, overwrite: true);
+                finally
+                {
+                    if (File.Exists(tempPath))
+                    {
+                        File.Delete(tempPath);
+                    }
+                }
 
                 CleanupBackups();
 

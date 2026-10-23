@@ -24,12 +24,12 @@ Here, “monolith” describes runtime and deployment: only `SyZero.Example4.Web
 | Web host | ASP.NET Core 9 |
 | SyZero core | `builder.AddSyZero()` / `app.UseSyZero()` |
 | API exposure | `SyZero.DynamicWebApi` publishes `TodoAppService` |
-| Documentation | `SyZero.Swagger`, default path `/api/swagger` |
+| Documentation | native OpenAPI through `SyZero.Swagger`, default path `/openapi/v1.json` |
 | Data | In-process `InMemoryTodoStore` |
 
 ## Run
 
-```pwsh
+```powershell
 cd src/SyZero.Service/SyZero.Example4.Monolith/SyZero.Example4.Web
 dotnet run
 ```
@@ -37,7 +37,7 @@ dotnet run
 The default port is `5005`:
 
 - `http://localhost:5005/` — service info
-- `http://localhost:5005/api/swagger` — Swagger UI
+- `http://localhost:5005/openapi/v1.json` — OpenAPI JSON
 - `GET http://localhost:5005/api/todo/list` — todo list API
 
 ## Key Code
@@ -52,16 +52,15 @@ builder.Services.AddControllers();
 builder.Services.AddDynamicWebApi(new DynamicWebApiOptions
 {
     DefaultApiPrefix = "/api",
-    DefaultAreaName = AppConfig.ServerOptions.Name
+    DefaultAreaName = builder.Configuration["SyZero:Name"] ?? string.Empty
 });
-builder.Services.AddSwagger();
+builder.Services.AddSyZeroOpenApi();
 
 var app = builder.Build();
 
 app.UseSyZero();
 app.MapControllers();
-app.UseSwagger();
-app.UseSwaggerUI(options => options.RoutePrefix = "api/swagger");
+app.MapSyZeroOpenApi();
 
 app.Run();
 ```

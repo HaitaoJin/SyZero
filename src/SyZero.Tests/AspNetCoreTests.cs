@@ -23,6 +23,7 @@ public class AspNetCoreTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<IToken>(new TestToken(CreatePrincipal(1)));
+        services.AddScoped<ISySession, TestSySession>();
 
         services.AddSyZeroController();
 

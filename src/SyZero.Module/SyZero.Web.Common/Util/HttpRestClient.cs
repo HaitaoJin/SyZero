@@ -8,7 +8,6 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using SyZero.Client;
-using SyZero.Util;
 
 namespace SyZero.Web.Common.Util
 {
@@ -17,6 +16,11 @@ namespace SyZero.Web.Common.Util
     /// </summary>
     public class HttpRestClient : IClient
     {
+        private readonly RestClient _client;
+
+        public HttpRestClient(RestClient client)
+            => _client = client ?? throw new ArgumentNullException(nameof(client));
+
         public async Task<ResponseTemplate<T>> ExecuteAsync<T>(RequestTemplate requestTemplate, CancellationToken cancellationToken)
         {
             if (requestTemplate == null)
@@ -24,7 +28,6 @@ namespace SyZero.Web.Common.Util
                 throw new ArgumentNullException(nameof(requestTemplate));
             }
 
-            var client = SyZeroUtil.GetService<RestClient>();
             var method = GetMethod(requestTemplate);
             var requset = new RestRequest(requestTemplate.Url, method);
             AddHeaders(requset, requestTemplate.Headers);
@@ -33,7 +36,7 @@ namespace SyZero.Web.Common.Util
             {
                 requset.AddQueryParameter(item.Key, item.Value);
             }
-            var response = await client.ExecuteAsync(requset, cancellationToken);
+            var response = await _client.ExecuteAsync(requset, cancellationToken);
             return GetResponseTemplate<T>(response);
         }
 

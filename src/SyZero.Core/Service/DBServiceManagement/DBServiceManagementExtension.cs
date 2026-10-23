@@ -50,12 +50,12 @@ namespace SyZero
         /// 添加数据库服务管理到依赖注入容器（使用默认 Repository 实现，从配置读取）
         /// </summary>
         /// <param name="services">服务集合</param>
-        /// <param name="configuration">配置，为 null 时使用 AppConfig.Configuration</param>
+        /// <param name="configuration">配置</param>
         /// <param name="sectionName">配置节名称，默认为 "DBServiceManagement"</param>
         /// <returns>服务集合</returns>
-        public static IServiceCollection AddDBServiceManagement(this IServiceCollection services, IConfiguration? configuration = null, string sectionName = DBServiceManagementOptions.SectionName)
+        public static IServiceCollection AddDBServiceManagement(this IServiceCollection services, IConfiguration configuration, string sectionName = DBServiceManagementOptions.SectionName)
         {
-            var config = configuration ?? AppConfig.Configuration;
+            var config = configuration ?? throw new ArgumentNullException(nameof(configuration));
             var options = new DBServiceManagementOptions();
             config?.GetSection(sectionName)?.Bind(options);
             return AddDBServiceManagement(services, options);
@@ -66,12 +66,12 @@ namespace SyZero
         /// </summary>
         /// <param name="services">服务集合</param>
         /// <param name="optionsAction">额外配置委托（在配置文件配置之后执行）</param>
-        /// <param name="configuration">配置，为 null 时使用 AppConfig.Configuration</param>
+        /// <param name="configuration">配置</param>
         /// <param name="sectionName">配置节名称，默认为 "DBServiceManagement"</param>
         /// <returns>服务集合</returns>
-        public static IServiceCollection AddDBServiceManagement(this IServiceCollection services, Action<DBServiceManagementOptions> optionsAction, IConfiguration? configuration = null, string sectionName = DBServiceManagementOptions.SectionName)
+        public static IServiceCollection AddDBServiceManagement(this IServiceCollection services, Action<DBServiceManagementOptions> optionsAction, IConfiguration configuration, string sectionName = DBServiceManagementOptions.SectionName)
         {
-            var config = configuration ?? AppConfig.Configuration;
+            var config = configuration ?? throw new ArgumentNullException(nameof(configuration));
             var options = new DBServiceManagementOptions();
             config?.GetSection(sectionName)?.Bind(options);
             optionsAction?.Invoke(options);
@@ -111,7 +111,7 @@ namespace SyZero
         /// <typeparam name="TServiceRegistryRepository">服务注册仓储实现类型</typeparam>
         /// <param name="services">服务集合</param>
         /// <param name="optionsAction">额外配置委托</param>
-        /// <param name="configuration">配置，为 null 时使用 AppConfig.Configuration</param>
+        /// <param name="configuration">配置</param>
         /// <param name="sectionName">配置节名称</param>
         /// <returns>服务集合</returns>
         public static IServiceCollection AddDBServiceManagement<TServiceRegistryRepository>(
@@ -121,7 +121,7 @@ namespace SyZero
             string sectionName = DBServiceManagementOptions.SectionName)
             where TServiceRegistryRepository : class, IServiceRegistryRepository
         {
-            var config = configuration ?? AppConfig.Configuration;
+            var config = configuration ?? throw new ArgumentNullException(nameof(configuration));
             var options = new DBServiceManagementOptions();
             config?.GetSection(sectionName)?.Bind(options);
             optionsAction?.Invoke(options);
@@ -165,7 +165,7 @@ namespace SyZero
         /// <typeparam name="TLeaderElectionRepository">Leader 选举仓储实现类型</typeparam>
         /// <param name="services">服务集合</param>
         /// <param name="optionsAction">额外配置委托</param>
-        /// <param name="configuration">配置，为 null 时使用 AppConfig.Configuration</param>
+        /// <param name="configuration">配置</param>
         /// <param name="sectionName">配置节名称</param>
         /// <returns>服务集合</returns>
         public static IServiceCollection AddDBServiceManagement<TServiceRegistryRepository, TLeaderElectionRepository>(
@@ -176,7 +176,7 @@ namespace SyZero
             where TServiceRegistryRepository : class, IServiceRegistryRepository
             where TLeaderElectionRepository : class, ILeaderElectionRepository
         {
-            var config = configuration ?? AppConfig.Configuration;
+            var config = configuration ?? throw new ArgumentNullException(nameof(configuration));
             var options = new DBServiceManagementOptions();
             config?.GetSection(sectionName)?.Bind(options);
             optionsAction?.Invoke(options);

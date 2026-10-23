@@ -58,13 +58,11 @@ namespace SyZero.Web.Common
             if (ivBytes == null || ivBytes.Length <= 0)
                 throw new ArgumentNullException(nameof(ivBytes));
 
-            var aes = new AesCryptoServiceProvider
-            {
-                Key = keyBytes,
-                IV = ivBytes,
-                Mode = cipher,
-                Padding = padding
-            };
+            using var aes = Aes.Create();
+            aes.Key = keyBytes;
+            aes.IV = ivBytes;
+            aes.Mode = cipher;
+            aes.Padding = padding;
             var outputBytes = aes.CreateDecryptor().TransformFinalBlock(decryptedBytes, 0, decryptedBytes.Length);
             return outputBytes;
         }

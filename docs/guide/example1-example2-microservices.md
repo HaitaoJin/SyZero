@@ -25,11 +25,17 @@ SyZero.Example2.Web  http://localhost:5003
 1. `Example1` 端口是 `5002`，服务名是 `SyZero.Example1`
 2. `Example2` 端口是 `5003`，服务名是 `SyZero.Example2`
 3. 两边都启用了 `AddDynamicWebApi(...)`
-4. 两边都启用了 `AddSyZeroFeign()`
-5. 两边都启用了 `AddLocalServiceManagement()`
+4. 两边都启用了 `AddSyZeroFeign(builder.Configuration)`
+5. 两边都启用了 `AddLocalServiceManagement(builder.Configuration)`
 6. 两边都在 `appsettings.json` 里配置了对方的 `Feign:Service`
 
 因此本地运行时，不需要先接 Consul / Nacos，就能演示双服务互调
+
+也可以通过 AppHost 一次启动两个服务、网关和前端：
+
+```bash
+dotnet run --launch-profile https --project src/SyZero.AppHost/SyZero.AppHost.csproj
+```
 
 ## 1. 启动 Example1
 
@@ -39,7 +45,7 @@ dotnet run --project src/SyZero.Service/SyZero.Example1.Service/SyZero.Example1.
 
 启动后可访问：
 
-1. `http://localhost:5002/api/swagger`
+1. `http://localhost:5002/openapi/v1.json`
 2. `http://localhost:5002/api/SyZero.Example1/Example1/GetServiceInfo`
 
 ## 2. 启动 Example2
@@ -50,7 +56,7 @@ dotnet run --project src/SyZero.Service/SyZero.Example2.Service/SyZero.Example2.
 
 启动后可访问：
 
-1. `http://localhost:5003/api/swagger`
+1. `http://localhost:5003/openapi/v1.json`
 2. `http://localhost:5003/api/SyZero.Example2/Example2/GetServiceInfo`
 
 ## 3. 验证双向远程调用
@@ -112,8 +118,8 @@ dotnet run --project src/SyZero.Service/SyZero.Example2.Service/SyZero.Example2.
 
 如果你要把这个示例扩展成更接近生产环境的拓扑，可以按下面的方向切换：
 
-1. 把 `AddLocalServiceManagement()` 换成 `AddConsul()` 或 `AddNacos()`
-2. 保持 `AddSyZeroFeign()` 不变
+1. 把 `AddLocalServiceManagement(builder.Configuration)` 换成 `AddConsul(builder.Configuration)` 或 `AddNacos(builder.Configuration)`
+2. 保持 `AddSyZeroFeign(builder.Configuration)` 不变
 3. 继续复用相同的 `ServiceName`
 
 这样可以验证 SyZero 的“业务代码不变，只替换服务发现后端”的设计
@@ -143,3 +149,4 @@ dotnet run --project src/SyZero.Service/SyZero.Example2.Service/SyZero.Example2.
 1. 如果要把两个服务收口到统一入口，继续阅读 [SyZero.Gateway 微服务网关示例](/guide/gateway-microservice-demo)
 2. 如果要切到注册中心，继续阅读 [服务注册与发现](/guide/service-discovery)
 3. 如果要查看 Feign 配置细节，继续阅读 [SyZero.Feign](/modules/SyZero.Feign)
+4. 如果要查看完整调用链，继续阅读 [AppHost 本地编排与可观测性](/guide/apphost-observability)

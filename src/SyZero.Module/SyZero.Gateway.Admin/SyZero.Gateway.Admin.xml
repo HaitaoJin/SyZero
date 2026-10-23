@@ -66,6 +66,9 @@
             对 <c>/admin-api/*</c> 的非 GET 请求强制要求 Admin 角色，Reader 返回 403。
             </summary>
         </member>
+        <member name="M:SyZero.Gateway.Admin.Auth.AdminBasicAuthMiddleware.#ctor(Microsoft.AspNetCore.Http.RequestDelegate,SyZero.Gateway.Admin.Auth.GatewayAdminCookieProtector)">
+            <summary>由依赖注入使用的构造函数，启用受 Data Protection 保护的 Cookie。</summary>
+        </member>
         <member name="T:SyZero.Gateway.Admin.Auth.AdminIpFilterMiddleware">
             <summary>
             管理面板 IP 黑白名单中间件：在 Auth 之前执行，命中黑名单或不在白名单内直接返回 403。
@@ -169,6 +172,19 @@
         <member name="P:SyZero.Gateway.Admin.Auth.FileGatewayAdminUserStore.FilePath">
             <summary>暴露文件路径供诊断或测试使用。</summary>
         </member>
+        <member name="T:SyZero.Gateway.Admin.Auth.GatewayAdminCookieProtector">
+            <summary>
+            使用 ASP.NET Core Data Protection 保护管理端 Cookie 中的凭据。
+            Cookie 仍携带用户名与密码，以便密码或角色修改后现有会话立即失效，
+            但内容不再以可逆的 Base64 明文暴露。
+            </summary>
+        </member>
+        <member name="M:SyZero.Gateway.Admin.Auth.GatewayAdminCookieProtector.Protect(System.String,System.String)">
+            <summary>创建受保护的 Cookie 令牌。</summary>
+        </member>
+        <member name="M:SyZero.Gateway.Admin.Auth.GatewayAdminCookieProtector.TryUnprotect(System.String,System.String@,System.String@)">
+            <summary>解析并验证受保护的 Cookie 令牌。</summary>
+        </member>
         <member name="T:SyZero.Gateway.Admin.Auth.GatewayAdminIpFilterOptions">
             <summary>
             管理面板 IP 黑白名单配置。绑定 <see cref="F:SyZero.Gateway.Admin.Auth.GatewayAdminIpFilterOptions.SectionName"/>。
@@ -187,6 +203,9 @@
         </member>
         <member name="P:SyZero.Gateway.Admin.Auth.GatewayAdminIpFilterOptions.ForwardedHeaderName">
             <summary>承载真实客户端 IP 的请求头名（默认 <c>X-Forwarded-For</c>）。</summary>
+        </member>
+        <member name="T:SyZero.Gateway.Admin.Auth.GatewayAdminPasswordHasher">
+            <summary>管理端文件账号的 PBKDF2-SHA256 密码编码与验证。</summary>
         </member>
         <member name="T:SyZero.Gateway.Admin.Auth.GatewayAdminRateLimitOptions">
             <summary>
@@ -279,7 +298,7 @@
             <summary>按 Name 查找；未找到返回 null。</summary>
         </member>
         <member name="M:SyZero.Gateway.Admin.Auth.IUserResolver.ValidateAsync(System.String,System.String,System.Threading.CancellationToken)">
-            <summary>校验用户名 + 密码（明文比较，固定时间）。返回匹配到的用户（带 IsBuiltIn / Role），否则 null。</summary>
+            <summary>校验用户名 + 密码（支持 PBKDF2 编码与旧版明文的固定时间比较）。返回匹配到的用户（带 IsBuiltIn / Role），否则 null。</summary>
         </member>
         <member name="M:SyZero.Gateway.Admin.Auth.IUserResolver.CountAdminsAsync(System.Threading.CancellationToken)">
             <summary>统计 Admin 角色账号数（用于 UI / 业务保护）。</summary>

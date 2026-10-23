@@ -8,7 +8,7 @@ SyZero 提供统一的 `IEventBus` 抽象，可以先在进程内发布事件，
 | --- | --- | --- |
 | Local | `AddLocalEventBus()` | 进程内事件，零外部依赖 |
 | DB | `AddDBEventBus()` | 简单持久化、可重试 |
-| Redis | `AddSyZeroRedis()` + `AddRedisEventBus()` | 跨实例广播，轻量但不保证持久化 |
+| Redis | `AddSyZeroRedis(builder.Configuration)` + `AddRedisEventBus(builder.Configuration)` | 跨实例广播，轻量但不保证持久化 |
 | RabbitMQ | `AddRabbitMQEventBus()` | 标准消息队列，适合生产异步解耦 |
 
 ## 1. 定义事件
@@ -46,7 +46,7 @@ public class OrderCreatedHandler : IEventHandler<OrderCreatedEvent>
 
 ```csharp
 builder.AddSyZero();
-builder.Services.AddLocalEventBus();
+builder.Services.AddLocalEventBus(builder.Configuration);
 ```
 
 适合单体服务、领域事件、本地开发验证。
@@ -55,7 +55,7 @@ builder.Services.AddLocalEventBus();
 
 ```csharp
 builder.AddSyZero();
-builder.Services.AddDBEventBus();
+builder.Services.AddDBEventBus(builder.Configuration);
 ```
 
 适合需要持久化和基础重试、但暂时不引入 MQ 的环境。
@@ -65,7 +65,7 @@ builder.Services.AddDBEventBus();
 ```csharp
 builder.AddSyZero();
 builder.Services.AddSyZeroRedis(builder.Configuration);
-builder.Services.AddRedisEventBus(options =>
+builder.Services.AddRedisEventBus(builder.Configuration, options =>
 {
     options.ChannelPrefix = "SyZero:EventBus:";
 });
@@ -77,7 +77,7 @@ builder.Services.AddRedisEventBus(options =>
 
 ```csharp
 builder.AddSyZero();
-builder.Services.AddRabbitMQEventBus();
+builder.Services.AddRabbitMQEventBus(builder.Configuration);
 ```
 
 配置示例：

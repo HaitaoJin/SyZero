@@ -1,12 +1,9 @@
-using Consul;
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Moq;
-using Ocelot.Logging;
-using Ocelot.Provider.Consul.Interfaces;
 using Ocelot.ServiceDiscovery;
 using SyZero.Gateway.Ocelot;
 using SyZero.Runtime.Security;
@@ -15,7 +12,6 @@ using Xunit;
 
 namespace SyZero.Tests;
 
-[Collection("AppConfig")]
 public class OcelotTests
 {
     [Fact]
@@ -32,12 +28,10 @@ public class OcelotTests
         var policy = corsOptions.Value.GetPolicy(options.CorsPolicyName);
 
         Assert.NotNull(provider.GetService<IHttpContextAccessor>());
-        Assert.NotNull(provider.GetService<IConsulClientFactory>());
         Assert.NotNull(policy);
         Assert.Equal(new[] { "https://app.example.com", "https://admin.example.com" }, options.AllowedOrigins);
         Assert.Equal(options.AllowedOrigins, policy!.Origins);
         Assert.True(policy.SupportsCredentials);
-        Assert.Contains(services, descriptor => descriptor.ImplementationType == typeof(SyZeroConsulServiceBuilder));
     }
 
     [Fact]
@@ -62,24 +56,6 @@ public class OcelotTests
         Assert.False(policy.SupportsCredentials);
     }
 
-    [Fact]
-    public void SyZeroConsulServiceBuilder_UsesServiceAddressAsDownstreamHost()
-    {
-        var builder = new TestableConsulServiceBuilder();
-        var entry = new ServiceEntry
-        {
-            Service = new AgentService
-            {
-                Address = "10.10.0.25",
-                Service = "gateway"
-            }
-        };
-
-        var host = builder.ResolveDownstreamHost(entry, new Node());
-
-        Assert.Equal("10.10.0.25", host);
-    }
-
     private static IConfiguration CreateConfiguration(string? origins)
     {
         var values = new Dictionary<string, string?>
@@ -99,22 +75,6 @@ public class OcelotTests
         return new ConfigurationBuilder()
             .AddInMemoryCollection(values)
             .Build();
-    }
-
-    private sealed class TestableConsulServiceBuilder : SyZeroConsulServiceBuilder
-    {
-        public TestableConsulServiceBuilder()
-            : base(
-                new HttpContextAccessor(),
-                new Mock<IConsulClientFactory>(MockBehavior.Strict).Object,
-                new Mock<IOcelotLoggerFactory>(MockBehavior.Strict).Object)
-        {
-        }
-
-        public string ResolveDownstreamHost(ServiceEntry entry, Node node)
-        {
-            return GetDownstreamHost(entry, node);
-        }
     }
 
     [Fact]

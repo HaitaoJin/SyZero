@@ -45,10 +45,10 @@ builder.AddSyZero();
 
 // 注册服务方式1 - 使用配置文件
 builder.Configuration.AddNacosConfiguration(builder.Configuration);
-builder.Services.AddNacos();
+builder.Services.AddNacos(builder.Configuration);
 
 // 注册服务方式2 - 使用委托配置
-builder.Services.AddNacos(options =>
+builder.Services.AddNacos(builder.Configuration, options =>
 {
     options.ServerAddresses = new[] { "http://localhost:8848" };
     options.ServiceName = "my-service";
@@ -136,7 +136,7 @@ builder.Configuration.AddNacosConfiguration(options =>
 ### 元数据管理
 
 ```csharp
-builder.Services.AddNacos(options =>
+builder.Services.AddNacos(builder.Configuration, options =>
 {
     options.Metadata = new Dictionary<string, string>
     {
